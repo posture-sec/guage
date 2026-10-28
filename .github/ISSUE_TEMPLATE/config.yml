@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security report
+    url: https://github.com/posture-sec/guage/security/advisories/new
+    about: Report a vulnerability privately through a security advisory, not through an issue.
+  - name: Usage question
+    url: https://github.com/posture-sec/guage/discussions
+    about: Ask how Gauge works or what a finding means.
