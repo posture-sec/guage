@@ -1,0 +1,17 @@
+# Draft shape only: the loader is not implemented and this policy is unconfigured.
+version = 1
+network = ""
+endpoints = []
+
+# [[account]]
+# id = ""
+# name = "treasury"
+# role = "treasury"
+# expected_signers = []
+# expected_thresholds = { low = 2, medium = 2, high = 2 }
+# expected_flags = { auth_required = false, auth_revocable = false, auth_immutable = false, clawback = false }
+# home_domain = "example.com"
+# expect_locked = false
+
+# An omitted expectation differs from an explicitly empty, zero or false value.
+# Accepted risks require an owner-supplied rule, account, reason and optional expiry.
