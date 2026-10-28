@@ -53,20 +53,26 @@ These come from `ARCHITECTURE_ESSENTIALS.md` section 2. Do not break them. If an
 
 ## 5. Commands
 
-These work once task 1.4 is done. Run all of them before finishing.
+These run today (CI job names in brackets). Run all of them before finishing.
 
 ```
-gofmt -l .                       # must print nothing
-go vet ./...
-staticcheck ./...
-go test ./... -race -count=1
-govulncheck ./...
+gofmt -l .                       # must print nothing                        [ci / go]
+go vet ./...                                                                  [ci / go]
+staticcheck ./...                # v0.8.2, config in staticcheck.conf         [ci / go]
+go test ./... -race -count=1                                                    [ci / go]
+govulncheck ./...                # v1.9.0                                      [ci / vuln]
+scripts/check_roadmap_touched.sh origin/main                                  [roadmap-check / gate]
+scripts/roadmap_progress.sh --check ROADMAP.md                                [roadmap-check / gate]
+scripts/test_roadmap_gate.sh                                                    [roadmap-check / gate]
+```
+
+Not available yet: the fuzz smoke run below waits for its targets in `internal/strkey` and `internal/sanitize` (tasks 2.2 and 2.5).
+
+```
 go test ./internal/strkey ./internal/sanitize -run '^$' -fuzz=Fuzz -fuzztime=10s   # smoke fuzz, per target
-scripts/check_roadmap_touched.sh          # once task 1.9 is done
-scripts/roadmap_progress.sh --check       # once task 1.9 is done
 ```
 
-If a command does not exist yet, say so in the PR instead of silently skipping it.
+`staticcheck` and `govulncheck` are not part of the Go distribution. Install the pinned versions with `go install honnef.co/go/tools/cmd/staticcheck@v0.8.2` and `go install golang.org/x/vuln/cmd/govulncheck@v1.9.0`. If a command does not exist yet, say so in the PR instead of silently skipping it.
 
 ## 6. Code conventions
 
