@@ -1,0 +1,13 @@
+/bin/
+/dist/
+/coverage/
+/coverage.out
+*.test
+/stellar-gauge
+/gauge.toml
+/baseline*.json
+/.env
+/.env.*
+
+# Local briefing copies of the planning documents; the root copies are authoritative.
+/files/
