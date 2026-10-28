@@ -1,7 +1,7 @@
 # ROADMAP: Gauge (working name)
 
-Last updated: 2026-10-28T14:45Z (scaffold branch `feat/1.12-project-scaffold`)
-Roadmap version: 2
+Last updated: 2026-10-28T15:10Z (repo hygiene branch `chore/1.5-repo-hygiene`)
+Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
 
@@ -34,14 +34,14 @@ The repository is 100% ready when every task in Phases 0 to 6 is done and every 
 | Phase | Name | Done | Total | Progress |
 |---|---|---|---|---|
 | 0 | Validation and decisions | 1 | 13 | 7% |
-| 1 | Repository bootstrap and self-protection | 3 | 12 | 25% |
+| 1 | Repository bootstrap and self-protection | 3 | 13 | 23% |
 | 2 | Core | 0 | 10 | 0% |
 | 3 | Rules | 0 | 7 | 0% |
 | 4 | Dogfood and release v0.1.0 | 0 | 9 | 0% |
-| 5 | v0.2 features | 0 | 7 | 0% |
+| 5 | v0.2 features | 0 | 8 | 0% |
 | 6 | Release v0.2.0 and community | 0 | 5 | 0% |
 | 7 (backlog) | Backlog | 0 | 4 | 0% |
-| **Phases 0 to 6** | **Readiness total** | **4** | **63** | **6%** |
+| **Phases 0 to 6** | **Readiness total** | **4** | **65** | **6%** |
 | Gates | G1 to G10 | 0 | 10 | 0% |
 <!-- PROGRESS:END -->
 
@@ -62,9 +62,11 @@ All must be true for 100%.
 
 ## 4. Current focus
 
-Task 1.12: the owner authorized a scope-first scaffold on 2026-10-28 using the existing `posture-sec/guage` repository and Apache-2.0 license. This narrow exception permits package and file placeholders, data declarations, model tests and a non-operational CLI before demand validation. It does not authorize feature implementations or complete the Phase 0 validation gates.
+Task 1.13: repo hygiene for program submission, on the owner's instruction of 2026-10-28 to set the repository up following the Stellar Wave playbook. The pattern was verified against live approved repos rather than assumed: `soroauth/soroauth-go` (ruleset `protect main`, `CODEOWNERS`, `ISSUE_TEMPLATE`, `dependabot.yml`, `ci / go` style job names, an `status: unaudited` badge, labels with `area:` and `complexity:` prefixes) and `plimsoll-protocol/plimsoll-indexer` (banner, badge row, maintainer table, cross-repo table, GitBook docs).
 
-Feature work remains blocked on tasks 0.2 to 0.4 and the relevant technical verification tasks. The original documents in `files/` remain untouched local briefing inputs; the root documents are authoritative for development.
+Two things the playbook assumes that do not apply here, so they are not being built: the contract and app phases (its 4 to 9) describe a Soroban contract plus frontend, and Gauge is a Go CLI with neither. Its Phase 11 documentation site is recorded as task 5.8 rather than done now.
+
+Feature work stays blocked on tasks 0.2 to 0.4 and the technical verification tasks. The original documents in `files/` remain untouched local briefing inputs; the root documents are authoritative for development.
 
 ## 5. Phases and tasks
 
@@ -88,16 +90,17 @@ Feature work remains blocked on tasks 0.2 to 0.4 and the relevant technical veri
 
 - [x] **1.1** Create the repository under the chosen org with the chosen license. S. Deps: 0.2. Done when: repo exists with license and default branch. (done 2026-10-28: `posture-sec/guage` exists with Apache-2.0 `LICENSE` and `main`)
 - [ ] **1.2** Confirm account and org hardening: hardware-key or passkey 2FA, protected recovery email, org-wide 2FA requirement, minimal owner list. S. Done when: checked off by the owner (not verifiable by CI).
-- [ ] **1.3** Configure rulesets: no force push, no deletion, required PR and status checks; add `.github/CODEOWNERS` for `internal/`, `cmd/`, `go.mod`, `go.sum`, `scripts/` and `.github/`. S. Deps: 1.1. Done when: a direct push to the default branch is rejected.
-- [x] **1.4** Scaffold the Go module: `go.mod` with the pinned Go version, `cmd/stellar-gauge`, empty `internal/` packages, staticcheck config. S. Deps: 1.1. Done when: `go build ./...` and `go test ./...` run green on the skeleton. (done 2026-10-28: `go build ./...` green, `go vet ./...` green, `gofmt -l .` empty, `go test ./... -race -count=1` green)
-- [ ] **1.5** CI workflows: gofmt check, `go vet`, `staticcheck`, `go test -race`, `govulncheck`; every action pinned by hash; top-level `permissions: contents: read`. S. Deps: 1.4. Done when: CI is green on the skeleton.
-- [ ] **1.6** Dependabot for `gomod` and GitHub Actions, grouped weekly. S. Deps: 1.1. Done when: config merged. Reminder: bot PRs also need a roadmap changelog line.
+- [ ] **1.3** Configure rulesets: no force push, no deletion, required PR and status checks; add `.github/CODEOWNERS` for `internal/`, `cmd/`, `go.mod`, `go.sum`, `scripts/` and `.github/`. S. Deps: 1.1. Done when: a direct push to the default branch is rejected. CODEOWNERS and the `protect main` ruleset are in place; the rejection test has not been run, so this stays unticked.
+- [x] **1.4** Scaffold the Go module: `go.mod` with the pinned Go version, `cmd/stellar-gauge`, empty `internal/` packages, staticcheck config. S. Deps: 1.1. Done when: `go build ./...` and `go test ./...` run green on the skeleton. (done 2026-10-28: `go build ./...` green, `go vet ./...` green, `gofmt -l .` empty, `go test ./... -race -count=1` green; merged in PR #1)
+- [ ] **1.5** CI workflows: gofmt check, `go vet`, `staticcheck`, `go test -race`, `govulncheck`; every action pinned by hash; top-level `permissions: contents: read`. S. Deps: 1.4. Done when: CI is green on the skeleton. `.github/workflows/ci.yml` prepared in 1.13; waiting on the first green run.
+- [ ] **1.6** Dependabot for `gomod` and GitHub Actions, grouped weekly. S. Deps: 1.1. Done when: config merged. Reminder: bot PRs also need a roadmap changelog line. `.github/dependabot.yml` prepared in 1.13.
 - [ ] **1.7** Scorecard workflow with a token that can read branch protection. S. Deps: 1.3. Done when: Branch-Protection returns a score, not an error.
-- [ ] **1.8** `SECURITY.md`, `CONTRIBUTING.md` and `.github/pull_request_template.md` (with the roadmap checkbox). S. Deps: 1.1. Done when: each carries the roadmap rule. Drafts prepared in 1.12; merge is pending.
-- [ ] **1.9** Roadmap gate: `scripts/check_roadmap_touched.sh` (fails if the PR diff changes any file but not `ROADMAP.md`, or `Last updated` did not change), `scripts/roadmap_progress.sh` (computes and checks the progress table) and a `roadmap-check.yml` workflow made a required check. M. Deps: 1.5. Done when: a test PR without a roadmap edit fails and one with it passes.
-- [ ] **1.10** `README.md` skeleton: what it is, status, quickstart placeholder, roadmap rule. S. Deps: 1.1. Done when: merged. Draft prepared in 1.12; merge is pending.
+- [ ] **1.8** `SECURITY.md`, `CONTRIBUTING.md` and `.github/pull_request_template.md` (with the roadmap checkbox). S. Deps: 1.1. Done when: each carries the roadmap rule. Rewritten to the approved-repo pattern in 1.13.
+- [ ] **1.9** Roadmap gate: `scripts/check_roadmap_touched.sh` (fails if the PR diff changes any file but not `ROADMAP.md`, or `Last updated` did not change), `scripts/roadmap_progress.sh` (computes and checks the progress table) and a `roadmap-check.yml` workflow made a required check. M. Deps: 1.5. Done when: a test PR without a roadmap edit fails and one with it passes. Scripts and workflow prepared in 1.13, with `scripts/test_roadmap_gate.sh` covering eight cases; the required-check part lands with 1.3.
+- [ ] **1.10** `README.md` skeleton: what it is, status, quickstart placeholder, roadmap rule. S. Deps: 1.1. Done when: merged. Rewritten in 1.13 with badges, maintainer table, rule list, what-it-does-not-check section and contributor credits.
 - [ ] **1.11** Copy the doc set into the repo root. S. Deps: 1.1. Done when: merged. Root copies are prepared in the scaffold; merge is pending.
-- [x] **1.12** Owner-authorized scope-first scaffold, independent of unfinished Phase 0 gates (D-09). S. Done when: root brief copies, scoped package/file placeholders, model declarations, presence-aware policy types and a source interface exist; the skeleton builds, model tests pass, and the CLI exits nonzero without auditing. No feature implementation or remote protection changes are included. (done 2026-10-28: local checks in 1.4, `go run ./cmd/stellar-gauge` prints a scaffold notice and exits 3)
+- [x] **1.12** Owner-authorized scope-first scaffold, independent of unfinished Phase 0 gates (D-09). S. Done when: root brief copies, scoped package/file placeholders, model declarations, presence-aware policy types and a source interface exist; the skeleton builds, model tests pass, and the CLI exits nonzero without auditing. No feature implementation or remote protection changes are included. (done 2026-10-28: local checks in 1.4, `go run ./cmd/stellar-gauge` prints a scaffold notice and exits 3; merged in PR #1)
+- [ ] **1.13** Program-submission repo hygiene, from the Stellar Wave playbook Phase 10 (owner-authorized 2026-10-28). S. Deps: 1.1. Done when: CI, roadmap-gate, Dependabot, CODEOWNERS, issue templates, README/CONTRIBUTING/SECURITY rewrites and `docs/banner.svg` are merged; the label taxonomy, repository topics and a planned issue backlog derived from this file exist on GitHub; and the pattern was verified against real approved repos rather than assumed. Remote protection settings are covered by 1.3, a release by 4.8 and a documentation site by a new 5.x task.
 
 ### Phase 2: Core
 
@@ -143,6 +146,7 @@ Feature work remains blocked on tasks 0.2 to 0.4 and the relevant technical veri
 - [ ] **5.5** Trustline exposure facts (issuer flags for each held asset). M. Deps: 0.6.
 - [ ] **5.6** SEP-29 memo-required check for merchant accounts. S. Deps: 0.8.
 - [ ] **5.7** Performance and rate-limit tests with many accounts. S. Deps: 2.7.
+- [ ] **5.8** Documentation site separate from the README (GitBook or equivalent): introduction with cited figures, protocol mechanics and the economic model with worked numbers, contract and rule reference, end-user guides per persona, developer guide, contributing guide. M. Deps: 4.2, 4.3. Done when: the site is linked from `README.md` and every page reflects the shipped behavior.
 
 ### Phase 6: Release v0.2.0 and community
 
@@ -179,6 +183,8 @@ Parallelizable early: 0.5 to 0.13 (research, no code), 1.2, 1.6, 1.8, 1.10. Land
 | D-08 | Roadmap gate has no exemptions, including dependency bumps | Decided 2026-10-28 | Matches the owner's instruction for Airlock; assumed to apply here. Dependabot is grouped weekly |
 | D-09 | Scope-first scaffold before feature development | Decided 2026-10-28 | Owner approved task 1.12 as a narrow exception to the no-code gate: root documents, placeholders and draft data models only. Demand, protocol verification and feature gates remain open; no deployment or repository-protection changes |
 | D-10 | Scaffold toolchain | Decided 2026-10-28 | Go 1.27.3 returned by the official stable-download metadata and verified locally with `go version`; no third-party runtime module added |
+| D-11 | Adopt the Stellar Wave playbook's Phase 10 hygiene for this repo | Decided 2026-10-28 | Owner instruction. Pattern verified against `soroauth/soroauth-go` and `plimsoll-protocol/plimsoll-indexer`, not recalled. Its contract and app phases (4 to 9) do not apply to a Go CLI with no Soroban contract, so they are skipped rather than adapted |
+| D-12 | No release tag until an auditing build exists | Decided 2026-10-28 | The playbook's Phase 10 item 6 asks for a `v0.1.0` tag. Tagging the scaffold would advertise a release that audits nothing, so the tag stays with task 4.8 |
 
 ## 8. Risk register
 
@@ -200,5 +206,6 @@ Newest first. One row per merged change.
 
 | Date (UTC) | Change | Tasks |
 |---|---|---|
+| 2026-10-28 | Repo hygiene for program submission: CI and roadmap-gate workflows, gate and progress scripts with an eight-case self-test, Dependabot, CODEOWNERS, issue forms, README/CONTRIBUTING/SECURITY rewritten to the verified approved-repo pattern, banner, plus a `protect main` ruleset, label taxonomy, topics and a roadmap-derived issue backlog | 1.13, 1.3, 1.5, 1.6, 1.8, 1.9, 1.10, D-11, D-12, 5.8 |
 | 2026-10-28 | Owner-authorized scaffold: root brief copies, Go module, package and file placeholders, model and policy declarations, source interface, non-operational CLI, README/CONTRIBUTING/SECURITY/PR-template drafts, structure and decision documentation | 1.1, 1.4, 1.8, 1.10, 1.11, 1.12, D-01 to D-04, D-09, D-10 |
 | 2026-10-28 | First drafts of the full doc set (PRD, ARCHITECTURE, ESSENTIALS, project_structure, AGENTS, CLAUDE, ROADMAP) with a red-team pass | 0.1 |
