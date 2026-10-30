@@ -1,6 +1,6 @@
 # ROADMAP: Gauge (working name)
 
-Last updated: 2026-10-30T13:05Z (policy loader and the first dependency)
+Last updated: 2026-10-30T13:40Z (report renderers and exit mapping)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
@@ -35,13 +35,13 @@ The repository is 100% ready when every task in Phases 0 to 6 is done and every 
 |---|---|---|---|---|
 | 0 | Validation and decisions | 11 | 13 | 84% |
 | 1 | Repository bootstrap and self-protection | 13 | 15 | 86% |
-| 2 | Core | 4 | 10 | 40% |
+| 2 | Core | 5 | 10 | 50% |
 | 3 | Rules | 0 | 7 | 0% |
 | 4 | Dogfood and release v0.1.0 | 0 | 9 | 0% |
 | 5 | v0.2 features | 0 | 8 | 0% |
 | 6 | Release v0.2.0 and community | 0 | 5 | 0% |
 | 7 (backlog) | Backlog | 0 | 4 | 0% |
-| **Phases 0 to 6** | **Readiness total** | **28** | **67** | **41%** |
+| **Phases 0 to 6** | **Readiness total** | **29** | **67** | **43%** |
 | Gates | G1 to G10 | 0 | 10 | 0% |
 <!-- PROGRESS:END -->
 
@@ -119,7 +119,7 @@ Constraint on the two remaining experimental tasks: Gauge never builds or submit
 - [ ] **2.3** `internal/threshold`: `Reachable` and `MinSigners` with table tests and a brute-force cross-check. M. Deps: 0.7, 2.1. Done when: all tables and the randomized cross-check pass.
 - [x] **2.4** `internal/policy` loader and CLI input validation: strict decode, `version`, explicit `network`, duplicate and unknown keys, `G`-only addresses, secret-seed rejection that never echoes the value. M. Deps: 2.2. Done when: each failure path exits 2 in tests. (done 2026-10-30: `Load` decodes with `github.com/BurntSushi/toml` v1.6.0 under a 1 MiB cap and treats any key `MetaData.Undecoded` reports as an error, so an unknown key inside `account` or `expected_thresholds` fails too. A seed is found by scanning the raw text for an `S` token that validates as a strkey, which catches one in a comment, in a name or in lowercase, and the returned error never contains it. 28 rejection cases pass, each mapped to an `Error.Kind` the CLI will turn into exit 2: missing or wrong version, missing or unknown network, unknown keys, duplicate account, `M` and `C` and bad-checksum IDs, unknown role, non-strkey signer keys, weights and thresholds outside 0 to 255, duplicate signers, non-https endpoints, URL and IP home domains, accept entries with no reason, wildcard or non-acceptable rules, bad expiry and duplicates, plus a syntax error. `gauge.example.toml` is loaded by a test so the documented shape stays valid. `ExpectedPassphrase` maps `mainnet` and `testnet` to their published passphrases, verified against the Stellar networks page on 2026-10-30, and treats any other value as the passphrase itself.)
 - [x] **2.5** `internal/sanitize`: control, bidi and zero-width stripping, length truncation, IDN flag, markdown escaping; fuzz target. M. Deps: 2.1. Done when: injection tests pass. (done 2026-10-30: `Text` removes C0 and C1 controls, whole CSI and OSC escape sequences, bidi overrides and marks, zero-width characters, soft hyphens, line separators and Unicode tag characters, then collapses whitespace and truncates to 256 runes with a visible `...`; `Domain` reports the IDN flag; `Markdown` escapes the markup characters and `Fenced` picks a fence longer than any backtick run in the content. Tests cover each injection class, multibyte truncation and idempotence. `FuzzText` ran 358280 executions and `FuzzFenced` 141856 in 10s each with no failure.)
-- [ ] **2.6** `internal/report` text and JSON renderers plus exit-code mapping, deterministic ordering, limits footer. M. Deps: 2.5. Done when: golden tests pass.
+- [x] **2.6** `internal/report` text and JSON renderers plus exit-code mapping, deterministic ordering, limits footer. M. Deps: 2.5. Done when: golden tests pass. (done 2026-10-30: `Text` prints the network, ledger, per-account facts and findings in severity/account/rule order, and `JSON` writes the same facts with severity as its name, two-space indentation, no HTML escaping and the limits footer as a `limits` field, which the text report also carries. Both render a sanitized copy, so the report the caller holds is unchanged, and a test compares it before and after rendering. Empty collections render as `[]` rather than `null`. `Exit` returns 1 when any non-accepted finding is at or above `fail_on` and 0 otherwise; accepted findings and lower severities do not count. Golden files `testdata/golden/sample.text.golden` and `sample.json.golden` are checked in and rewritten only with `-update`.)
 - [ ] **2.7** `internal/source`: `Source` interface and Horizon implementation with timeouts, size caps, strict decode, bounded retries and concurrency, passphrase check, `ErrNotFound`; fake Horizon tests for every failure mode. L. Deps: 0.6, 0.9, 0.12, 2.1. Done when: the failure-mode tests pass.
 - [ ] **2.8** `internal/run` orchestration. M. Deps: 2.4, 2.6, 2.7. Done when: an end-to-end test with a fake source passes.
 - [ ] **2.9** `cmd/stellar-gauge` with `check`, `audit` and `version`. S. Deps: 2.8. Done when: CLI integration tests pass.
@@ -220,6 +220,7 @@ Newest first. One row per merged change.
 
 | Date (UTC) | Change | Tasks |
 |---|---|---|
+| 2026-10-30 | Report renderers: text and JSON output for a `model.Report`, both rendering a sanitized copy so the caller's report is not mutated, both ordered severity/account/rule, with empty collections as `[]`. JSON serializes severity as `info`/`warn`/`high` and adds the limits footer as a `limits` field; text prints the same footer. `Exit` maps findings to 0 or 1, ignoring accepted findings and anything below the failure threshold. Golden files `sample.text.golden` and `sample.json.golden` are checked in, regenerated only with `-update`, and the tests also cover hostile strings, determinism and the no-mutation guarantee | 2.6 |
 | 2026-10-30 | Policy loader and the first dependency: `github.com/BurntSushi/toml` v1.6.0 enters `go.mod` and `go.sum` under ADR-004. `policy.Load` caps the file at 1 MiB, rejects unknown keys via `MetaData.Undecoded`, rejects a secret seed found anywhere in the raw text including comments and lowercase, and validates version, network, endpoints, G-only IDs, roles, expected signer keys and weights, thresholds, home domains and every accept entry (reason, wildcard and non-acceptable rule, date, duplicate). Rejections carry a kind and a field path, never a value. `gauge.example.toml` now holds a valid testnet policy and is loaded by a test | 2.4, ADR-004 |
 | 2026-10-30 | First Phase 2 code: `internal/model` gets severity names, a finding constructor whose sha256 fingerprint survives whitespace changes, and a stable severity/account/rule sort; `internal/strkey` classifies all ten SEP-23 types, rejects anything that does not re-encode to the exact input (which catches nonzero trailing bits) and rejects non-canonical case, with errors that never echo their input; `internal/sanitize` removes controls, whole CSI and OSC sequences, bidi and zero-width characters, truncates to 256 runes, flags IDNs and fences markdown evidence. All 10 valid and 20 invalid SEP-23 vectors pass. Fuzz targets ran clean: 676129 executions for strkey, 358280 for text and 141856 for fencing, 10s each | 2.1, 2.2, 2.5 |
 | 2026-10-30 | Horizon fixtures committed: five testnet responses (`root-testnet.json`, `1-default.json`, `7-extra-signer.json`, `8-clawback-undeclared.json`, `10-not-found.json`) with a sidecar `README.md` recording network, date, per-file ledger and what each establishes. The captures answer the parser question the task was blocking: the master key appears inside `signers` as an ordinary `ed25519_public_key` entry, and there is no per-account balances route. The three signer shapes that need a transaction to exist are named in the sidecar as hand-built rather than captured, so no gap is left implicit. `project_structure.md` lists the files it used to call `no fabricated account captures` | 0.6 |

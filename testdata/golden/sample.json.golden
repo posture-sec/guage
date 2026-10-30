@@ -1,0 +1,107 @@
+{
+  "tool_version": "0.0.0-test",
+  "network": "Test SDF Network ; September 2015",
+  "ledger": 5466897,
+  "accounts": [
+    {
+      "snapshot": {
+        "id": "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
+        "network": "Test SDF Network ; September 2015",
+        "endpoint": "https://horizon-testnet.stellar.org",
+        "ledger": 5466881,
+        "sequence": "9007199254740993",
+        "thresholds": {
+          "low": 1,
+          "medium": 2,
+          "high": 2
+        },
+        "signers": [
+          {
+            "key": "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
+            "type": "ed25519",
+            "weight": 1,
+            "sponsor": ""
+          }
+        ],
+        "flags": {
+          "auth_required": true,
+          "auth_revocable": false,
+          "auth_immutable": false,
+          "clawback_enabled": false
+        },
+        "home_domain": "exаmple.com",
+        "sponsor": "sponsor",
+        "balances": []
+      },
+      "findings": [
+        {
+          "rule_id": "sig-single-key-high",
+          "severity": "high",
+          "account": "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
+          "message": "One signing key controls the high threshold.",
+          "evidence": "minimum signers: 1",
+          "fingerprint": "197d9ec2e2f0c17cd2496f045938fcbde78fb3d7cc31fa84d53c00d1658b705b",
+          "accepted": false
+        },
+        {
+          "rule_id": "flag-drift",
+          "severity": "warn",
+          "account": "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
+          "message": "Declared flags differ from the chain.",
+          "evidence": "auth_required declared false, observed true",
+          "fingerprint": "1df656afe9e674d296da9049114c5ddfea5c04fe365831815af700b0cda4b531",
+          "accepted": true
+        },
+        {
+          "rule_id": "thr-drift",
+          "severity": "warn",
+          "account": "GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3",
+          "message": "Declared thresholds differ from the chain.",
+          "evidence": "low 2, medium 2, high 3",
+          "fingerprint": "23ed595205dd01c02f9ce9aed8050632b8f2059d895fb73a1dfb467712913f0d",
+          "accepted": false
+        }
+      ]
+    },
+    {
+      "snapshot": {
+        "id": "GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3",
+        "network": "Test SDF Network ; September 2015",
+        "endpoint": "https://horizon-testnet.stellar.org",
+        "ledger": 5466881,
+        "sequence": "",
+        "thresholds": {
+          "low": 2,
+          "medium": 2,
+          "high": 2
+        },
+        "signers": [
+          {
+            "key": "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
+            "type": "ed25519",
+            "weight": 1,
+            "sponsor": ""
+          },
+          {
+            "key": "GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3",
+            "type": "ed25519",
+            "weight": 1,
+            "sponsor": ""
+          }
+        ],
+        "flags": {
+          "auth_required": false,
+          "auth_revocable": false,
+          "auth_immutable": false,
+          "clawback_enabled": false
+        },
+        "home_domain": "",
+        "sponsor": "",
+        "balances": []
+      },
+      "findings": []
+    }
+  ],
+  "exit_code": 1,
+  "limits": "Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised."
+}
