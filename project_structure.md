@@ -66,7 +66,8 @@ guage/
       run_test.go                         # reserved integration tests
 
   testdata/
-    horizon/.gitkeep                      # no fabricated account captures (0.6)
+    horizon/README.md                     # capture provenance, ledgers, what could not be captured (0.6)
+    horizon/{root-testnet,1-default,7-extra-signer,8-clawback-undeclared,10-not-found}.json
     policy/.gitkeep                       # valid/invalid loader fixtures pending (2.4)
     golden/.gitkeep                       # report fixtures pending (2.6, 3.6, 5.3)
 
