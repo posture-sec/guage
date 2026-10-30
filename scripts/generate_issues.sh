@@ -11,6 +11,7 @@
 #   --roadmap FILE  roadmap to read (default ROADMAP.md)
 #   --repo OWNER/NAME  target repository (default posture-sec/guage)
 #   --apply         create the missing issues with gh
+#   --update        also rewrite the body and labels of issues that exist
 #   --check         fail if an open task has no row, or a row has no open task
 #   --include-done  also emit rows for tasks already ticked
 set -euo pipefail
@@ -19,6 +20,7 @@ repo="${GUAGE_REPO:-posture-sec/guage}"
 roadmap="ROADMAP.md"
 phase=""
 apply=0
+update=0
 check=0
 include_done=0
 
@@ -28,6 +30,7 @@ while [ $# -gt 0 ]; do
     --roadmap) roadmap="${2:?--roadmap needs a value}"; shift ;;
     --repo) repo="${2:?--repo needs a value}"; shift ;;
     --apply) apply=1 ;;
+    --update) update=1 ;;
     --check) check=1 ;;
     --include-done) include_done=1 ;;
     *) echo "generate_issues: unknown argument ${1}" >&2; exit 2 ;;
@@ -67,6 +70,7 @@ backlog() {
     '1.11	type: docs	area: docs	docs: keep the briefing doc set in the repository root' \
     '1.13	type: tooling	area: ci	ci: finish program-submission repo hygiene' \
     '1.14	type: tooling	area: ci	ci: keep the issue backlog in step with the roadmap' \
+    '1.15	type: docs	area: docs	docs(wave): keep the submission packet current' \
     '2.1	type: feature	area: model	feat(model): complete types, severity ordering, constructors' \
     '2.2	type: feature	area: strkey	feat(strkey): classify keys, verify checksums, detect seeds' \
     '2.3	type: feature	area: threshold	feat(threshold): Reachable and MinSigners with cross-check' \
@@ -137,27 +141,57 @@ verb_for() {
   esac
 }
 
-# Roadmap sizes are unmeasured guesses, so the label buckets stay coarse: S and
-# M share medium, L and XL share high. complexity: trivial is reserved for fixes
-# a reviewer can check in one screen, which no roadmap task claims to be.
-# The body always prints the roadmap size next to the label.
+# The three tiers match the Drips Wave complexity levels, so the label and the
+# value entered in the wave dashboard agree: docs.drips.network/wave says a
+# maintainer assigns Trivial, Medium or High per issue, and that issues tagged
+# from GitHub instead land in Trivial at 100 points regardless of the work.
+# Roadmap sizes are unmeasured guesses, so the mapping is one way: S to Trivial,
+# M to Medium, L and XL to High. The body prints the roadmap size as well.
 complexity_for() {
   case "$1" in
     L | XL) printf 'complexity: high' ;;
-    S | M) printf 'complexity: medium' ;;
+    M) printf 'complexity: medium' ;;
+    S) printf 'complexity: trivial' ;;
+    *) printf '' ;;
+  esac
+}
+
+tier_for() {
+  case "$1" in
+    L | XL) printf 'High' ;;
+    M) printf 'Medium' ;;
+    S) printf 'Trivial' ;;
     *) printf '' ;;
   esac
 }
 
 created=0
+updated=0
 planned=0
 skipped=0
 rows_seen=""
 
-known_markers=""
-if [ "${apply}" -eq 1 ]; then
-  known_markers="$(gh issue list --repo "${repo}" --state all --limit 500 --json body \
-    --jq '.[].body' 2>/dev/null | sed -nE 's/.*gauge-task: ([^ ]+).*/\1/p' | sort -u || true)"
+# Contributor routing labels, applied by this script so a rerun cannot wipe them.
+# Only tasks whose dependencies are already ticked and that need nothing beyond
+# public documentation qualify: the Phase 0 research tasks a newcomer can finish
+# without touching a network, a decision or a protected path.
+good_first="0.5 0.8 0.9 0.12 0.13"
+help_wanted="${good_first} 0.6 2.1"
+
+routing_labels() {
+  out=""
+  case " ${help_wanted} " in *" $1 "*) out="${out},help wanted" ;; esac
+  case " ${good_first} " in *" $1 "*) out="${out},good first issue" ;; esac
+  printf '%s' "${out#,}"
+}
+
+# id to issue number for whatever the backlog already created.
+declare -A issue_of=()
+if [ "${apply}" -eq 1 ] || [ "${update}" -eq 1 ]; then
+  while read -r num marker; do
+    [ -n "${marker}" ] && issue_of["${marker}"]="${num}"
+  done < <(gh issue list --repo "${repo}" --state all --limit 500 --json number,body \
+    --jq '.[] | "\(.number) \(.body | split("\n")[0])"' 2>/dev/null | sed -nE 's/^([0-9]+) .*gauge-task: ([^ ]+).*/\1 \2/p')
 fi
 
 while IFS=$'\t' read -r id ttype tarea title; do
@@ -199,14 +233,18 @@ while IFS=$'\t' read -r id ttype tarea title; do
   [ -n "${deps}" ] || deps="$(printf '%s' "${text}" | sed -nE 's/.*Deps: (.*)$/\1/p' | sed -E 's/\.$//')"
   done_when="$(printf '%s' "${text}" | sed -nE 's/.*Done when: //p' | sed -E 's/\.$//')"
   complexity="$(complexity_for "${size}")"
+  tier="$(tier_for "${size}")"
 
-  if printf '%s\n' "${known_markers}" | grep -qx -- "${id}"; then
+  existing="${issue_of[${id}]:-}"
+  if [ -n "${existing}" ] && [ "${update}" -eq 0 ]; then
     skipped=$((skipped + 1))
     continue
   fi
 
   labels="${ttype},${tarea}"
   [ -n "${complexity}" ] && labels="${labels},${complexity}"
+  routing="$(routing_labels "${id}")"
+  [ -n "${routing}" ] && labels="${labels},${routing}"
 
   slug="$(printf '%s' "${title}" | sed -E 's/^[a-z]+(\([a-z0-9]+\))?: //' | tr '[:upper:]' '[:lower:]' \
     | sed -E 's/[^a-z0-9]+/-/g; s/^-//; s/-$//' | cut -d- -f1-5)"
@@ -239,7 +277,13 @@ while IFS=$'\t' read -r id ttype tarea title; do
     printf -- '- Suggested branch: `%s/%s-%s`.\n' "${verb}" "${id}" "${slug}"
     printf -- '- Read `AGENTS.md` before starting: section 4 holds the hard rules, section 5 the checks to run.\n'
     printf -- '- Write the failing test or fixture first, then the smallest change that passes it.\n'
-    printf -- '- If a hard rule or an open decision blocks this task, stop and ask the owner.\n\n'
+    printf -- '- If a hard rule or an open decision blocks this task, stop and ask the owner.\n'
+    if [ -n "${tier}" ]; then
+      printf -- '- Drips Wave: the maintainer sets the tier to %s in the dashboard, under Maintainers then Issues. Tagging this issue with the `Stellar Wave` label on GitHub instead would fix its value at Trivial, 100 points, whatever the work turns out to be.\n' "${tier}"
+    else
+      printf -- '- Drips Wave: not wave work. A readiness gate closes when the tasks behind it close.\n'
+    fi
+    printf '\n'
     printf '## Tech stack\n\n'
     printf -- '- Go %s, module `%s`\n' "$(sed -nE 's/^go ([0-9.]+)$/\1/p' go.mod)" "$(sed -nE 's/^module (\S+)$/\1/p' go.mod)"
     printf -- '- Standard library plus `github.com/BurntSushi/toml` only; a new module needs owner approval\n'
@@ -247,10 +291,22 @@ while IFS=$'\t' read -r id ttype tarea title; do
     printf -- '- GitHub Actions pinned by commit SHA for CI and release tasks\n'
   } >"${body}"
 
-  if [ "${apply}" -eq 1 ]; then
+  if [ "${apply}" -eq 1 ] && [ -n "${existing}" ]; then
+    payload="$(mktemp)"
+    jq -n --arg title "${title}" --arg body "$(cat "${body}")" \
+      --argjson labels "$(printf '%s' "${labels}" | tr ',' '\n' | jq -R . | jq -s .)" \
+      '{title: $title, body: $body, labels: $labels}' >"${payload}"
+    gh api --method PATCH "repos/${repo}/issues/${existing}" --input "${payload}" \
+      --jq '"#" + (.number | tostring)' </dev/null >/dev/null
+    rm -f "${payload}"
+    echo "updated ${id}: issue #${existing}"
+    updated=$((updated + 1))
+  elif [ "${apply}" -eq 1 ]; then
     url="$(gh issue create --repo "${repo}" --title "${title}" --label "${labels}" --body-file "${body}" </dev/null)"
     echo "created ${id}: ${title} -> ${url}"
     created=$((created + 1))
+  elif [ -n "${existing}" ]; then
+    echo "would update ${id}: issue #${existing} [${labels}]"
   else
     echo "would create ${id}: ${title} [${labels}]"
   fi
@@ -273,7 +329,7 @@ if [ "${check}" -eq 1 ]; then
 fi
 
 if [ "${apply}" -eq 1 ]; then
-  echo "generate_issues: ${created} issue(s) created, ${skipped} already present or ticked"
+  echo "generate_issues: ${created} created, ${updated} updated, ${skipped} already present and unchanged"
 else
-  echo "generate_issues: ${planned} issue(s) planned, ${skipped} ticked or already present (dry run)"
+  echo "generate_issues: ${planned} issue(s) planned, ${skipped} already present or ticked (dry run)"
 fi

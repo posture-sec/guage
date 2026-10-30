@@ -72,12 +72,13 @@ guage/
 
   docs/
     banner.svg                            # README banner; wordmark plus status line
+    WAVE_SUBMISSION.md                    # verified Drips Wave facts, gate list, runbook        (1.15, D-13)
 
   scripts/
     check_roadmap_touched.sh              # gate: a PR that changes files must change ROADMAP.md   (1.9)
     roadmap_progress.sh                   # computes the progress table; --check fails when stale   (1.9)
     test_roadmap_gate.sh                  # eight cases for both scripts, on throwaway git repos    (1.9)
-    generate_issues.sh                    # roadmap to GitHub issues; --check, --apply              (1.13, 1.14)
+    generate_issues.sh                    # roadmap to GitHub issues; --check, --apply, --update   (1.13, 1.14)
 
   .github/
     CODEOWNERS                            # owner on every path, extra weight on the protected ones (1.3)
@@ -91,7 +92,7 @@ guage/
       roadmap-check.yml                   # roadmap-check / gate: touched, table current, self-test  (1.9)
 ```
 
-Remote state set up alongside these files (task 1.13, not visible in the tree): a `protect main` ruleset requiring a pull request and the three CI checks, the label taxonomy listed in `CONTRIBUTING.md`, repository topics, GitHub Discussions, and 72 issues (#5 to #76), one per open roadmap task in Phases 0 to 6 plus the ten readiness gates, produced by `scripts/generate_issues.sh`. Absent on purpose: the direct-push rejection test for 1.3 has been run only against a probe branch carrying the same rules, not against `main`; no release tag exists (D-12); and there is no scheduled-audit or release workflow yet (4.5, 5.4).
+Remote state set up alongside these files (task 1.13, not visible in the tree): a `protect main` ruleset requiring a pull request and the three CI checks, the label taxonomy listed in `CONTRIBUTING.md`, repository topics, GitHub Discussions, and 73 issues (#5 to #77), one per open roadmap task in Phases 0 to 6 plus the ten readiness gates, produced by `scripts/generate_issues.sh`. Absent on purpose: the direct-push rejection test for 1.3 has been run only against a probe branch carrying the same rules, not against `main`; no release tag exists (D-12); and there is no scheduled-audit or release workflow yet (4.5, 5.4).
 
 Drafted but not finished: `README.md` (1.10) and `CONTRIBUTING.md`, `SECURITY.md`, `.github/pull_request_template.md` (1.8) carry the roadmap rule and status wording; each task is done only when merged.
 

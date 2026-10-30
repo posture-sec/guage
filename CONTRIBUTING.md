@@ -47,14 +47,18 @@ Tests never touch the real network. A test that needs live Horizon carries the `
 
 Issues carry one `area:` and one `type:` label, plus `complexity:` when the task has a roadmap size. They are scoped to a single task or rule.
 
-The planned backlog is generated, not hand-maintained: `scripts/generate_issues.sh` reads the open tasks in `ROADMAP.md` and opens one issue per task and per readiness gate, with the acceptance criteria taken from the task's "Done when" line. It is idempotent, so rerunning it after a roadmap change only adds what is missing. `--check` fails when an open task has no row in the script, which is the reminder to add one in the same pull request. Gate issues carry no `complexity:` label because gates have no roadmap size.
+The planned backlog is generated, not hand-maintained: `scripts/generate_issues.sh` reads the open tasks in `ROADMAP.md` and opens one issue per task and per readiness gate, with the acceptance criteria taken from the task's "Done when" line. It is idempotent, so rerunning it after a roadmap change only adds what is missing; `--update` rewrites the body and labels of issues that already exist when the roadmap line moved. `--check` fails when an open task has no row in the script, which is the reminder to add one in the same pull request. Gate issues carry no `complexity:` label because gates have no roadmap size.
+
+`complexity:` mirrors the roadmap size, one to one: `S` becomes `complexity: trivial`, `M` becomes `medium`, `L` and `XL` become `high`. The labels match the tiers a funding program reads, so changing a roadmap size and rerunning the generator is the only step.
 
 | Prefix | Meaning |
 | --- | --- |
 | `area: model`, `area: policy`, `area: source`, `area: sep1`, `area: rules`, `area: report`, `area: run`, `area: strkey`, `area: threshold`, `area: sanitize`, `area: cli`, `area: ci`, `area: docs` | Which package the work lands in |
-| `complexity: trivial`, `complexity: medium`, `complexity: high` | Relative effort, not a time estimate |
+| `complexity: trivial`, `complexity: medium`, `complexity: high` | Relative effort, from the roadmap size, not a time estimate |
 | `type: feature`, `type: test`, `type: tooling`, `type: docs`, `type: security`, `type: research` | Kind of work |
-| `Stellar Wave`, `good first issue`, `help wanted` | Program and contributor routing |
+| `good first issue`, `help wanted` | Contributor routing: the dependency-free research tasks that need reading and writing rather than a decision from the owner |
+
+Do not add a `Stellar Wave` label to an issue to enroll it in a funding cycle. The program docs state that issues tagged through GitHub are assigned Trivial complexity and 100 points whatever the work turns out to be; the tier belongs in the dashboard, under Maintainers, so the maintainer can set it. `docs/WAVE_SUBMISSION.md` holds the verified program facts and the runbook.
 
 ## Adding a rule
 

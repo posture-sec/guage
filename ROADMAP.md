@@ -1,6 +1,6 @@
 # ROADMAP: Gauge (working name)
 
-Last updated: 2026-10-30T07:10Z (repo hygiene branch `chore/1.5-repo-hygiene`)
+Last updated: 2026-10-30T07:56Z (wave preparation on `chore/1.5-repo-hygiene`)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
@@ -34,14 +34,14 @@ The repository is 100% ready when every task in Phases 0 to 6 is done and every 
 | Phase | Name | Done | Total | Progress |
 |---|---|---|---|---|
 | 0 | Validation and decisions | 1 | 13 | 7% |
-| 1 | Repository bootstrap and self-protection | 5 | 14 | 35% |
+| 1 | Repository bootstrap and self-protection | 5 | 15 | 33% |
 | 2 | Core | 0 | 10 | 0% |
 | 3 | Rules | 0 | 7 | 0% |
 | 4 | Dogfood and release v0.1.0 | 0 | 9 | 0% |
 | 5 | v0.2 features | 0 | 8 | 0% |
 | 6 | Release v0.2.0 and community | 0 | 5 | 0% |
 | 7 (backlog) | Backlog | 0 | 4 | 0% |
-| **Phases 0 to 6** | **Readiness total** | **6** | **66** | **9%** |
+| **Phases 0 to 6** | **Readiness total** | **6** | **67** | **8%** |
 | Gates | G1 to G10 | 0 | 10 | 0% |
 <!-- PROGRESS:END -->
 
@@ -68,7 +68,9 @@ Two things the playbook assumes that do not apply here, so they are not being bu
 
 Feature work stays blocked on tasks 0.2 to 0.4 and the technical verification tasks. The original documents in `files/` remain untouched local briefing inputs; the root documents are authoritative for development.
 
-Phase 1 is 5 of 14 done as of 2026-10-30: CI (1.5) and the roadmap gate (1.9) now carry observed evidence rather than prepared files. The remote half of 1.13 is finished, including the issue backlog: 72 issues, #5 to #76, one per open task in Phases 0 to 6 plus the ten gates, regenerated with `scripts/generate_issues.sh --apply`, which skips any task that already has an issue. What is left in Phase 1 is the merge of the prepared files, the direct-push test against `main` (1.3), the Scorecard run (1.7), the owner's hardening check (1.2) and wiring `generate_issues.sh --check` into the gate workflow (1.14).
+Phase 1 is 5 of 15 done as of 2026-10-30: CI (1.5) and the roadmap gate (1.9) now carry observed evidence rather than prepared files. The remote half of 1.13 is finished, including the issue backlog: 73 issues, #5 to #77, one per open task in Phases 0 to 6 plus the ten gates, regenerated with `scripts/generate_issues.sh --apply`, which skips any task that already has an issue. What is left in Phase 1 is the merge of the prepared files, the direct-push test against `main` (1.3), the Scorecard run (1.7), the owner's hardening check (1.2) and wiring `generate_issues.sh --check` into the gate workflow (1.14).
+
+Wave preparation (2026-10-30, D-13): the guide's submission steps were verified against the live Drips Wave docs rather than taken from it, and the result is that no Stellar Wave is open to apply to. The repository is not applied while its CLI audits nothing, because a rejected repository cannot be re-applied. `docs/WAVE_SUBMISSION.md` holds the verified facts, the gate list that must clear before the Apply button, the maintainer runbook for a cycle, and the draft submission answers; task 1.15 keeps it current.
 
 ## 5. Phases and tasks
 
@@ -102,8 +104,9 @@ Phase 1 is 5 of 14 done as of 2026-10-30: CI (1.5) and the roadmap gate (1.9) no
 - [ ] **1.10** `README.md` skeleton: what it is, status, quickstart placeholder, roadmap rule. S. Deps: 1.1. Done when: merged. Rewritten in 1.13 with badges, maintainer table, rule list, what-it-does-not-check section and contributor credits.
 - [ ] **1.11** Copy the doc set into the repo root. S. Deps: 1.1. Done when: merged. Root copies are prepared in the scaffold; merge is pending.
 - [x] **1.12** Owner-authorized scope-first scaffold, independent of unfinished Phase 0 gates (D-09). S. Done when: root brief copies, scoped package/file placeholders, model declarations, presence-aware policy types and a source interface exist; the skeleton builds, model tests pass, and the CLI exits nonzero without auditing. No feature implementation or remote protection changes are included. (done 2026-10-28: local checks in 1.4, `go run ./cmd/stellar-gauge` prints a scaffold notice and exits 3; merged in PR #1)
-- [ ] **1.13** Program-submission repo hygiene, from the Stellar Wave playbook Phase 10 (owner-authorized 2026-10-28). S. Deps: 1.1. Done when: CI, roadmap-gate, Dependabot, CODEOWNERS, issue templates, README/CONTRIBUTING/SECURITY rewrites and `docs/banner.svg` are merged; the label taxonomy, repository topics and a planned issue backlog derived from this file exist on GitHub; and the pattern was verified against real approved repos rather than assumed. Remote protection settings are covered by 1.3, a release by 4.8 and a documentation site by a new 5.x task. Done on the remote side (2026-10-30): topics, Discussions, 33 labels, the `protect main` ruleset and 72 issues, #5 to #76, one per open task in Phases 0 to 6 plus the ten readiness gates, generated by `scripts/generate_issues.sh` from this file. Done when the files merge: the workflow, script, template and document changes themselves.
+- [ ] **1.13** Program-submission repo hygiene, from the Stellar Wave playbook Phase 10 (owner-authorized 2026-10-28). S. Deps: 1.1. Done when: CI, roadmap-gate, Dependabot, CODEOWNERS, issue templates, README/CONTRIBUTING/SECURITY rewrites and `docs/banner.svg` are merged; the label taxonomy, repository topics and a planned issue backlog derived from this file exist on GitHub; and the pattern was verified against real approved repos rather than assumed. Remote protection settings are covered by 1.3, a release by 4.8 and a documentation site by a new 5.x task. Done on the remote side (2026-10-30): topics, Discussions, 33 labels, the `protect main` ruleset and 73 issues, #5 to #77, one per open task in Phases 0 to 6 plus the ten readiness gates, generated by `scripts/generate_issues.sh` from this file. Done when the files merge: the workflow, script, template and document changes themselves.
 - [ ] **1.14** Keep the issue backlog in step with this file. `scripts/generate_issues.sh --check` proves every open task in Phases 0 to 6 and every gate has a curated row; `--apply` opens only the issues that are missing, keyed on a marker line in each body. Adding the `--check` step to the roadmap-gate workflow is the remaining work. S. Deps: 1.13. Done when: `roadmap-check.yml` runs `scripts/generate_issues.sh --check` and a test PR that adds a task without a backlog row fails.
+- [ ] **1.15** Keep `docs/WAVE_SUBMISSION.md` current: the verified program facts, the gate list to clear before applying, the maintainer runbook for a cycle, and the draft submission answers. M. Deps: 1.13. Done when: the file's facts are re-checked and its numbers recounted within the wave cycle the application is filed in, with the check date written at the top.
 
 ### Phase 2: Core
 
@@ -188,6 +191,7 @@ Parallelizable early: 0.5 to 0.13 (research, no code), 1.2, 1.6, 1.8, 1.10. Land
 | D-10 | Scaffold toolchain | Decided 2026-10-28 | Go 1.27.3 returned by the official stable-download metadata and verified locally with `go version`; no third-party runtime module added |
 | D-11 | Adopt the Stellar Wave playbook's Phase 10 hygiene for this repo | Decided 2026-10-28 | Owner instruction. Pattern verified against `soroauth/soroauth-go` and `plimsoll-protocol/plimsoll-indexer`, not recalled. Its contract and app phases (4 to 9) do not apply to a Go CLI with no Soroban contract, so they are skipped rather than adapted |
 | D-12 | No release tag until an auditing build exists | Decided 2026-10-28 | The playbook's Phase 10 item 6 asks for a `v0.1.0` tag. Tagging the scaffold would advertise a release that audits nothing, so the tag stays with task 4.8 |
+| D-13 | Do not apply to a Drips Wave until the gate list clears | Decided 2026-10-30 | The program docs say a rejected repository cannot be re-applied and that appeals are capped at three with waiting periods, and no Stellar Wave is open as of 2026-10-30. Spending the first application on a repository whose CLI audits nothing trades a permanent strike for nothing. See `docs/WAVE_SUBMISSION.md` |
 
 ## 8. Risk register
 
@@ -209,7 +213,8 @@ Newest first. One row per merged change.
 
 | Date (UTC) | Change | Tasks |
 |---|---|---|
-| 2026-10-30 | Backlog, evidence and enforcement wording: `scripts/generate_issues.sh` opens one issue per open task and gate from this file (issues #5 to #75 on the remote, idempotent through a marker line in each body), the roadmap gate is proven on both sides (PR #4 failed `roadmap-check / gate` for a change with no roadmap edit, PR #2 passes it), CI is green on the skeleton, and a probe ruleset with the same configuration as `protect main` refused a direct push with "Changes must be made through a pull request" | 1.5, 1.9, 1.13, 1.14 |
+| 2026-10-30 | Wave preparation: `scripts/generate_issues.sh` grew `--update` and a wave routing section in every body, the 73 backlog issues were relabelled so `complexity:` now matches the program's Trivial, Medium and High tiers (32, 28, 3, with the 10 gates untiered), the dependency-free research tasks took `good first issue` and `help wanted`, and `docs/WAVE_SUBMISSION.md` records the verified program facts, the gate list and the maintainer runbook | 1.13, 1.15, D-13 |
+| 2026-10-30 | Backlog, evidence and enforcement wording: `scripts/generate_issues.sh` opens one issue per open task and gate from this file, idempotent through a marker line in each body, the roadmap gate is proven on both sides (PR #4 failed `roadmap-check / gate` for a change with no roadmap edit, PR #2 passes it), CI is green on the skeleton, and a probe ruleset with the same configuration as `protect main` refused a direct push with "Changes must be made through a pull request" | 1.5, 1.9, 1.13, 1.14 |
 | 2026-10-28 | Repo hygiene for program submission: CI and roadmap-gate workflows, gate and progress scripts with an eight-case self-test, Dependabot, CODEOWNERS, issue forms, README/CONTRIBUTING/SECURITY rewritten to the verified approved-repo pattern, banner, plus a `protect main` ruleset, label taxonomy, topics and a roadmap-derived issue backlog | 1.13, 1.3, 1.5, 1.6, 1.8, 1.9, 1.10, D-11, D-12, 5.8 |
 | 2026-10-28 | Owner-authorized scaffold: root brief copies, Go module, package and file placeholders, model and policy declarations, source interface, non-operational CLI, README/CONTRIBUTING/SECURITY/PR-template drafts, structure and decision documentation | 1.1, 1.4, 1.8, 1.10, 1.11, 1.12, D-01 to D-04, D-09, D-10 |
 | 2026-10-28 | First drafts of the full doc set (PRD, ARCHITECTURE, ESSENTIALS, project_structure, AGENTS, CLAUDE, ROADMAP) with a red-team pass | 0.1 |
