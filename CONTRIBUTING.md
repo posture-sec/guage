@@ -45,7 +45,9 @@ Tests never touch the real network. A test that needs live Horizon carries the `
 
 ## Issues and labels
 
-Issues carry one `area:`, one `complexity:` and one `type:` label, and are scoped to a single task or rule.
+Issues carry one `area:` and one `type:` label, plus `complexity:` when the task has a roadmap size. They are scoped to a single task or rule.
+
+The planned backlog is generated, not hand-maintained: `scripts/generate_issues.sh` reads the open tasks in `ROADMAP.md` and opens one issue per task and per readiness gate, with the acceptance criteria taken from the task's "Done when" line. It is idempotent, so rerunning it after a roadmap change only adds what is missing. `--check` fails when an open task has no row in the script, which is the reminder to add one in the same pull request. Gate issues carry no `complexity:` label because gates have no roadmap size.
 
 | Prefix | Meaning |
 | --- | --- |

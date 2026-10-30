@@ -1,6 +1,6 @@
 # ROADMAP: Gauge (working name)
 
-Last updated: 2026-10-28T15:10Z (repo hygiene branch `chore/1.5-repo-hygiene`)
+Last updated: 2026-10-30T06:55Z (repo hygiene branch `chore/1.5-repo-hygiene`)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
@@ -34,14 +34,14 @@ The repository is 100% ready when every task in Phases 0 to 6 is done and every 
 | Phase | Name | Done | Total | Progress |
 |---|---|---|---|---|
 | 0 | Validation and decisions | 1 | 13 | 7% |
-| 1 | Repository bootstrap and self-protection | 3 | 13 | 23% |
+| 1 | Repository bootstrap and self-protection | 5 | 14 | 35% |
 | 2 | Core | 0 | 10 | 0% |
 | 3 | Rules | 0 | 7 | 0% |
 | 4 | Dogfood and release v0.1.0 | 0 | 9 | 0% |
 | 5 | v0.2 features | 0 | 8 | 0% |
 | 6 | Release v0.2.0 and community | 0 | 5 | 0% |
 | 7 (backlog) | Backlog | 0 | 4 | 0% |
-| **Phases 0 to 6** | **Readiness total** | **4** | **65** | **6%** |
+| **Phases 0 to 6** | **Readiness total** | **6** | **66** | **9%** |
 | Gates | G1 to G10 | 0 | 10 | 0% |
 <!-- PROGRESS:END -->
 
@@ -68,6 +68,8 @@ Two things the playbook assumes that do not apply here, so they are not being bu
 
 Feature work stays blocked on tasks 0.2 to 0.4 and the technical verification tasks. The original documents in `files/` remain untouched local briefing inputs; the root documents are authoritative for development.
 
+Phase 1 is 5 of 14 done as of 2026-10-30: CI (1.5) and the roadmap gate (1.9) now carry observed evidence rather than prepared files. The remote half of 1.13 is finished, including the issue backlog: 72 issues, #5 to #76, one per open task in Phases 0 to 6 plus the ten gates, regenerated with `scripts/generate_issues.sh --apply`, which skips any task that already has an issue. What is left in Phase 1 is the merge of the prepared files, the direct-push test against `main` (1.3), the Scorecard run (1.7), the owner's hardening check (1.2) and wiring `generate_issues.sh --check` into the gate workflow (1.14).
+
 ## 5. Phases and tasks
 
 ### Phase 0: Validation and decisions (no code)
@@ -90,17 +92,18 @@ Feature work stays blocked on tasks 0.2 to 0.4 and the technical verification ta
 
 - [x] **1.1** Create the repository under the chosen org with the chosen license. S. Deps: 0.2. Done when: repo exists with license and default branch. (done 2026-10-28: `posture-sec/guage` exists with Apache-2.0 `LICENSE` and `main`)
 - [ ] **1.2** Confirm account and org hardening: hardware-key or passkey 2FA, protected recovery email, org-wide 2FA requirement, minimal owner list. S. Done when: checked off by the owner (not verifiable by CI).
-- [ ] **1.3** Configure rulesets: no force push, no deletion, required PR and status checks; add `.github/CODEOWNERS` for `internal/`, `cmd/`, `go.mod`, `go.sum`, `scripts/` and `.github/`. S. Deps: 1.1. Done when: a direct push to the default branch is rejected. CODEOWNERS and the `protect main` ruleset are in place; the rejection test has not been run, so this stays unticked.
+- [ ] **1.3** Configure rulesets: no force push, no deletion, required PR and status checks; add `.github/CODEOWNERS` for `internal/`, `cmd/`, `go.mod`, `go.sum`, `scripts/` and `.github/`. S. Deps: 1.1. Done when: a direct push to the default branch is rejected. CODEOWNERS and the `protect main` ruleset (id 26055352) are in place, `GET /rules/branches/main` reports it as the effective ruleset, and an identical throwaway ruleset on a probe branch rejected a direct push with "Changes must be made through a pull request" on 2026-10-30. The literal test against `main` has not been run, so this stays unticked: merge PR #2, then `git checkout -b probe main && git commit --allow-empty -m probe && git push origin probe:main` must be refused.
 - [x] **1.4** Scaffold the Go module: `go.mod` with the pinned Go version, `cmd/stellar-gauge`, empty `internal/` packages, staticcheck config. S. Deps: 1.1. Done when: `go build ./...` and `go test ./...` run green on the skeleton. (done 2026-10-28: `go build ./...` green, `go vet ./...` green, `gofmt -l .` empty, `go test ./... -race -count=1` green; merged in PR #1)
-- [ ] **1.5** CI workflows: gofmt check, `go vet`, `staticcheck`, `go test -race`, `govulncheck`; every action pinned by hash; top-level `permissions: contents: read`. S. Deps: 1.4. Done when: CI is green on the skeleton. `.github/workflows/ci.yml` prepared in 1.13; waiting on the first green run.
+- [x] **1.5** CI workflows: gofmt check, `go vet`, `staticcheck`, `go test -race`, `govulncheck`; every action pinned by hash; top-level `permissions: contents: read`. S. Deps: 1.4. Done when: CI is green on the skeleton. (done 2026-10-28: `.github/workflows/ci.yml` on PR #2, jobs `ci / go` pass 1m1s and `ci / vuln` pass 33s against head `8846690`; actions pinned by full SHA, `permissions: contents: read` at workflow level)
 - [ ] **1.6** Dependabot for `gomod` and GitHub Actions, grouped weekly. S. Deps: 1.1. Done when: config merged. Reminder: bot PRs also need a roadmap changelog line. `.github/dependabot.yml` prepared in 1.13.
 - [ ] **1.7** Scorecard workflow with a token that can read branch protection. S. Deps: 1.3. Done when: Branch-Protection returns a score, not an error.
 - [ ] **1.8** `SECURITY.md`, `CONTRIBUTING.md` and `.github/pull_request_template.md` (with the roadmap checkbox). S. Deps: 1.1. Done when: each carries the roadmap rule. Rewritten to the approved-repo pattern in 1.13.
-- [ ] **1.9** Roadmap gate: `scripts/check_roadmap_touched.sh` (fails if the PR diff changes any file but not `ROADMAP.md`, or `Last updated` did not change), `scripts/roadmap_progress.sh` (computes and checks the progress table) and a `roadmap-check.yml` workflow made a required check. M. Deps: 1.5. Done when: a test PR without a roadmap edit fails and one with it passes. Scripts and workflow prepared in 1.13, with `scripts/test_roadmap_gate.sh` covering eight cases; the required-check part lands with 1.3.
+- [x] **1.9** Roadmap gate: `scripts/check_roadmap_touched.sh` (fails if the PR diff changes any file but not `ROADMAP.md`, or `Last updated` did not change), `scripts/roadmap_progress.sh` (computes and checks the progress table) and a `roadmap-check.yml` workflow made a required check. M. Deps: 1.5. Done when: a test PR without a roadmap edit fails and one with it passes. (done 2026-10-28: PR #4 changed one `testdata/` file and no roadmap, `roadmap-check / gate` failed in 5s with `check_roadmap_touched: ROADMAP.md must be updated in the same pull request`; PR #2 edits the roadmap and the same check passes in 6s. Both ran against base `chore/1.5-repo-hygiene` because `main` had no workflow files until that PR merges. The context is already listed in the `protect main` required checks, so it becomes blocking for `main` with 1.3.)
 - [ ] **1.10** `README.md` skeleton: what it is, status, quickstart placeholder, roadmap rule. S. Deps: 1.1. Done when: merged. Rewritten in 1.13 with badges, maintainer table, rule list, what-it-does-not-check section and contributor credits.
 - [ ] **1.11** Copy the doc set into the repo root. S. Deps: 1.1. Done when: merged. Root copies are prepared in the scaffold; merge is pending.
 - [x] **1.12** Owner-authorized scope-first scaffold, independent of unfinished Phase 0 gates (D-09). S. Done when: root brief copies, scoped package/file placeholders, model declarations, presence-aware policy types and a source interface exist; the skeleton builds, model tests pass, and the CLI exits nonzero without auditing. No feature implementation or remote protection changes are included. (done 2026-10-28: local checks in 1.4, `go run ./cmd/stellar-gauge` prints a scaffold notice and exits 3; merged in PR #1)
-- [ ] **1.13** Program-submission repo hygiene, from the Stellar Wave playbook Phase 10 (owner-authorized 2026-10-28). S. Deps: 1.1. Done when: CI, roadmap-gate, Dependabot, CODEOWNERS, issue templates, README/CONTRIBUTING/SECURITY rewrites and `docs/banner.svg` are merged; the label taxonomy, repository topics and a planned issue backlog derived from this file exist on GitHub; and the pattern was verified against real approved repos rather than assumed. Remote protection settings are covered by 1.3, a release by 4.8 and a documentation site by a new 5.x task.
+- [ ] **1.13** Program-submission repo hygiene, from the Stellar Wave playbook Phase 10 (owner-authorized 2026-10-28). S. Deps: 1.1. Done when: CI, roadmap-gate, Dependabot, CODEOWNERS, issue templates, README/CONTRIBUTING/SECURITY rewrites and `docs/banner.svg` are merged; the label taxonomy, repository topics and a planned issue backlog derived from this file exist on GitHub; and the pattern was verified against real approved repos rather than assumed. Remote protection settings are covered by 1.3, a release by 4.8 and a documentation site by a new 5.x task. Done on the remote side (2026-10-30): topics, Discussions, 33 labels, the `protect main` ruleset and 72 issues, #5 to #76, one per open task in Phases 0 to 6 plus the ten readiness gates, generated by `scripts/generate_issues.sh` from this file. Done when the files merge: the workflow, script, template and document changes themselves.
+- [ ] **1.14** Keep the issue backlog in step with this file. `scripts/generate_issues.sh --check` proves every open task in Phases 0 to 6 and every gate has a curated row; `--apply` opens only the issues that are missing, keyed on a marker line in each body. Adding the `--check` step to the roadmap-gate workflow is the remaining work. S. Deps: 1.13. Done when: `roadmap-check.yml` runs `scripts/generate_issues.sh --check` and a test PR that adds a task without a backlog row fails.
 
 ### Phase 2: Core
 
@@ -206,6 +209,7 @@ Newest first. One row per merged change.
 
 | Date (UTC) | Change | Tasks |
 |---|---|---|
+| 2026-10-30 | Backlog and evidence: `scripts/generate_issues.sh` opens one issue per open task and gate from this file (issues #5 to #75 on the remote, idempotent through a marker line in each body), the roadmap gate is proven on both sides (PR #4 failed `roadmap-check / gate` for a change with no roadmap edit, PR #2 passes it), CI is green on the skeleton, and a probe ruleset with the same configuration as `protect main` refused a direct push with "Changes must be made through a pull request" | 1.5, 1.9, 1.13, 1.14 |
 | 2026-10-28 | Repo hygiene for program submission: CI and roadmap-gate workflows, gate and progress scripts with an eight-case self-test, Dependabot, CODEOWNERS, issue forms, README/CONTRIBUTING/SECURITY rewritten to the verified approved-repo pattern, banner, plus a `protect main` ruleset, label taxonomy, topics and a roadmap-derived issue backlog | 1.13, 1.3, 1.5, 1.6, 1.8, 1.9, 1.10, D-11, D-12, 5.8 |
 | 2026-10-28 | Owner-authorized scaffold: root brief copies, Go module, package and file placeholders, model and policy declarations, source interface, non-operational CLI, README/CONTRIBUTING/SECURITY/PR-template drafts, structure and decision documentation | 1.1, 1.4, 1.8, 1.10, 1.11, 1.12, D-01 to D-04, D-09, D-10 |
 | 2026-10-28 | First drafts of the full doc set (PRD, ARCHITECTURE, ESSENTIALS, project_structure, AGENTS, CLAUDE, ROADMAP) with a red-team pass | 0.1 |
