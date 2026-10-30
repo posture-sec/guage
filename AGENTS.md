@@ -64,7 +64,7 @@ govulncheck ./...                # v1.9.0                                      [
 scripts/check_roadmap_touched.sh origin/main                                  [roadmap-check / gate]
 scripts/roadmap_progress.sh --check ROADMAP.md                                [roadmap-check / gate]
 scripts/test_roadmap_gate.sh                                                    [roadmap-check / gate]
-scripts/generate_issues.sh --check         # backlog rows cover every open task (local)
+scripts/generate_issues.sh --check          # backlog rows cover every open task      [roadmap-check / gate]
 ```
 
 Not available yet: the fuzz smoke run below waits for its targets in `internal/strkey` and `internal/sanitize` (tasks 2.2 and 2.5).

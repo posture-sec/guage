@@ -11,16 +11,15 @@ Working notes for applying `posture-sec/guage` to a Stellar Wave cycle. Program 
 
 ## 2. Why this repository is not applying yet
 
-Three reasons, ordered by how long each takes to clear.
+Two reasons, ordered by how long each takes to clear.
 
 1. No cycle is open, so there is nothing to apply into today.
 2. Nothing audits anything yet. `go run ./cmd/stellar-gauge` prints a scaffold notice and exits 3. A submission with no working check reads as unfinished, and the downside is asymmetric: a rejected repository cannot simply be re-applied, appeals go through the dashboard, are capped at three, and carry waiting periods. Spending the first application on a scaffold trades a permanent strike for nothing.
-3. The hygiene work is still on an open pull request. A program reviewer lands on the default branch, which currently has no CI, no README badges and no contributing docs until PR #2 merges.
 
 ## 3. Gate list before clicking Apply
 
-- [ ] PR #2 merged, so `main` carries CI, the roadmap gate, `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODEOWNERS`, issue forms and the banner.
-- [ ] Task 1.3 closed by observing the direct-push refusal against `main` itself, not a probe branch.
+- [x] PR #2 merged, so `main` carries CI, the roadmap gate, `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODEOWNERS`, issue forms and the banner. (merged 2026-10-30 as `ae6a05d`; the first push-event CI run on `main` passed)
+- [x] Task 1.3 closed by observing the direct-push refusal against `main` itself, not a probe branch. (refused 2026-10-30 with "Changes must be made through a pull request", `main` unchanged)
 - [ ] Task 1.7 done: a Scorecard run where Branch-Protection returns a score.
 - [ ] Task 2.9 done, so `stellar-gauge check` reads a real account and prints a report. This is the minimum credible demo.
 - [ ] A short screen recording of that run end to end, which the playbook treats as the difference between a submission and an unfinished one.

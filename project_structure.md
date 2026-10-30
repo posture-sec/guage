@@ -89,10 +89,10 @@ guage/
       bug.yml                             # bug form: command, exit code, policy excerpt, version
     workflows/
       ci.yml                              # ci / go (gofmt, vet, build, test -race, staticcheck) and ci / vuln (1.5)
-      roadmap-check.yml                   # roadmap-check / gate: touched, table current, self-test  (1.9)
+      roadmap-check.yml                   # roadmap-check / gate: touched, table, backlog rows, self-test (1.9, 1.14)
 ```
 
-Remote state set up alongside these files (task 1.13, not visible in the tree): a `protect main` ruleset requiring a pull request and the three CI checks, the label taxonomy listed in `CONTRIBUTING.md`, repository topics, GitHub Discussions, and 73 issues (#5 to #77), one per open roadmap task in Phases 0 to 6 plus the ten readiness gates, produced by `scripts/generate_issues.sh`. Absent on purpose: the direct-push rejection test for 1.3 has been run only against a probe branch carrying the same rules, not against `main`; no release tag exists (D-12); and there is no scheduled-audit or release workflow yet (4.5, 5.4).
+Remote state set up alongside these files (task 1.13, not visible in the tree): a `protect main` ruleset requiring a pull request and the three CI checks, the label taxonomy listed in `CONTRIBUTING.md`, repository topics, GitHub Discussions, and 73 issues (#5 to #77), one per open roadmap task in Phases 0 to 6 plus the ten readiness gates, produced by `scripts/generate_issues.sh`. The 1.3 direct-push rejection was observed against `main` itself on 2026-10-30, after PR #2 merged: an empty-commit push was refused with "Changes must be made through a pull request" and `main` did not move. Absent on purpose: no release tag (D-12), and no scheduled-audit or release workflow yet (4.5, 5.4).
 
 Drafted but not finished: `README.md` (1.10) and `CONTRIBUTING.md`, `SECURITY.md`, `.github/pull_request_template.md` (1.8) carry the roadmap rule and status wording; each task is done only when merged.
 

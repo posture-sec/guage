@@ -22,5 +22,7 @@ jobs:
           scripts/check_roadmap_touched.sh "origin/${GITHUB_BASE_REF}"
       - name: progress table current
         run: scripts/roadmap_progress.sh --check ROADMAP.md
+      - name: issue backlog covers every open task
+        run: scripts/generate_issues.sh --check
       - name: gate script self-test
         run: scripts/test_roadmap_gate.sh
