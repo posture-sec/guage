@@ -34,9 +34,15 @@ It is **state-based, not event-based**. It does not watch a stream and alert; it
 
 ### 2.2 What exists today
 
-- Event and contract monitors are plentiful: Sentinel, OpenZeppelin Monitor, Blip, SoroBeacon and others. [Verified: search results] They watch activity; none that I found audits an account's posture against declared intent. [Unverified: three searches only]
-- Webacy offers a beta risk API for third-party Stellar addresses and tokens. [Verified] That judges other people's addresses. Gauge audits the operator's own.
-- Stellar Laboratory and explorers display account data, but nothing compares it with an expected policy. [Unverified]
+Task 0.5, searched 2026-10-30 with `gh search repos`; each line below is quoted from that repository's own description on that date.
+
+- `signerreach/signerreach` is the nearest adjacent project: "Offline checker for changes to Stellar classic-account signers and thresholds" (0 stars, last touched 2026-10-20). Same subject line, different question. Going by its own description it reports changes to signers and thresholds, which answers "what moved"; Gauge compares against expectations the operator declared, which answers "is this what we agreed, and could one key take over". Gauge also checks issuer flags and the `stellar.toml` identity binding, outside the scope that description claims.
+- Official tooling displays or exports state without judging it. `stellar/account-viewer-v2` is "A simple tool to view an account on the Stellar network and make transactions from it" (it can submit; Gauge never does), and `stellar/stellar-account-prometheus-exporter` is "Stellar Account Prometheus Exporter - Monitor Stellar Network Accounts" (metrics, not findings). Its predecessor `stellar-deprecated/account-viewer` is deprecated in favour of v2. `pacwoodson/stellar-portal` is a "Pure web client for viewing and managing Stellar accounts".
+- `Stellar-Sentinel/sentinel-backend` is a "FastAPI service for Stellar account screening, Soroban event monitoring, and network health", and `stellar-expert/public-directory` is a "Curated list of well-known Stellar accounts and blocked domains". Both are about other people's accounts: an event monitor and a blocklist.
+- Webacy offers a beta risk API for third-party Stellar addresses and tokens. [Verified] That also judges other people's addresses. Gauge audits the operator's own.
+- Stellar Laboratory and the explorers show signers, thresholds, flags and home domain, and offer a transaction builder. Nothing there compares what the chain shows with what the operator intended, and nothing there exits nonzero for a scheduled job.
+
+The honest version of the gap, given `signerreach` exists: no project found in these searches audits an account against a declared expectation policy and fails a CI run when reality and intent disagree. Event and contract monitors are plentiful (Sentinel, OpenZeppelin Monitor, Blip, SoroBeacon and others) [Verified: search results]; they watch activity, not configuration.
 
 ### 2.3 Gap this project targets
 
@@ -147,7 +153,11 @@ Severities shown are defaults; roles change them (Appendix A).
 | `id-toml-unreachable` | `stellar.toml` cannot be fetched or parsed under the guard | WARN |
 | `id-toml-account-unlisted` | The account is not listed in `stellar.toml` | WARN |
 
-Facts always printed: network and ledger as of, signers (type, weight, sponsor), thresholds, flags, minimum signers to reach each tier, home domain and sponsorship. [Unverified: exact `stellar.toml` field names (task 0.8)]
+Facts always printed: network and ledger as of, signers (type, weight, sponsor), thresholds, flags, minimum signers to reach each tier, home domain and sponsorship.
+
+Field names, from SEP-1 v2.7.0 as read in task 0.8 on 2026-10-30. The identity rules use `NETWORK_PASSPHRASE` (compared with the network the run was told to use), `ACCOUNTS` (a list of `G...` strings, which is what `id-toml-account-unlisted` checks; there is no `ACCOUNT_ID` field), and `SIGNING_KEY`, `HORIZON_URL` and `VERSION`, which are printed as facts. `id-toml-unreachable` keys on a successful strict TOML parse of a body under the 100 KB cap, not on the response's content type: SEP-1 only *recommends* `text/plain`, and an issuer account captured on testnet on 2026-10-30 serves its `home_domain` `stellar.toml` as HTTP 200 with `content-type: text/html` and an HTML body, which a content-type check would have called reachable.
+
+SEP-29, the memo-required check behind FR-19, is one account data entry: name `config.memo_required`, value the base64 of the string `1`. It applies to a destination that is not a multiplexed account, it is enforced entirely by the sending client, and the spec's requirement is to prevent submission and notify, not to warn. Gauge is read-only, so its part is to report whether the receiving account has opted in and whether its home domain's SEP-1 file exists to say so.
 
 ### 6.2 CLI
 
@@ -182,6 +192,16 @@ reason  = "Regulated asset; clawback disclosed in terms"
 expires = "2027-04-27"                   # optional
 ```
 
+### 6.4 Endpoints and what they cost (task 0.12, 2026-10-30)
+
+`endpoints` defaults to nothing; the file or `--endpoint` must say which Horizon to use, and the run verifies the passphrase that endpoint reports before trusting any account data from it. The two public endpoints to offer as the documented choices are `https://horizon.stellar.org` for `mainnet` and `https://horizon-testnet.stellar.org` for `testnet`. Per D-16 the verification pass only touched testnet, so the mainnet figures below are quoted from the documentation and have not been observed here.
+
+- Horizon limits requests per IP address through the `PER_HOUR_RATE_LIMIT` option, which the rate-limiting page states defaults to 3600 requests per hour and can be disabled by an operator setting it to 0. Exceeding it returns `429 Too Many Requests`. [Verified: developer docs, 2026-10-30]
+- No rate-limit or remaining-quota response header was observed on testnet at all (`curl -D` on a root read and an account read, 2026-10-30), so retries must back off on the 429 itself and cannot read a budget from the response. [Verified: observed]
+- Successful reads are `application/hal+json; charset=utf-8` and carry a `Latest-Ledger` header; errors are `application/problem+json` with `type`, `title`, `status`, `detail` and an `extras` object naming `invalid_field` and `reason`. `HEAD` requests are refused with 405. [Verified: observed on testnet]
+- Collection endpoints cap `limit` at 200: `limit=201` returns 400 with `reason` "invalid limit: value provided that is over limit max of 200". v0.1 fetches one account at a time, so this only binds the P1 pagination work. [Verified: observed on testnet]
+- A single run is small: one root read plus one account read per account, so a 50-account policy costs about 51 requests, roughly 1.4% of an hour's default budget. The rate limit is therefore a reason for bounded concurrency and fail-closed 429 handling, not a reason to cache.
+
 ## 7. Non-functional requirements
 
 - **Read-only:** no writes except an explicit `--out`. No secrets read from environment or files.
@@ -209,20 +229,20 @@ expires = "2027-04-27"                   # optional
 No calendar dates. Phases and exit criteria live in `ROADMAP.md`.
 
 - **v0.1.0:** Phases 0 to 4. **v0.2.0:** Phases 5 and 6. **Backlog:** Phase 7.
-- Proposed feature sequencing (decision D-04): start features only after Airlock v0.1.0 (Airlock roadmap task 5.5). The owner authorized a scaffold-only exception (ROADMAP D-09) for structure and data models; Phase 0 validation and feature gates remain pending.
+- Feature sequencing is settled: D-04 was decided on 2026-10-30 to build Gauge now and share conventions, not code, with Airlock. The scaffold-only exception (ROADMAP D-09) that covered the first pull requests is spent; Phase 0 stands at 10 of 13 with 0.4, 0.6 and 0.7 open, and the readiness gates in `ROADMAP.md` section 3 still decide when a version can be tagged.
 
 ## 10. Risks and mitigations
 
 | Risk | Likelihood | Mitigation |
 |---|---|---|
 | Nobody wants it: operators do not audit their accounts | Medium | Demand check (0.4) before any code |
-| Solo-maintainer overload across Airlock, Gauge and Accensa | High | D-04 sequencing; Phase 7 closed until v0.1.0 |
-| Horizon is deprecated or changes shape | Medium [Unverified] | `Source` interface; task 0.9; RPC later |
-| Threshold or signer semantics modeled wrong | Medium | Pure function, fixtures from real accounts, testnet experiments (0.6, 0.7) |
+| Solo-maintainer overload across Airlock, Gauge and Accensa | High | Carried, not sequenced away: D-04 decided on 2026-10-30 to build Gauge now, so the mitigation is the Phase 7 freeze until v0.1.0 and a backlog of 73 labelled issues that a contributor can pick up |
+| Horizon is deprecated or changes shape | Low to Medium | 0.9 closed 2026-10-30: Horizon is still the documented API surface, and a live `getLedgerEntries` call returned a classic account ledger entry, so RPC is a feasible second source behind the same `Source` interface |
+| Threshold or signer semantics modeled wrong | Medium | Pure function plus the brute-force cross-check in 2.3. The 0.6 fixtures come from real testnet accounts; the 0.7 states that need a transaction to exist (master weight 0, `hash(x)`, pre-auth, leftover signatures) cannot be observed without submitting one, which this tool never does, so they stay hand-built and labelled unverified |
 | False sense of security | High | Say "posture", list what is not checked, no "secure" wording |
 | Expectation config edited to match an attacker's change | Medium | Protect the config like policy: CODEOWNERS, protected branch, baseline stored separately; residual risk documented |
-| `stellar.toml` fetch abused (SSRF, huge body, hostile redirects) | Medium | Dial-time IP guard, size cap, redirect limits |
-| Name collision (the `gauge` word, an existing Gauge test tool CLI) | Medium [Unverified] | Task 0.11; binary is `stellar-gauge` |
+| `stellar.toml` fetch abused (SSRF, huge body, hostile redirects) | Medium | Dial-time IP guard, size cap, redirect limits. SEP-1 itself sets no redirect or status-code rules, so those bounds are Gauge's and must be stated as such |
+| Name collision (the `gauge` word, an existing Gauge test tool CLI) | Medium-High for the repository slug, Low for the binary | 0.11 measured it on 2026-10-30 (see `ROADMAP.md` D-15): `getgauge/gauge` holds the correctly spelled word in Go with 3,195 stars, and `evoziosk/guage` uses this exact slug spelling. D-15 proposes a rename and waits on the owner |
 | Overlap with commercial or SCF-funded tools | Low to Medium | Different job: self-audit against declared policy |
 
 ## 11. Evidence register
@@ -234,41 +254,52 @@ No calendar dates. Phases and exit criteria live in `ROADMAP.md`.
 - Flags: authorization required, revocable, immutable, clawback enabled; clawback must be set before issuance.
 - Horizon account objects expose flags, signers, home domain, sponsor and trustline flags.
 - Existing monitoring tools and Webacy's Stellar risk API.
+- Phase 0 verification pass of 2026-10-30, all read or run that day, testnet only per D-16:
+  - SEP-23's layout and its full test suite. The 10 valid and 20 invalid strkeys in that document were run against an encoder and decoder written here in standard-library Go; all 30 behave as the spec says. The version base values are G 6, M 12, S 18, T 19, P 15, C 2, L 11, B 1, W 22, X 23, each shifted into the top 5 bits of the first byte, with the low 3 bits carrying an algorithm specifier for which only 0 is defined. The checksum is CRC16 with polynomial x16+x12+x5+1 appended little-endian; muxed IDs and the signed-payload length prefix are big-endian.
+  - Horizon's rate-limit page: per-IP `PER_HOUR_RATE_LIMIT`, default 3600 requests per hour, 429 on exceed, 0 disables.
+  - Observed on `https://horizon-testnet.stellar.org`: `application/hal+json` for successes, `application/problem+json` for errors, a `Latest-Ledger` header on a successful account read, 405 for `HEAD`, no rate-limit headers, `limit` max 200, `/accounts` requiring exactly one filter, no `/accounts/{id}/balances` route, and the master key present inside `signers` as `{"weight":1,"key":"<account_id>","type":"ed25519_public_key"}`.
+  - Observed on `https://soroban-testnet.stellar.org`: `getLedgerEntries` accepts the 40-byte classic account `LedgerKey` and returns the account's `LedgerEntry` XDR with its `lastModifiedLedgerSeq`, no `contentType` field, and `latestLedger` 5466028.
+  - SEP-1 v2.7.0: `https://DOMAIN/.well-known/stellar.toml`, 100 KB maximum, `Access-Control-Allow-Origin: *` mandatory, `text/plain` recommended not required, fields `VERSION`, `NETWORK_PASSPHRASE`, `SIGNING_KEY`, `HORIZON_URL`, `ACCOUNTS` (list of `G...`), no `ACCOUNT_ID`, and no rules about redirects or status codes. SEP-29: the `config.memo_required` data entry whose value is base64 of `1`, non-muxed destinations only, client-enforced, and it must block submission rather than warn.
+  - `github.com/BurntSushi/toml`: MIT license, latest release v1.6.0, last pushed 2026-08-18T20:04:59Z, 5,028 stars, not archived, and its own `go.mod` declares no `require` directives, so it carries no transitive dependencies.
+  - Name and landscape searches: `getgauge/gauge` 3,195 stars (pushed 2026-10-29), `npm/gauge` 320 stars, `evoziosk/guage` 4 stars (pushed 2026-10-13), GitHub account `guage` exists with 0 public repositories, `zvere1111/StellarGauge` TypeScript with 1 star (last push 2025-12-17), `github.com/posture-sec/guage` resolves on the module proxy with an empty version list, and `gh api orgs/posture-sec/repos` returns only `guage`.
 
 **Unverified or untested** (listed in full in section 14)
 
 ## 12. Open questions
 
-1. Who are the first three users and what would make them run Gauge on a schedule? (0.4)
-2. Does Horizon list the master key inside `signers`? (0.6)
-3. Exact threshold behavior for edge cases (threshold 0 with no weighted signer; leftover signatures). (0.7)
-4. SEP-1 field names, size limit and redirect rules. (0.8)
-5. Horizon long-term status; is Stellar RPC `getLedgerEntries` enough for accounts? (0.9)
-6. Implement strkey ourselves or import the Stellar Go SDK package? (0.10)
+1. Who are the first three users and what would make them run Gauge on a schedule? (0.4) Still open; nothing in the codebase or on the network answers it.
+2. Exact threshold behavior for edge cases (threshold 0 with no weighted signer; leftover signatures). (0.7) Still open, and partly unanswerable by observation: producing those states means building and submitting a transaction, which this tool never does.
+3. Does Horizon list the master key inside `signers`, and with what shape? (0.6) Answered on testnet 2026-10-30: yes, as `{"weight":1,"key":"<account_id>","type":"ed25519_public_key"}`, i.e. the master key is just another signer entry whose key equals `account_id`. Not re-checked on mainnet, per D-16.
+4. SEP-1 field names, size limit and redirect rules. (0.8) Answered from SEP-1 v2.7.0 and recorded in section 6.1 and `ARCHITECTURE.md` 6.5. The spec sets no redirect rules at all, so the redirect cap is Gauge's own.
+5. Horizon long-term status; is Stellar RPC `getLedgerEntries` enough for accounts? (0.9) Answered: Horizon is not marked deprecated in the current developer docs, and `getLedgerEntries` does serve classic account entries, observed live on testnet. ADR-005 stands.
+6. Implement strkey ourselves or import the Stellar Go SDK package? (0.10) Answered: own package, ADR-003 confirmed, with SEP-23's own 30 test vectors passing against the implementation written here.
+7. Public endpoint rate limits and which endpoints to default to. (0.12) Answered in section 6.4.
+8. TOML dependency footprint. (0.13) Answered: zero transitive dependencies, MIT, maintained.
 
 ## 13. Decisions
 
 | ID | Decision | Status | Notes |
 |---|---|---|---|
-| D-01 | Project and repo name | Scaffold identity confirmed | Owner approved existing repo `guage`, working product name Gauge, binary `stellar-gauge`; final naming and collision check remain open |
+| D-01 | Project and repo name | Decided 2026-10-30 | Working name Gauge, binary `stellar-gauge`, module `github.com/posture-sec/guage`. The slug question is D-15 in `ROADMAP.md` |
 | D-02 | Host organization | Decided 2026-10-28: `posture-sec` | Existing repository; module `github.com/posture-sec/guage` |
 | D-03 | License | Decided 2026-10-28: Apache-2.0 | Retain the existing LICENSE |
-| D-04 | Sequencing | Feature sequencing remains proposed | Owner authorized only the scope scaffold before validation (ROADMAP D-09); no feature gates waived |
-| D-05 | Data source | Proposed: Horizon first, behind an interface | RPC later |
-| D-06 | TOML parser | Proposed: `github.com/BurntSushi/toml`, the only third-party dependency | Go has no TOML in the standard library; check its transitive deps in 0.13 |
+| D-04 | Sequencing | Decided 2026-10-30: proceed with Gauge now | Share conventions, not code, with Airlock. No public Airlock repository exists to wait for, and the 0.5 search found no duplicate of this job |
+| D-05 | Data source | Confirmed 2026-10-30: Horizon first, behind an interface | RPC is a feasible second source; 0.9 observed `getLedgerEntries` serving a classic account entry |
+| D-06 | TOML parser | Confirmed 2026-10-30: `github.com/BurntSushi/toml` v1.6.0 | MIT, no transitive dependencies, last push 2026-08-18; owner approved it as the only third-party dependency |
 | D-07 | Funding or program applications | Open | After v0.2.0 and adoption evidence |
 | D-08 | Roadmap gate has no exemptions, including dependency bumps | Decided 2026-10-28 | Matches the owner's instruction for Airlock; assumed to apply here |
+| D-15 | Rename the repository slug away from `guage` | Proposed, awaiting the owner | Measured in 0.11; see the decision log in `ROADMAP.md` |
+| D-16 | Verification network | Decided 2026-10-30: testnet only | Mainnet endpoint facts in this document are quoted from documentation, not observed |
 
 ## 14. Unverified or untested items
 
-- Whether any equivalent self-audit tool exists (only three searches).
-- Horizon returns the master key inside `signers`.
-- Threshold semantics at the edges (threshold 0, leftover signatures).
-- SEP-1 field names, size limit and redirect rules; SEP-29 behavior.
-- Horizon's long-term status; Horizon and RPC rate limits on public endpoints.
-- Maximum signers per account (believed 20) and Horizon balance pagination for accounts with many trustlines.
-- Who would actually run this (demand).
-- All timing, size and Scorecard targets.
+- Who would actually run this (demand, 0.4). No operator has been asked yet.
+- Threshold semantics at the edges (threshold 0 with no weighted signer, leftover signatures). 0.7 needs states that only a transaction submission creates, which this tool forbids, so these stay documented-and-unverified unless a partner account already exhibits them.
+- Everything mainnet-specific: the shape of `https://horizon.stellar.org` responses, its rate-limit configuration, and whether mainnet Horizon lists the master key identically. Observed on testnet only, per D-16.
+- Maximum signers per account (believed 20, from the core ledger entry) and Horizon balance pagination for accounts with many trustlines. The account object embeds a `balances` array; whether it is ever truncated for an account with many trustlines has not been tested, because no captured account had more than one balance.
+- Whether `hash(x)` and pre-auth signer entries appear in Horizon `signers` with the same shape as `ed25519_public_key` entries. Not captured yet; they cannot be funded into existence through friendbot, so it needs a real or built fixture.
+- All timing, size and Scorecard targets in section 7 and 8.
+- The claims attributed to other projects, which are read from their own repository descriptions rather than from running them.
 
 ## 15. Red-team review (summary)
 
