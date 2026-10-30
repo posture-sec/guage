@@ -1,0 +1,49 @@
+name: Bug report
+description: A check, output or exit code does not behave as documented.
+labels: ["type: bug", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gauge is read-only and treats every fetched value as hostile. Do not paste
+        a secret seed into this form. If a seed reached the CLI or this issue,
+        rotate the key first.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Include the full command, the exit code and the output.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What the docs say should happen
+      description: Cite the rule ID, PRD requirement or exit-code table row.
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant policy excerpt
+      description: Account IDs are public, so they are fine here. Remove nothing else.
+      render: toml
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Gauge version or commit
+    validations:
+      required: true
+  - type: dropdown
+    id: network
+    attributes:
+      label: Network
+      options:
+        - mainnet
+        - testnet
+        - other
+    validations:
+      required: true

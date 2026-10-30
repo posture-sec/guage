@@ -1,0 +1,20 @@
+# Review ownership. The paths below are the security-relevant ones listed in
+# AGENTS.md section 12: a change there must not loosen a check.
+
+*                                  @bolabeatz
+
+/internal/source/                  @bolabeatz
+/internal/sep1/                    @bolabeatz
+/internal/policy/                  @bolabeatz
+/internal/strkey/                  @bolabeatz
+/internal/sanitize/                @bolabeatz
+/internal/threshold/               @bolabeatz
+/internal/model/                   @bolabeatz
+/internal/rules/                   @bolabeatz
+/internal/report/                  @bolabeatz
+/internal/run/                     @bolabeatz
+/cmd/                              @bolabeatz
+/go.mod                            @bolabeatz
+/go.sum                            @bolabeatz
+/scripts/                          @bolabeatz
+/.github/                          @bolabeatz

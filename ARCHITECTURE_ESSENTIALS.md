@@ -6,7 +6,7 @@ Status: design target v0.1; implementation is a scaffold only (ROADMAP 1.12, D-0
 
 - `ROADMAP.md` must be updated in the same PR as every change: code, tests, docs, CI, config, dependency bumps, reverts.
 - Update means: tick, untick or add tasks; add a changelog entry; refresh the progress table; refresh `Last updated`.
-- CI check: `scripts/check_roadmap_touched.sh` (task 1.9; until it exists, reviewers enforce by hand). [16]
+- CI check: the required `roadmap-check / gate` check runs `scripts/check_roadmap_touched.sh` (task 1.9, done). [16]
 - If behavior changes, also update `PRD.md`, `ARCHITECTURE.md`, this file and `project_structure.md` in the same PR.
 
 ## 1. What this is

@@ -1,0 +1,26 @@
+name: roadmap-check
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  roadmap:
+    name: roadmap-check / gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: ROADMAP.md touched
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+        run: |
+          git fetch --no-tags origin "${GITHUB_BASE_REF}"
+          scripts/check_roadmap_touched.sh "origin/${GITHUB_BASE_REF}"
+      - name: progress table current
+        run: scripts/roadmap_progress.sh --check ROADMAP.md
+      - name: gate script self-test
+        run: scripts/test_roadmap_gate.sh

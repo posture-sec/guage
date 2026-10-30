@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" role="img" aria-label="Gauge: read-only posture audits for Stellar accounts">
+  <rect width="1200" height="320" fill="#0f1417"/>
+  <g stroke="#232c31" stroke-width="1">
+    <path d="M0 80H1200M0 160H1200M0 240H1200M200 0V320M400 0V320M600 0V320M800 0V320M1000 0V320"/>
+  </g>
+  <text x="72" y="150" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="88" fill="#e8ecee" letter-spacing="6">GAUGE</text>
+  <text x="76" y="196" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="24" fill="#8fa0a8">stellar-gauge &#183; read-only posture audits for Stellar accounts</text>
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20" fill="#c9d3d8">
+    <text x="76" y="252">signers</text>
+    <text x="252" y="252">thresholds</text>
+    <text x="452" y="252">flags</text>
+    <text x="592" y="252">home domain</text>
+  </g>
+  <g fill="none" stroke="#4f9c8f" stroke-width="2">
+    <path d="M76 264h96M252 264h140M452 264h72M592 264h172"/>
+  </g>
+  <text x="1128" y="252" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" fill="#6d7f88">unaudited &#183; scaffold</text>
+</svg>
