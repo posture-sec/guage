@@ -1,6 +1,6 @@
 # ROADMAP: Gauge (working name)
 
-Last updated: 2026-10-30T11:06Z (Horizon fixtures for 0.6)
+Last updated: 2026-10-30T12:25Z (Phase 2 starts: model, strkey and sanitize)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
@@ -35,13 +35,13 @@ The repository is 100% ready when every task in Phases 0 to 6 is done and every 
 |---|---|---|---|---|
 | 0 | Validation and decisions | 11 | 13 | 84% |
 | 1 | Repository bootstrap and self-protection | 13 | 15 | 86% |
-| 2 | Core | 0 | 10 | 0% |
+| 2 | Core | 3 | 10 | 30% |
 | 3 | Rules | 0 | 7 | 0% |
 | 4 | Dogfood and release v0.1.0 | 0 | 9 | 0% |
 | 5 | v0.2 features | 0 | 8 | 0% |
 | 6 | Release v0.2.0 and community | 0 | 5 | 0% |
 | 7 (backlog) | Backlog | 0 | 4 | 0% |
-| **Phases 0 to 6** | **Readiness total** | **24** | **67** | **35%** |
+| **Phases 0 to 6** | **Readiness total** | **27** | **67** | **40%** |
 | Gates | G1 to G10 | 0 | 10 | 0% |
 <!-- PROGRESS:END -->
 
@@ -114,11 +114,11 @@ Constraint on the two remaining experimental tasks: Gauge never builds or submit
 
 ### Phase 2: Core
 
-- [ ] **2.1** `internal/model`: types, severity ordering, constructors. S. Deps: 1.4. Done when: unit tests pass. Draft declarations and ordering tests are included in 1.12; finalized contracts and any required constructors remain pending.
-- [ ] **2.2** `internal/strkey`: classify `G`, `M`, `C`, `S`, `T`, `X`; checksum; seed detection; reference vectors; fuzz target. M. Deps: 0.10, 2.1. Done when: vectors pass and the fuzz smoke run is clean.
+- [x] **2.1** `internal/model`: types, severity ordering, constructors. S. Deps: 1.4. Done when: unit tests pass. (done 2026-10-30: `Severity.String` gives the stable `info`/`warn`/`high` names output sorts on; `NewFinding` computes the sha256 fingerprint over rule ID, account and whitespace-normalized evidence, which is what an `[[accept]]` entry keys on, and `SortFindings` orders by severity descending then account then rule ID with `sort.SliceStable` so equal keys keep discovery order. Tests in `model_test.go` cover the names, fingerprint stability under spacing changes, separation between rules, accounts and evidence, and the ordering.)
+- [x] **2.2** `internal/strkey`: classify `G`, `M`, `C`, `S`, `T`, `X`; checksum; seed detection; reference vectors; fuzz target. M. Deps: 0.10, 2.1. Done when: vectors pass and the fuzz smoke run is clean. (done 2026-10-30: all 10 valid and 20 invalid SEP-23 vectors behave as specified, and the package classifies ten types (`G M S T X P C L B W`) from the version byte. Validity is decode, check checksum and shape, then re-encode and require the exact string, so nonzero unused bits are rejected rather than silently discarded; a non-uppercase encoding is rejected as non-canonical because that is the only form Horizon resolves. Errors are sentinels that never contain the input, since one input may be a seed. `FuzzClassify` ran 676129 executions in 10s with no failure.)
 - [ ] **2.3** `internal/threshold`: `Reachable` and `MinSigners` with table tests and a brute-force cross-check. M. Deps: 0.7, 2.1. Done when: all tables and the randomized cross-check pass.
 - [ ] **2.4** `internal/policy` loader and CLI input validation: strict decode, `version`, explicit `network`, duplicate and unknown keys, `G`-only addresses, secret-seed rejection that never echoes the value. M. Deps: 2.2. Done when: each failure path exits 2 in tests.
-- [ ] **2.5** `internal/sanitize`: control, bidi and zero-width stripping, length truncation, IDN flag, markdown escaping; fuzz target. M. Deps: 2.1. Done when: injection tests pass.
+- [x] **2.5** `internal/sanitize`: control, bidi and zero-width stripping, length truncation, IDN flag, markdown escaping; fuzz target. M. Deps: 2.1. Done when: injection tests pass. (done 2026-10-30: `Text` removes C0 and C1 controls, whole CSI and OSC escape sequences, bidi overrides and marks, zero-width characters, soft hyphens, line separators and Unicode tag characters, then collapses whitespace and truncates to 256 runes with a visible `...`; `Domain` reports the IDN flag; `Markdown` escapes the markup characters and `Fenced` picks a fence longer than any backtick run in the content. Tests cover each injection class, multibyte truncation and idempotence. `FuzzText` ran 358280 executions and `FuzzFenced` 141856 in 10s each with no failure.)
 - [ ] **2.6** `internal/report` text and JSON renderers plus exit-code mapping, deterministic ordering, limits footer. M. Deps: 2.5. Done when: golden tests pass.
 - [ ] **2.7** `internal/source`: `Source` interface and Horizon implementation with timeouts, size caps, strict decode, bounded retries and concurrency, passphrase check, `ErrNotFound`; fake Horizon tests for every failure mode. L. Deps: 0.6, 0.9, 0.12, 2.1. Done when: the failure-mode tests pass.
 - [ ] **2.8** `internal/run` orchestration. M. Deps: 2.4, 2.6, 2.7. Done when: an end-to-end test with a fake source passes.
@@ -220,6 +220,7 @@ Newest first. One row per merged change.
 
 | Date (UTC) | Change | Tasks |
 |---|---|---|
+| 2026-10-30 | First Phase 2 code: `internal/model` gets severity names, a finding constructor whose sha256 fingerprint survives whitespace changes, and a stable severity/account/rule sort; `internal/strkey` classifies all ten SEP-23 types, rejects anything that does not re-encode to the exact input (which catches nonzero trailing bits) and rejects non-canonical case, with errors that never echo their input; `internal/sanitize` removes controls, whole CSI and OSC sequences, bidi and zero-width characters, truncates to 256 runes, flags IDNs and fences markdown evidence. All 10 valid and 20 invalid SEP-23 vectors pass. Fuzz targets ran clean: 676129 executions for strkey, 358280 for text and 141856 for fencing, 10s each | 2.1, 2.2, 2.5 |
 | 2026-10-30 | Horizon fixtures committed: five testnet responses (`root-testnet.json`, `1-default.json`, `7-extra-signer.json`, `8-clawback-undeclared.json`, `10-not-found.json`) with a sidecar `README.md` recording network, date, per-file ledger and what each establishes. The captures answer the parser question the task was blocking: the master key appears inside `signers` as an ordinary `ed25519_public_key` entry, and there is no per-account balances route. The three signer shapes that need a transaction to exist are named in the sidecar as hand-built rather than captured, so no gap is left implicit. `project_structure.md` lists the files it used to call `no fabricated account captures` | 0.6 |
 | 2026-10-30 | Phase 0 closed on the evidence, and the project is authorised to leave scaffold-only status. Read or run on the day: the SEP-23 suite (10 valid and 20 invalid strkeys) against a stdlib encoder and decoder written here, which passed only after three missing rules were added, and which is the basis for confirming ADR-003; a live `getLedgerEntries` call on Soroban testnet returning a classic account ledger entry (84-byte XDR, `latestLedger` 5466028), which confirms ADR-005's Horizon-first, RPC-later shape; SEP-1 v2.7.0 and SEP-29 read from the spec, naming `VERSION`, `NETWORK_PASSPHRASE`, `SIGNING_KEY`, `HORIZON_URL` and `ACCOUNTS` with a 100 KB cap and a mandatory CORS header, plus a real issuer whose `stellar.toml` answers 200 with `content-type: text/html`; Horizon's documented per-IP 3600 requests/hour and 429, and observed `hal+json` responses, `problem+json` errors, a `Latest-Ledger` header, 405 on HEAD, no rate-limit headers and a `limit` ceiling of 200; a `gh api` read of `BurntSushi/toml` (MIT, v1.6.0, no `require` directives, so no transitive dependencies), approved by the owner as the one third-party module; and the name-collision search that produced D-15. `PRD.md` 2.2 now records the landscape as repositories that exist with their own descriptions, led by `signerreach/signerreach`. D-04 is Decided (proceed now; the org has one repository, so there is no public Airlock release to wait for), D-16 records the testnet-only verification policy, and 0.4, 0.6 and 0.7 stay open with the reason each is still open | 0.2, 0.3, 0.5, 0.8, 0.9, 0.10, 0.11, 0.12, 0.13, D-01, D-04, D-05, D-06, D-15, D-16 |
 | 2026-10-30 | Scorecard evidence and the rest of Phase 1: the first `scorecard / analysis` run on `main` published overall 6.2 with Branch-Protection scoring 4 rather than erroring, so 1.7 is ticked; 1.6, 1.8, 1.10 and 1.11 are ticked against the files now on `main`, with the Dependabot runs and the roadmap-rule presence in each document observed rather than assumed; D-14 accepts the three approval-related Branch-Protection warnings while the repository has one maintainer | 1.6, 1.7, 1.8, 1.10, 1.11, D-14 |
