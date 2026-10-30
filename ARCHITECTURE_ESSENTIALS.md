@@ -1,6 +1,6 @@
 # ARCHITECTURE_ESSENTIALS: Gauge (working name)
 
-Status: design target v0.1; implementation is partway through Phase 2. `internal/model` (types, severity names, finding fingerprints, ordering), `internal/strkey` (SEP-23 classification and seed detection) and `internal/sanitize` (control stripping, IDN flag, markdown escaping) the `internal/policy` loader (strict TOML, seed rejection, network passphrases) and the `internal/report` renderers (text, JSON, limits footer, exit mapping) are implemented and tested; the threshold math, Horizon source, orchestration and CLI are still pending. Full detail: `ARCHITECTURE.md` (section numbers in brackets). Scope: `PRD.md`. Work queue: `ROADMAP.md`. File locations: `project_structure.md`.
+Status: design target v0.1; implementation is partway through Phase 2. `internal/model` (types, severity names, finding fingerprints, ordering), `internal/strkey` (SEP-23 classification and seed detection), `internal/sanitize` (control stripping, IDN flag, markdown escaping), the `internal/policy` loader (strict TOML, seed rejection, network passphrases), the `internal/report` renderers (text, JSON, limits footer, exit mapping) and `internal/source` (Horizon client with caps, retries, strict decode, passphrase comparison) are implemented and tested; the threshold math, orchestration and CLI are still pending. Full detail: `ARCHITECTURE.md` (section numbers in brackets). Scope: `PRD.md`. Work queue: `ROADMAP.md`. File locations: `project_structure.md`.
 
 ## 0. Roadmap rule (read first)
 
