@@ -20,7 +20,7 @@ Two reasons, ordered by how long each takes to clear.
 
 - [x] PR #2 merged, so `main` carries CI, the roadmap gate, `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODEOWNERS`, issue forms and the banner. (merged 2026-10-30 as `ae6a05d`; the first push-event CI run on `main` passed)
 - [x] Task 1.3 closed by observing the direct-push refusal against `main` itself, not a probe branch. (refused 2026-10-30 with "Changes must be made through a pull request", `main` unchanged)
-- [ ] Task 1.7 done: a Scorecard run where Branch-Protection returns a score.
+- [x] Task 1.7 done: a Scorecard run where Branch-Protection returns a score. (2026-10-30: score 4, overall 6.2, Scorecard v5.6.0, badge live in the README. The three warnings about required approvals are accepted under D-14 because the repository has one maintainer, and they will keep the score down until a second reviewer exists.)
 - [ ] Task 2.9 done, so `stellar-gauge check` reads a real account and prints a report. This is the minimum credible demo.
 - [ ] A short screen recording of that run end to end, which the playbook treats as the difference between a submission and an unfinished one.
 - [ ] Task 0.4 answered with named operators, since the pitch rests on people who would run this on a schedule.
