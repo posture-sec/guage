@@ -1,6 +1,6 @@
 # ARCHITECTURE_ESSENTIALS: Gauge (working name)
 
-Status: design target v0.1; implementation is partway through Phase 2. `internal/model` (types, severity names, finding fingerprints, ordering), `internal/strkey` (SEP-23 classification and seed detection), `internal/sanitize` (control stripping, IDN flag, markdown escaping), the `internal/policy` loader (strict TOML, seed rejection, network passphrases), the `internal/report` renderers (text, JSON, limits footer, exit mapping) and `internal/source` (Horizon client with caps, retries, strict decode, passphrase comparison) are implemented and tested; the threshold math, orchestration and CLI are still pending. Full detail: `ARCHITECTURE.md` (section numbers in brackets). Scope: `PRD.md`. Work queue: `ROADMAP.md`. File locations: `project_structure.md`.
+Status: design target v0.1; implementation is partway through Phase 2. `internal/model` (types, severity names, finding fingerprints, ordering), `internal/strkey` (SEP-23 classification and seed detection), `internal/sanitize` (control stripping, IDN flag, markdown escaping), the `internal/policy` loader (strict TOML, seed rejection, network passphrases), the `internal/report` renderers (text, JSON, limits footer, exit mapping), `internal/source` (Horizon client with caps, retries, strict decode, passphrase comparison), the `internal/run` orchestrator and the `cmd/stellar-gauge` CLI (`check`, `audit`, `version`) are implemented and tested; the threshold math and the rules are still pending, so a run cannot yet emit a finding and exit 1. Full detail: `ARCHITECTURE.md` (section numbers in brackets). Scope: `PRD.md`. Work queue: `ROADMAP.md`. File locations: `project_structure.md`.
 
 ## 0. Roadmap rule (read first)
 
@@ -64,7 +64,7 @@ Status: design target v0.1; implementation is partway through Phase 2. `internal
 - `AccountSnapshot`: ID, Network, Endpoint, Ledger, Sequence, Thresholds, Signers, Flags, HomeDomain, Sponsor, Balances.
 - `Finding`: RuleID, Severity, Account, Message, Evidence, Fingerprint (`sha256(rule|account|evidence)`), Accepted.
 - `NetworkInfo`: Passphrase, Ledger. `AccountReport`: Snapshot, Findings. `Report`: ToolVersion, Network, Ledger, Accounts, typed ExitCode.
-- Config `gauge.toml`: `version`, `network`, `endpoints`, `[[account]]` (id, name, role, expected_signers, expected_thresholds, expected_flags, home_domain, expect_locked), `[[accept]]` (rule, account, reason, optional expires). Draft types preserve omitted expectations; strict decode and acceptance logic are not implemented.
+- Config `gauge.toml`: `version`, `network`, `endpoints`, `[[account]]` (id, name, role, expected_signers, expected_thresholds, expected_flags, home_domain, expect_locked), `[[accept]]` (rule, account, reason, optional expires). Pointer fields preserve omitted expectations; strict decode, seed rejection and per-entry validation are implemented, while role severity adjustments remain task 3.4.
 
 ## 7. Threshold math [6.3]
 

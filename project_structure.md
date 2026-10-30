@@ -16,7 +16,7 @@ guage/
   PRD.md, ARCHITECTURE.md                  # product scope and target design
   ARCHITECTURE_ESSENTIALS.md               # hard rules and current implementation status
   ROADMAP.md, project_structure.md         # work queue and this scope map
-  README.md                                # scaffold status, limits and roadmap rule (1.10 draft)
+  README.md                                # status, limits and roadmap rule (1.10)
   CONTRIBUTING.md, SECURITY.md             # process drafts carrying the roadmap rule (1.8)
   LICENSE                                 # existing Apache-2.0 license
   .gitignore                              # local policies, outputs, briefings and secrets stay untracked
@@ -26,9 +26,11 @@ guage/
   gauge.example.toml                      # commented, intentionally unconfigured policy draft
 
   cmd/stellar-gauge/
-    main.go                               # scaffold notice, exit 3, no input processing or I/O beyond stderr
-    {check,audit,version}.go               # P0 command placeholders (2.9)
-    {snapshot,diff}.go                     # P1 command placeholders (5.2)
+    main.go                               # dispatch, exit-code mapping and report rendering (2.9)
+    {check,audit,version}.go              # P0 commands: flags, account validation, policy load (2.9)
+    cli_test.go                           # in-process CLI tests: check, audit, JSON output, failure modes
+    g3_test.go                            # fail-closed gate G3 cases (2.10)
+    {snapshot,diff}.go                    # P1 command placeholders (5.2)
 
   internal/
     model/
@@ -62,9 +64,9 @@ guage/
       markdown.go                         # P1 output (5.3)
       report_test.go                      # golden files, sanitization, determinism and exit tests
     run/
-      {run,check,audit}.go                 # P0 orchestration (2.8)
+      {run,check,audit}.go                 # P0 orchestration: passphrase, bounded fetch, accepts (2.8)
       {compare,snapshot,diff}.go           # P1 orchestration (5.1, 5.2)
-      run_test.go                         # reserved integration tests
+      run_test.go                         # end-to-end orchestration with a fake source (2.8)
 
   testdata/
     horizon/README.md                     # capture provenance, ledgers, what could not be captured (0.6)
@@ -102,7 +104,7 @@ Drafted but not finished: `README.md` (1.10) and `CONTRIBUTING.md`, `SECURITY.md
 
 Still absent, not silently implemented: a release workflow (4.5) and a scheduled-audit template (5.4). `go.sum` holds Go's own checksums for the one approved module (ADR-004, added in 2.4); no lockfile is hand-drafted. The local `files/` briefing copies are Git-ignored; the root documents are the maintained source of truth.
 
-Checks that run today: `gofmt -l .`, `go build ./...`, `go vet ./...`, `go test ./... -race -count=1`, `staticcheck ./...`, `govulncheck ./...`, `scripts/check_roadmap_touched.sh origin/main`, `scripts/roadmap_progress.sh --check`, `scripts/test_roadmap_gate.sh`, `scripts/generate_issues.sh --check`. OSSF Scorecard runs on pushes to `main` and weekly (`scorecard / analysis`), not on pull requests, because it audits the default branch and publishes results. `go run ./cmd/stellar-gauge` still prints the scaffold notice and returns nonzero. No subcommand, network client, audit rule or renderer is operational. The strkey, sanitize, model and policy-loader packages are implemented (2.1, 2.2, 2.4, 2.5), and the first two carry fuzz targets; tests beside the remaining empty packages are file placeholders, not evidence of feature coverage.
+Checks that run today: `gofmt -l .`, `go build ./...`, `go vet ./...`, `go test ./... -race -count=1`, `staticcheck ./...`, `govulncheck ./...`, `scripts/check_roadmap_touched.sh origin/main`, `scripts/roadmap_progress.sh --check`, `scripts/test_roadmap_gate.sh`, `scripts/generate_issues.sh --check`. OSSF Scorecard runs on pushes to `main` and weekly (`scorecard / analysis`), not on pull requests, because it audits the default branch and publishes results. `stellar-gauge version` prints the version, and `check` and `audit` read real accounts through the Horizon client and render a report; no rule is registered yet, so a run can exit 0, 2 or 3 but cannot yet exit 1. The implemented packages are `model`, `strkey`, `sanitize`, `policy`, `source`, `report`, `run` and `cmd/stellar-gauge` (2.1 to 2.10), and `strkey` and `sanitize` carry fuzz targets. `internal/threshold`, `internal/sep1` and `internal/rules` are still placeholders.
 
 Not built on purpose (do not create without a roadmap decision): a watch daemon, alert integrations, a rules language or plugin loader, a web UI, reputation scoring, contract-account auditing. See `ARCHITECTURE.md` 14.3.
 
