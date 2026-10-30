@@ -1,17 +1,29 @@
-# Draft shape only: the loader is not implemented and this policy is unconfigured.
+# Gauge policy. Account IDs must be canonical G addresses.
+# `network` is required and has no default: mainnet, testnet or a full passphrase.
 version = 1
-network = ""
-endpoints = []
+network = "testnet"
+endpoints = ["https://horizon-testnet.stellar.org"]
 
-# [[account]]
-# id = ""
-# name = "treasury"
-# role = "treasury"
-# expected_signers = []
-# expected_thresholds = { low = 2, medium = 2, high = 2 }
-# expected_flags = { auth_required = false, auth_revocable = false, auth_immutable = false, clawback = false }
-# home_domain = "example.com"
-# expect_locked = false
+[[account]]
+# Public SEP-23 test vector; replace it with the account you audit.
+id = "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+name = "treasury"
+role = "treasury"
+expected_signers = [
+  { key = "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ", weight = 1 },
+]
+expected_thresholds = { low = 1, medium = 2, high = 2 }
+expected_flags = { auth_required = false, auth_revocable = false, auth_immutable = false, clawback = false }
+home_domain = "example.com"
+expect_locked = false
+
+# Only the owner adds accept entries, always with a reason. The expiry is optional.
+# A rule that hides a missing account, a network mismatch or an unreachable
+# threshold cannot be accepted at all.
+# [[accept]]
+# rule = "flag-undeclared-clawback"
+# account = "G..."
+# reason = "..."
+# expires = "2027-04-27"
 
 # An omitted expectation differs from an explicitly empty, zero or false value.
-# Accepted risks require an owner-supplied rule, account, reason and optional expiry.

@@ -175,6 +175,7 @@ Fetches `https://{home_domain}/.well-known/stellar.toml` for identity checks.
 - `network` is required and must be `mainnet`, `testnet` or a full passphrase. There is no default.
 - Role profiles map role to severity adjustments (PRD Appendix A).
 - `[[accept]]` entries: `rule`, `account`, `reason` required; `expires` optional; no wildcards; some rules are not acceptable (`acct-missing`, `acct-network-mismatch`, `sig-threshold-unreachable`).
+- Implemented 2026-10-30 (task 2.4): decoding uses `github.com/BurntSushi/toml` v1.6.0 with `MetaData.Undecoded`, so an unknown key anywhere in the file is an error, and the file is capped at 1 MiB. A secret seed is found by scanning the raw text for an `S` token that validates as a strkey, so it is rejected even in a comment; the error never contains it. Rejections carry a category (`Error.Kind`) and a field path, which is what the CLI maps to exit 2. Network names resolve to their published passphrases, and any other network value is treated as the passphrase itself.
 
 ### 6.7 `rules`
 
@@ -196,9 +197,9 @@ Argument parsing and dispatch only. No logic.
 
 ## 7. Data models
 
-The scaffold contains plain declarations in `internal/model`, policy input types in `internal/policy`, and the `Source` interface. As of 2026-10-30, `internal/model` also carries the severity names, the finding constructor with its fingerprint and the sort order, `internal/strkey` validates and classifies addresses, and `internal/sanitize` cleans output. Signer normalization, threshold math, policy decoding, source parsing and report rendering are still pending. JSON tags are draft snake_case field names; severity is numeric in raw struct encoding. A stable public report schema and serialization behavior remain part of task 2.6. Signer type values (`ed25519`, `hash_x`, `pre_auth_tx`) are internal labels, not a verified Horizon wire mapping.
+The scaffold contains plain declarations in `internal/model`, policy input types in `internal/policy`, and the `Source` interface. As of 2026-10-30, `internal/model` also carries the severity names, the finding constructor with its fingerprint and the sort order, `internal/strkey` validates and classifies addresses, and `internal/sanitize` cleans output. Signer normalization, threshold math, source parsing and report rendering are still pending. JSON tags are draft snake_case field names; severity is numeric in raw struct encoding. A stable public report schema and serialization behavior remain part of task 2.6. Signer type values (`ed25519`, `hash_x`, `pre_auth_tx`) are internal labels, not a verified Horizon wire mapping.
 
-`policy.Config` holds version, network, endpoints, accounts and accepts. `policy.Account` holds identity, name, role, expected signers, thresholds, flags, home domain and issuer lock intent. Pointer fields preserve omitted versus explicit empty/zero/false expectations. `policy.Acceptance` carries rule, account, reason and an optional expiry string; strict decoding, date validation, role adjustments and non-acceptable-rule enforcement remain pending. No TOML dependency has been added.
+`policy.Config` holds version, network, endpoints, accounts and accepts. `policy.Account` holds identity, name, role, expected signers, thresholds, flags, home domain and issuer lock intent. Pointer fields preserve omitted versus explicit empty/zero/false expectations. `policy.Acceptance` carries rule, account, reason and an optional expiry string; strict decoding, date validation and non-acceptable-rule enforcement are implemented, while role severity adjustments remain task 3.4. `github.com/BurntSushi/toml` v1.6.0 is the only module in `go.mod`, approved as ADR-004.
 
 ```go
 type Severity int
