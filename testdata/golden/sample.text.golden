@@ -1,0 +1,42 @@
+Gauge 0.0.0-test
+network: Test SDF Network ; September 2015
+ledger: 5466897
+
+account GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ
+  endpoint: https://horizon-testnet.stellar.org
+  as of ledger 5466881, sequence 9007199254740993
+  thresholds: low 1, medium 2, high 2
+  flags: auth_required=true auth_revocable=false auth_immutable=false clawback=false
+  home domain: exаmple.com (IDN)
+  sponsor: sponsor
+  signers: 1
+    GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ ed25519 weight 1
+  findings: 3 (1 accepted)
+    [high] sig-single-key-high
+      One signing key controls the high threshold.
+      evidence: minimum signers: 1
+      fingerprint: 197d9ec2e2f0c17cd2496f045938fcbde78fb3d7cc31fa84d53c00d1658b705b
+    [warn] flag-drift (accepted)
+      Declared flags differ from the chain.
+      evidence: auth_required declared false, observed true
+      fingerprint: 1df656afe9e674d296da9049114c5ddfea5c04fe365831815af700b0cda4b531
+    [warn] thr-drift
+      Declared thresholds differ from the chain.
+      evidence: low 2, medium 2, high 3
+      fingerprint: 23ed595205dd01c02f9ce9aed8050632b8f2059d895fb73a1dfb467712913f0d
+
+account GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3
+  endpoint: https://horizon-testnet.stellar.org
+  as of ledger 5466881, sequence (none)
+  thresholds: low 2, medium 2, high 2
+  flags: auth_required=false auth_revocable=false auth_immutable=false clawback=false
+  home domain: (none)
+  sponsor: (none)
+  signers: 2
+    GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ ed25519 weight 1
+    GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3 ed25519 weight 1
+  findings: none
+
+result: 3 findings (1 high, 2 warn, 0 info), 1 accepted
+exit code: 1
+limits: Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised.

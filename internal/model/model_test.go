@@ -212,3 +212,24 @@ func TestSortFindingsIsStable(t *testing.T) {
 		t.Fatal("finding order among equal keys changed")
 	}
 }
+
+func TestSeverityJSONIsAName(t *testing.T) {
+	t.Parallel()
+	data, err := json.Marshal(model.SevHigh)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(data) != `"high"` {
+		t.Fatalf("severity JSON = %s, want \"high\"", data)
+	}
+	var got model.Severity
+	if err := json.Unmarshal([]byte(`"warn"`), &got); err != nil {
+		t.Fatal(err)
+	}
+	if got != model.SevWarn {
+		t.Fatalf("severity = %v", got)
+	}
+	if err := json.Unmarshal([]byte(`3`), &got); err == nil {
+		t.Fatal("numeric severity accepted")
+	}
+}

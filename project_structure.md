@@ -58,9 +58,9 @@ guage/
       {rules,account,signers,thresholds,flags,identity,facts}.go # pure rule boundaries (3.1 to 3.7)
       rules_test.go                       # reserved positive and negative cases
     report/
-      {text,json,exit}.go                  # P0 renderers and outcome mapping (2.6)
+      {text,json,exit}.go                  # P0 renderers, limits footer and outcome mapping (2.6)
       markdown.go                         # P1 output (5.3)
-      report_test.go                      # reserved golden tests
+      report_test.go                      # golden files, sanitization, determinism and exit tests
     run/
       {run,check,audit}.go                 # P0 orchestration (2.8)
       {compare,snapshot,diff}.go           # P1 orchestration (5.1, 5.2)
@@ -70,7 +70,7 @@ guage/
     horizon/README.md                     # capture provenance, ledgers, what could not be captured (0.6)
     horizon/{root-testnet,1-default,7-extra-signer,8-clawback-undeclared,10-not-found}.json
     policy/.gitkeep                       # acceptance fixtures pending (3.4)
-    golden/.gitkeep                       # report fixtures pending (2.6, 3.6, 5.3)
+    golden/{sample.text,sample.json}.golden # regenerated only with `-update` and reviewed (2.6)
 
   docs/
     banner.svg                            # README banner; wordmark plus status line
