@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Draft v0.1 target (includes a red-team pass, section 14); scaffold only under ROADMAP 1.12 and D-09 |
+| Status | Draft v0.1 target (includes a red-team pass, section 14); functional alpha through Phase 2 as of 2026-10-30, with threshold math and the rules still pending |
 | Date | 2026-10-28 |
 | Companion docs | `PRD.md`, `ARCHITECTURE_ESSENTIALS.md`, `ROADMAP.md`, `project_structure.md`, `AGENTS.md`, `CLAUDE.md` |
 | Tags | **[Verified]** checked against a source; **[Unverified]** believed or designed but untested |
@@ -177,6 +177,7 @@ Fetches `https://{home_domain}/.well-known/stellar.toml` for identity checks.
 - Role profiles map role to severity adjustments (PRD Appendix A).
 - `[[accept]]` entries: `rule`, `account`, `reason` required; `expires` optional; no wildcards; some rules are not acceptable (`acct-missing`, `acct-network-mismatch`, `sig-threshold-unreachable`).
 - Implemented 2026-10-30 (task 2.4): decoding uses `github.com/BurntSushi/toml` v1.6.0 with `MetaData.Undecoded`, so an unknown key anywhere in the file is an error, and the file is capped at 1 MiB. A secret seed is found by scanning the raw text for an `S` token that validates as a strkey, so it is rejected even in a comment; the error never contains it. Rejections carry a category (`Error.Kind`) and a field path, which is what the CLI maps to exit 2. Network names resolve to their published passphrases, and any other network value is treated as the passphrase itself.
+- Endpoint scheme, amended 2026-10-30 during 2.9: `https` anywhere, plain `http` only for a loopback host. The schema now mirrors `internal/source`, which already refused plain HTTP for any other host, so a policy can name every endpoint the client itself accepts and no runtime surprise replaces a config error. The enforcement point is unchanged: `source.normalizeEndpoint` still rejects a non-loopback `http` endpoint before any request is made.
 
 ### 6.7 `rules`
 
@@ -193,13 +194,17 @@ A rule is a pure function `func(ctx RuleContext) []model.Finding`. `RuleContext`
 
 Orchestrates: load policy, build sources, check network passphrase, fetch snapshots concurrently with a bound, fetch identity data, evaluate rules, apply accepts, produce a `Report`, map to an exit code.
 
+Implemented 2026-10-30 (task 2.8) as `Run(ctx, Job)` with `Check` and `Audit` as the two builders. Order is fixed: the request is validated, the source is built, the passphrase is compared **before any account read**, then accounts are fetched in policy order through a semaphore (default 8) that cancels every worker on the first failure, so a partial fetch never becomes a report. The rule stage is an injected `Evaluator`; a panic inside it becomes a HIGH `src-rule-panic` finding and exit 3 rather than a crash, because an incomplete result must not exit 0. Accepts are applied to acceptable rules only, with the expiry date treated as the last day it holds and an unparseable date treated as not live. `report.Exit` decides 0 or 1; every orchestration failure is returned as an error, not a report, and `ErrUsage` marks the failures the CLI maps to exit 2.
+
 ### 6.10 `cmd/stellar-gauge`
 
 Argument parsing and dispatch only. No logic.
 
+Implemented 2026-10-30 (task 2.9) with the standard library `flag` package, one file per command. `runCLI(args, stdout, stderr) int` is the whole entry point, so tests drive the CLI in process and there is no `os/exec` anywhere. Exit codes are `model.ExitCode` values: 0 clean, 1 findings, 2 usage or policy, 3 source or internal. `check` takes `--network`, exactly one `--endpoint`, `--format text|json`, `--fail-on high|warn` and one or more `G` accounts; `audit` takes `--config`, `--format` and `--fail-on`, refuses positional arguments, and reports `markdown` as not implemented rather than silently falling back to text. Account arguments are classified before any request: `M` and `W` get the muxed message, `C` the contract message, `S` the rotate-the-key message, and none of them is ever echoed. A rendering failure exits 3, never 0.
+
 ## 7. Data models
 
-The scaffold contains plain declarations in `internal/model`, policy input types in `internal/policy`, and the `Source` interface. As of 2026-10-30, `internal/model` also carries the severity names, the finding constructor with its fingerprint and the sort order, `internal/strkey` validates and classifies addresses, `internal/sanitize` cleans output, `internal/source` reads and strictly decodes Horizon responses, and `internal/report` renders them. Threshold math, orchestration and the CLI are still pending. JSON tags are snake_case field names and severity marshals as its lowercase name; the report schema and serialization behavior are fixed by task 2.6 and its golden files. Signer type values (`ed25519`, `hash_x`, `pre_auth_tx`) are internal labels; `internal/source` maps them from Horizon's `ed25519_public_key`, `sha256_hash` and `preauth_tx`.
+As of 2026-10-30, `internal/model` carries the severity names, the finding constructor with its fingerprint and the sort order, `internal/strkey` validates and classifies addresses, `internal/sanitize` cleans output, `internal/source` reads and strictly decodes Horizon responses, `internal/report` renders them, `internal/run` orchestrates a run, and `cmd/stellar-gauge` exposes `check`, `audit` and `version`. Threshold math and the rules are still pending: no rule is registered yet, so a run reports facts and exits 0, 2 or 3 but cannot yet produce exit 1. JSON tags are snake_case field names and severity marshals as its lowercase name; the report schema and serialization behavior are fixed by task 2.6 and its golden files. Signer type values (`ed25519`, `hash_x`, `pre_auth_tx`) are internal labels; `internal/source` maps them from Horizon's `ed25519_public_key`, `sha256_hash` and `preauth_tx`.
 
 `policy.Config` holds version, network, endpoints, accounts and accepts. `policy.Account` holds identity, name, role, expected signers, thresholds, flags, home domain and issuer lock intent. Pointer fields preserve omitted versus explicit empty/zero/false expectations. `policy.Acceptance` carries rule, account, reason and an optional expiry string; strict decoding, date validation and non-acceptable-rule enforcement are implemented, while role severity adjustments remain task 3.4. `github.com/BurntSushi/toml` v1.6.0 is the only module in `go.mod`, approved as ADR-004.
 
@@ -288,6 +293,8 @@ Baseline files (P1) are JSON serializations of `AccountSnapshot` with a schema v
 | Rule panics | recovered, reported as a HIGH internal finding, exit 3 |
 
 Exit codes: 0 pass; 1 findings at or above `fail_on`; 2 configuration or usage error; 3 source or internal error. Anything nonzero fails CI.
+
+At v0.1 as implemented through task 2.9, the rows that name `acct-network-mismatch`, `acct-missing`, `id-toml-unreachable` and `src-disagreement` are not active yet. A passphrase mismatch and a missing account stop the run as source errors (exit 3) instead of becoming findings, because a report needs a snapshot and the rules that would carry those IDs are tasks 3.3 and 3.5. Both stay fail-closed, so the exit code is still non-zero; the difference is that the run reports the stop instead of naming a rule.
 
 ## 9. Rule specifications
 

@@ -65,12 +65,32 @@ func validNetwork(network string) bool {
 	return strings.Contains(network, " ; ")
 }
 
+// validEndpoint mirrors the rule in internal/source: https anywhere, plain
+// HTTP only for a loopback host, because a config must be able to name every
+// endpoint the client itself accepts.
 func validEndpoint(endpoint string) bool {
 	u, err := url.Parse(endpoint)
 	if err != nil {
 		return false
 	}
-	return u.Scheme == "https" && u.Host != "" && u.User == nil && u.RawQuery == "" && u.Fragment == ""
+	if u.Host == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
+		return false
+	}
+	switch strings.ToLower(u.Scheme) {
+	case "https":
+		return true
+	case "http":
+		return loopbackHost(u.Hostname())
+	}
+	return false
+}
+
+func loopbackHost(host string) bool {
+	if strings.EqualFold(host, "localhost") {
+		return true
+	}
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
 }
 
 func (a *Account) validate(index int) error {
@@ -185,6 +205,13 @@ func validRuleID(rule string) bool {
 		}
 	}
 	return true
+}
+
+// Acceptable reports whether an [[accept]] entry may cover a rule. The
+// orchestrator uses it so a hand-built accept cannot silence a structural
+// failure such as a missing account or an unreachable threshold tier.
+func Acceptable(rule string) bool {
+	return !nonAcceptable(rule)
 }
 
 // nonAcceptable lists the rules an accepted-risk entry may never silence, from

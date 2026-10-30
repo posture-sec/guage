@@ -75,6 +75,24 @@ func TestLoadValidPolicy(t *testing.T) {
 	}
 }
 
+func TestLoadAcceptsPlainHTTPForLoopbackOnly(t *testing.T) {
+	t.Parallel()
+	for _, endpoint := range []string{
+		"http://127.0.0.1:8000",
+		"http://localhost:8000",
+		"http://[::1]:8000",
+	} {
+		endpoint := endpoint
+		t.Run(endpoint, func(t *testing.T) {
+			t.Parallel()
+			body := "version = 1\nnetwork = \"testnet\"\nendpoints = [\"" + endpoint + "\"]"
+			if _, err := Load(strings.NewReader(body)); err != nil {
+				t.Fatalf("Load(%q): %v", endpoint, err)
+			}
+		})
+	}
+}
+
 func TestLoadDefaultsRoleAndKeepsOmittedSeparate(t *testing.T) {
 	t.Parallel()
 	cfg, err := Load(strings.NewReader(`

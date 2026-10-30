@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/go-1.27.3-00ADD8" alt="Go 1.27.3" />
   <img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="Apache-2.0" />
   <a href="SECURITY.md#status-of-this-code"><img src="https://img.shields.io/badge/status-unaudited-orange" alt="Unaudited" /></a>
-  <a href="ROADMAP.md"><img src="https://img.shields.io/badge/status-scaffold%20only-lightgrey" alt="Scaffold only" /></a>
+  <a href="ROADMAP.md"><img src="https://img.shields.io/badge/status-functional%20alpha-orange" alt="Functional alpha" /></a>
 </p>
 
 # Gauge
@@ -22,13 +22,14 @@ Gauge is read-only and secret-free. It never accepts, stores or echoes a secret 
 
 ## Status
 
-Scaffold only (ROADMAP task 1.12, decision D-09). The module, package boundaries, data models and a non-operational CLI exist:
+Functional alpha (ROADMAP Phase 2, tasks 2.1 to 2.10). The policy loader, Horizon client, report renderers, orchestrator and CLI are implemented and tested:
 
 ```bash
-go run ./cmd/stellar-gauge   # prints a scaffold notice and exits 3
+go run ./cmd/stellar-gauge version
+go run ./cmd/stellar-gauge check --network testnet --endpoint https://horizon-testnet.stellar.org G...
 ```
 
-No subcommand audits an account yet, so there is no release to install and no report to show. The commands below describe the intended interface and are marked as such in `README` until they work.
+A run reads the account, prints what the chain shows and exits `0`, `2` or `3`. No audit rule is registered yet, so it cannot emit a finding or exit `1`; that arrives with Phase 3. There is no release to install.
 
 ## What it will check
 
@@ -51,15 +52,15 @@ Exit codes: `0` pass, `1` findings at or above `--fail-on`, `2` configuration or
 - Live streaming or alerting. It is a state comparison you schedule, not a daemon.
 - The expectations themselves. If an attacker can edit both `gauge.toml` and the workflow that runs Gauge, the check can be made to pass. That residual risk is documented in `ARCHITECTURE_ESSENTIALS.md` section 10 and is a process problem, not a code problem.
 
-## Planned usage
-
-Target interface, not yet implemented. Once task 2.9 lands:
+## Usage
 
 ```bash
-stellar-gauge check G... G... --network mainnet          # facts plus universal rules, no config
-stellar-gauge audit --config gauge.toml --format json    # declared expectations, CI-friendly
+stellar-gauge check --network testnet --endpoint https://horizon-testnet.stellar.org G... G...
+stellar-gauge audit --config gauge.toml --format json
 stellar-gauge version
 ```
+
+`check` takes accounts on the command line and needs an explicit network and one endpoint. `audit` reads accounts, roles and expectations from the policy file, whose `endpoints` entry supplies the endpoint. Both take `--format text|json` and `--fail-on high|warn`; markdown output is not implemented yet.
 
 `gauge.example.toml` shows the policy shape: one `[[account]]` block per audited account with its role and expected signers, thresholds and flags, plus `[[accept]]` entries for risks you have decided to live with. An omitted expectation is not a zero or a false; it means "not declared", and drift rules only fire where you declared something.
 

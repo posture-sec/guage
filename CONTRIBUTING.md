@@ -4,7 +4,7 @@ Gauge is a read-only audit tool, so the bar for a change is "it cannot produce a
 
 ## Status
 
-The repository is a scaffold (`ROADMAP.md` task 1.12). Package directories and placeholder files mark scope boundaries. They are not implemented features, and a file's existence is not progress. Pick work from the open issues or from `ROADMAP.md` and say which task you are taking.
+The repository is a functional alpha (`ROADMAP.md` Phase 2): the policy loader, Horizon client, report renderers, orchestrator and CLI are implemented and tested. The threshold math, the rules and the SEP-1 fetcher are still placeholders, and a placeholder file is not progress. Pick work from the open issues or from `ROADMAP.md` and say which task you are taking.
 
 ## Before you start
 

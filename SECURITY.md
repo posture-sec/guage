@@ -29,7 +29,7 @@ Out of scope:
 
 **Unaudited.** No third party has reviewed Gauge, and the security checks in `AGENTS.md` section 5 (`govulncheck`, `staticcheck`, fuzzing of the sanitizer and strkey paths) are wired into CI but not all of them have targets yet.
 
-**Scaffold only.** As of the current commit no audit logic exists: no policy loader, no network client, no rules and no renderers. Nothing here should be relied on to detect anything. See `ROADMAP.md` for what is actually implemented.
+**Functional alpha, unaudited.** As of the current commit there is a policy loader, a Horizon client with timeouts, size caps and bounded retries, strict decoding, report renderers, an orchestrator and a CLI. No audit rule is implemented yet, so a run reports observed state and cannot emit a finding. The code has not been independently reviewed, so nothing here should be relied on to detect anything. See `ROADMAP.md` for what is actually implemented.
 
 ## What this tool cannot tell you
 
