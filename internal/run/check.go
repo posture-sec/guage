@@ -7,6 +7,7 @@ import (
 
 	"github.com/posture-sec/guage/internal/model"
 	"github.com/posture-sec/guage/internal/policy"
+	"github.com/posture-sec/guage/internal/rules"
 	"github.com/posture-sec/guage/internal/strkey"
 )
 
@@ -35,6 +36,10 @@ func Check(ctx context.Context, req CheckRequest) (model.Report, error) {
 		accounts = append(accounts, policy.Account{ID: id, Role: model.RoleOther})
 	}
 	named := policy.Config{Network: req.Network}
+	evaluate := req.Evaluate
+	if evaluate == nil {
+		evaluate = rules.Evaluate
+	}
 	return Run(ctx, Job{
 		ToolVersion: req.ToolVersion,
 		Network:     named.ExpectedPassphrase(),
@@ -43,7 +48,7 @@ func Check(ctx context.Context, req CheckRequest) (model.Report, error) {
 		FailOn:      req.FailOn,
 		Concurrency: req.Concurrency,
 		NewSource:   req.NewSource,
-		Evaluate:    req.Evaluate,
+		Evaluate:    evaluate,
 		Now:         req.Now,
 	})
 }

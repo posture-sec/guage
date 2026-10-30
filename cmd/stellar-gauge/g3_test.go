@@ -18,8 +18,9 @@ func TestGateG3(t *testing.T) {
 	seed := testStrkey(secretSeedVersion, 32)
 
 	cases := []struct {
-		name string
-		run  func() (int, string, string)
+		name        string
+		run         func() (int, string, string)
+		wantFinding string
 	}{
 		{
 			name: "unreachable endpoint",
@@ -42,11 +43,15 @@ func TestGateG3(t *testing.T) {
 			},
 		},
 		{
+			// A passphrase mismatch is a finding about the endpoint, not a
+			// transport failure, so the run still reports. It must not report a
+			// pass, and it must not read any account from the wrong network.
 			name: "wrong passphrase",
 			run: func() (int, string, string) {
 				srv := startEndpoint(t, endpoint{})
 				return execCLI(t, "check", "--network", "mainnet", "--endpoint", srv.URL, accountOne)
 			},
+			wantFinding: "acct-network-mismatch",
 		},
 		{
 			name: "unknown config key",
@@ -84,11 +89,23 @@ func TestGateG3(t *testing.T) {
 			if code == 0 {
 				t.Fatalf("exit code = 0, want non-zero")
 			}
-			if stdout != "" {
-				t.Errorf("stdout carries a report despite the failure: %q", stdout)
-			}
-			if stderr == "" {
-				t.Error("stderr is empty, so the operator is not told why the run stopped")
+			if tc.wantFinding != "" {
+				if code != 1 {
+					t.Errorf("exit code = %d, want 1 for a reported finding", code)
+				}
+				if !strings.Contains(stdout, tc.wantFinding) {
+					t.Errorf("stdout does not carry the %s finding: %q", tc.wantFinding, stdout)
+				}
+				if strings.Contains(stdout, "exit code: 0") {
+					t.Error("stdout reports a pass despite the finding")
+				}
+			} else {
+				if stdout != "" {
+					t.Errorf("stdout carries a report despite the failure: %q", stdout)
+				}
+				if stderr == "" {
+					t.Error("stderr is empty, so the operator is not told why the run stopped")
+				}
 			}
 			if strings.Contains(stderr, seed) {
 				t.Error("stderr echoed the secret seed")

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Draft v0.1 target (includes a red-team pass, section 14); functional alpha through Phase 2 as of 2026-10-30, with threshold math and the rules still pending |
+| Status | Draft v0.1 target (includes a red-team pass, section 14); functional alpha through Phase 2 plus the flag and account rules as of 2026-10-30, with threshold math, signer rules and identity rules still pending |
 | Date | 2026-10-28 |
 | Companion docs | `PRD.md`, `ARCHITECTURE_ESSENTIALS.md`, `ROADMAP.md`, `project_structure.md`, `AGENTS.md`, `CLAUDE.md` |
 | Tags | **[Verified]** checked against a source; **[Unverified]** believed or designed but untested |
@@ -181,7 +181,9 @@ Fetches `https://{home_domain}/.well-known/stellar.toml` for identity checks.
 
 ### 6.7 `rules`
 
-A rule is a pure function `func(ctx RuleContext) []model.Finding`. `RuleContext` carries the snapshot, the account's policy, role profile and identity facts. Rules are registered in a plain slice; there is no plugin or scripting system.
+A rule is a pure function `func(rules.Context) []model.Finding`. `rules.Context` carries the snapshot, the account's policy, whether the account was missing or the network mismatched, and the observed and requested passphrases. Role severity adjustment is not applied yet (task 3.4), so every rule uses its baseline severity. Rules are registered in a plain slice; there is no plugin or scripting system.
+
+Implemented 2026-10-30 (tasks 3.2 and 3.3) with four rules, evaluated in registry order: `acct-missing` (HIGH) when the endpoint answered 404, `acct-network-mismatch` (HIGH) when the endpoint's passphrase differs from the requested network, `flag-drift` (WARN) comparing only the flags the policy declares, and `flag-undeclared-clawback` (WARN) when clawback is observed on and the policy says nothing about it. A declared clawback value, true or false, suppresses the undeclared warning; a declared false that disagrees with the chain is `flag-drift` instead. Flag comparisons run in a fixed order so evidence is deterministic. Neither account rule can be accepted (section 8), and both suppress every other rule because there is no trustworthy snapshot to compare against. `All()` returns a copy of the registry, and `Evaluate` is the default `run.Evaluator`.
 
 ### 6.8 `report` and `sanitize`
 
@@ -194,7 +196,7 @@ A rule is a pure function `func(ctx RuleContext) []model.Finding`. `RuleContext`
 
 Orchestrates: load policy, build sources, check network passphrase, fetch snapshots concurrently with a bound, fetch identity data, evaluate rules, apply accepts, produce a `Report`, map to an exit code.
 
-Implemented 2026-10-30 (task 2.8) as `Run(ctx, Job)` with `Check` and `Audit` as the two builders. Order is fixed: the request is validated, the source is built, the passphrase is compared **before any account read**, then accounts are fetched in policy order through a semaphore (default 8) that cancels every worker on the first failure, so a partial fetch never becomes a report. The rule stage is an injected `Evaluator`; a panic inside it becomes a HIGH `src-rule-panic` finding and exit 3 rather than a crash, because an incomplete result must not exit 0. Accepts are applied to acceptable rules only, with the expiry date treated as the last day it holds and an unparseable date treated as not live. `report.Exit` decides 0 or 1; every orchestration failure is returned as an error, not a report, and `ErrUsage` marks the failures the CLI maps to exit 2.
+Implemented 2026-10-30 (task 2.8) as `Run(ctx, Job)` with `Check` and `Audit` as the two builders. Order is fixed: the request is validated, the source is built, the passphrase is compared **before any account read**, then accounts are fetched in policy order through a semaphore (default 8) that cancels every worker on the first failure, so a partial fetch never becomes a report. A passphrase mismatch does not stop the run: nothing is fetched, every account gets `acct-network-mismatch`, and the report says no state was read (task 3.3). A 404 is also observation rather than failure: the account becomes an `acct-missing` finding. Every other source failure still aborts with exit 3. The rule stage is an injected `Evaluator` (default `rules.Evaluate`); a panic inside it becomes a HIGH `src-rule-panic` finding and exit 3 rather than a crash, because an incomplete result must not exit 0. Accepts are applied to acceptable rules only, with the expiry date treated as the last day it holds and an unparseable date treated as not live. `report.Exit` decides 0 or 1; every orchestration failure is returned as an error, not a report, and `ErrUsage` marks the failures the CLI maps to exit 2.
 
 ### 6.10 `cmd/stellar-gauge`
 
@@ -204,7 +206,7 @@ Implemented 2026-10-30 (task 2.9) with the standard library `flag` package, one 
 
 ## 7. Data models
 
-As of 2026-10-30, `internal/model` carries the severity names, the finding constructor with its fingerprint and the sort order, `internal/strkey` validates and classifies addresses, `internal/sanitize` cleans output, `internal/source` reads and strictly decodes Horizon responses, `internal/report` renders them, `internal/run` orchestrates a run, and `cmd/stellar-gauge` exposes `check`, `audit` and `version`. Threshold math and the rules are still pending: no rule is registered yet, so a run reports facts and exits 0, 2 or 3 but cannot yet produce exit 1. JSON tags are snake_case field names and severity marshals as its lowercase name; the report schema and serialization behavior are fixed by task 2.6 and its golden files. Signer type values (`ed25519`, `hash_x`, `pre_auth_tx`) are internal labels; `internal/source` maps them from Horizon's `ed25519_public_key`, `sha256_hash` and `preauth_tx`.
+As of 2026-10-30, `internal/model` carries the severity names, the finding constructor with its fingerprint and the sort order, `internal/strkey` validates and classifies addresses, `internal/sanitize` cleans output, `internal/source` reads and strictly decodes Horizon responses, `internal/report` renders them, `internal/rules` holds the four account and flag rules, `internal/run` orchestrates a run, and `cmd/stellar-gauge` exposes `check`, `audit` and `version`. A run can now exit 1. The two account rules are HIGH and fail the default threshold; `flag-drift` and `flag-undeclared-clawback` are WARN, so they fail only under `--fail-on warn`. Threshold math and the signer, threshold and identity rules are still pending. JSON tags are snake_case field names and severity marshals as its lowercase name; the report schema and serialization behavior are fixed by task 2.6 and its golden files. Signer type values (`ed25519`, `hash_x`, `pre_auth_tx`) are internal labels; `internal/source` maps them from Horizon's `ed25519_public_key`, `sha256_hash` and `preauth_tx`.
 
 `policy.Config` holds version, network, endpoints, accounts and accepts. `policy.Account` holds identity, name, role, expected signers, thresholds, flags, home domain and issuer lock intent. Pointer fields preserve omitted versus explicit empty/zero/false expectations. `policy.Acceptance` carries rule, account, reason and an optional expiry string; strict decoding, date validation and non-acceptable-rule enforcement are implemented, while role severity adjustments remain task 3.4. `github.com/BurntSushi/toml` v1.6.0 is the only module in `go.mod`, approved as ADR-004.
 
@@ -283,7 +285,7 @@ Baseline files (P1) are JSON serializations of `AccountSnapshot` with a schema v
 |---|---|
 | Endpoint unreachable, times out or returns non-2xx after retries | exit 3 |
 | Response over the size cap or fails strict decoding | exit 3 |
-| Network passphrase differs from configured network | `acct-network-mismatch` (HIGH) and stop for that endpoint |
+| Network passphrase differs from configured network | `acct-network-mismatch` (HIGH), no state read |
 | Account not found | `acct-missing` (HIGH) |
 | Input is a secret seed | exit 2, value never echoed |
 | Input is `M` or `C` address | exit 2 with a clear message |
@@ -294,7 +296,7 @@ Baseline files (P1) are JSON serializations of `AccountSnapshot` with a schema v
 
 Exit codes: 0 pass; 1 findings at or above `fail_on`; 2 configuration or usage error; 3 source or internal error. Anything nonzero fails CI.
 
-At v0.1 as implemented through task 2.9, the rows that name `acct-network-mismatch`, `acct-missing`, `id-toml-unreachable` and `src-disagreement` are not active yet. A passphrase mismatch and a missing account stop the run as source errors (exit 3) instead of becoming findings, because a report needs a snapshot and the rules that would carry those IDs are tasks 3.3 and 3.5. Both stay fail-closed, so the exit code is still non-zero; the difference is that the run reports the stop instead of naming a rule.
+As implemented through tasks 3.2 and 3.3, the `acct-network-mismatch` and `acct-missing` rows are active. Both are HIGH findings and neither can be accepted, so they fail the default threshold and keep gate G3's exit non-zero. A passphrase mismatch reads no account at all: each account is marked skipped and carries the finding. The `id-toml-unreachable` and `src-disagreement` rows remain inactive until tasks 3.5 and 5.1, and an unreachable endpoint, an oversized body or a malformed response still exits 3 with no report. Exit 1 therefore means the run completed and the chain disagreed with the request; exit 3 still means no trustworthy comparison exists.
 
 ## 9. Rule specifications
 

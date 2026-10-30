@@ -7,6 +7,7 @@ import (
 
 	"github.com/posture-sec/guage/internal/model"
 	"github.com/posture-sec/guage/internal/policy"
+	"github.com/posture-sec/guage/internal/rules"
 )
 
 // AuditOptions carries the run settings that a policy file does not declare.
@@ -26,6 +27,10 @@ func Audit(ctx context.Context, cfg *policy.Config, opts AuditOptions) (model.Re
 	if cfg == nil {
 		return model.Report{}, fmt.Errorf("%w: no policy", ErrUsage)
 	}
+	evaluate := opts.Evaluate
+	if evaluate == nil {
+		evaluate = rules.Evaluate
+	}
 	return Run(ctx, Job{
 		ToolVersion: opts.ToolVersion,
 		Network:     cfg.ExpectedPassphrase(),
@@ -35,7 +40,7 @@ func Audit(ctx context.Context, cfg *policy.Config, opts AuditOptions) (model.Re
 		FailOn:      opts.FailOn,
 		Concurrency: opts.Concurrency,
 		NewSource:   opts.NewSource,
-		Evaluate:    opts.Evaluate,
+		Evaluate:    evaluate,
 		Now:         opts.Now,
 	})
 }

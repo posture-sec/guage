@@ -20,6 +20,7 @@ const (
 	mainnetPassphr  = "Public Global Stellar Network ; September 2015"
 	fixtureRoot     = "../../testdata/horizon/root-testnet.json"
 	fixtureAccount  = "../../testdata/horizon/1-default.json"
+	fixtureClawback = "../../testdata/horizon/8-clawback-undeclared.json"
 	fixtureNotFound = "../../testdata/horizon/10-not-found.json"
 )
 
@@ -319,8 +320,6 @@ func TestCheckFailsClosed(t *testing.T) {
 	}{
 		{name: "endpoint refused", endpoint: down.URL, network: testNetwork, accounts: []string{accountOne}, wantCode: 3},
 		{name: "server error", server: endpoint{always500: true}, serves: true, network: testNetwork, accounts: []string{accountOne}, wantCode: 3},
-		{name: "missing account", server: endpoint{accountStatus: http.StatusNotFound, balance: readFixture(t, fixtureNotFound)}, serves: true, network: testNetwork, accounts: []string{accountMissing}, wantCode: 3},
-		{name: "wrong network", server: endpoint{}, serves: true, network: "mainnet", accounts: []string{accountOne}, wantCode: 3},
 		{name: "oversize response", server: endpoint{oversize: true}, serves: true, network: testNetwork, accounts: []string{accountOne}, wantCode: 3},
 		{name: "malformed root", server: endpoint{root: []byte(`{"network_passphrase":`)}, serves: true, network: testNetwork, accounts: []string{accountOne}, wantCode: 3},
 		{name: "malformed account", server: endpoint{balance: []byte(`{"id":`)}, serves: true, network: testNetwork, accounts: []string{accountOne}, wantCode: 3},
@@ -348,6 +347,77 @@ func TestCheckFailsClosed(t *testing.T) {
 	}
 }
 
+func TestCheckReportsAMissingAccountAsAFinding(t *testing.T) {
+	t.Parallel()
+	srv := startEndpoint(t, endpoint{
+		accountStatus: http.StatusNotFound,
+		balance:       readFixture(t, fixtureNotFound),
+	})
+	code, stdout, stderr := execCLI(t, "check",
+		"--network", testNetwork,
+		"--endpoint", srv.URL,
+		accountMissing,
+	)
+	if code != 1 {
+		t.Fatalf("exit code = %d, want 1 (stderr %q)", code, stderr)
+	}
+	if stderr != "" {
+		t.Errorf("a reported finding wrote to stderr: %q", stderr)
+	}
+	for _, want := range []string{
+		"account " + accountMissing,
+		"not found on this endpoint (never created, or merged)",
+		"[high] acct-missing",
+		"exit code: 1",
+	} {
+		if !strings.Contains(stdout, want) {
+			t.Errorf("stdout does not contain %q:\n%s", want, stdout)
+		}
+	}
+}
+
+func TestCheckWritesAMissingAccountAsJSON(t *testing.T) {
+	t.Parallel()
+	srv := startEndpoint(t, endpoint{
+		accountStatus: http.StatusNotFound,
+		balance:       readFixture(t, fixtureNotFound),
+	})
+	code, stdout, stderr := execCLI(t, "check",
+		"--network", testNetwork,
+		"--endpoint", srv.URL,
+		"--format", "json",
+		accountMissing,
+	)
+	if code != 1 {
+		t.Fatalf("exit code = %d, want 1 (stderr %q)", code, stderr)
+	}
+	var payload struct {
+		ExitCode int `json:"exit_code"`
+		Accounts []struct {
+			Missing  bool `json:"missing"`
+			Snapshot struct {
+				ID string `json:"id"`
+			} `json:"snapshot"`
+			Findings []struct {
+				RuleID string `json:"rule_id"`
+			} `json:"findings"`
+		} `json:"accounts"`
+	}
+	if err := json.Unmarshal([]byte(stdout), &payload); err != nil {
+		t.Fatalf("stdout is not JSON: %v\n%s", err, stdout)
+	}
+	if payload.ExitCode != 1 || len(payload.Accounts) != 1 {
+		t.Fatalf("unexpected JSON header: %+v", payload)
+	}
+	account := payload.Accounts[0]
+	if !account.Missing || account.Snapshot.ID != accountMissing {
+		t.Errorf("missing account marked wrong: %+v", account)
+	}
+	if len(account.Findings) != 1 || account.Findings[0].RuleID != "acct-missing" {
+		t.Errorf("unexpected findings: %+v", account.Findings)
+	}
+}
+
 func writePolicy(t *testing.T, body string) string {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "gauge.toml")
@@ -358,12 +428,16 @@ func writePolicy(t *testing.T, body string) string {
 }
 
 func policyFor(endpointURL string) string {
+	return policyForAccount(endpointURL, accountOne)
+}
+
+func policyForAccount(endpointURL, id string) string {
 	return `version = 1
 network = "testnet"
 endpoints = ["` + endpointURL + `"]
 
 [[account]]
-id = "` + accountOne + `"
+id = "` + id + `"
 name = "treasury"
 role = "treasury"
 `
@@ -379,6 +453,41 @@ func TestAuditRunsFromAPolicyFile(t *testing.T) {
 	}
 	if !strings.Contains(stdout, "account "+accountOne) {
 		t.Errorf("stdout does not mention the audited account:\n%s", stdout)
+	}
+}
+
+func TestAuditReportsUndeclaredClawback(t *testing.T) {
+	t.Parallel()
+	srv := startEndpoint(t, endpoint{balance: readFixture(t, fixtureClawback)})
+	path := writePolicy(t, policyForAccount(srv.URL, accountMissing))
+	code, stdout, stderr := execCLI(t, "audit", "--config", path, "--fail-on", "warn")
+	if code != 1 {
+		t.Fatalf("exit code = %d, want 1 (stderr %q)", code, stderr)
+	}
+	if !strings.Contains(stdout, "[warn] flag-undeclared-clawback") {
+		t.Errorf("stdout does not carry the clawback warning:\n%s", stdout)
+	}
+}
+
+func TestAuditReportsDeclaredFlagDrift(t *testing.T) {
+	t.Parallel()
+	srv := startEndpoint(t, endpoint{balance: readFixture(t, fixtureClawback)})
+	body := policyForAccount(srv.URL, accountMissing) + "expected_flags = { auth_required = false, clawback = true }\n"
+	path := writePolicy(t, body)
+	code, stdout, stderr := execCLI(t, "audit", "--config", path, "--fail-on", "warn")
+	if code != 1 {
+		t.Fatalf("exit code = %d, want 1 (stderr %q)", code, stderr)
+	}
+	for _, want := range []string{
+		"[warn] flag-drift",
+		"auth_required declared false, observed true",
+	} {
+		if !strings.Contains(stdout, want) {
+			t.Errorf("stdout does not contain %q:\n%s", want, stdout)
+		}
+	}
+	if strings.Contains(stdout, "flag-undeclared-clawback") {
+		t.Errorf("a declared clawback expectation still raised the undeclared warning:\n%s", stdout)
 	}
 }
 
@@ -465,14 +574,24 @@ func TestAuditReportsAMissingConfig(t *testing.T) {
 
 func TestCheckPassphraseIsNotHardcodedToTheEndpoint(t *testing.T) {
 	t.Parallel()
-	// A mainnet root must not satisfy a testnet request.
+	// A mainnet root must not satisfy a testnet request. The account body is
+	// malformed on purpose: if the run read it, the run would fail with exit 3
+	// instead of reporting the mismatch.
 	root := []byte(`{"network_passphrase":"` + mainnetPassphr + `","history_latest_ledger":1}`)
-	srv := startEndpoint(t, endpoint{root: root})
-	code, stdout, _ := execCLI(t, "check", "--network", testNetwork, "--endpoint", srv.URL, accountOne)
-	if code != 3 {
-		t.Fatalf("exit code = %d, want 3", code)
+	srv := startEndpoint(t, endpoint{root: root, balance: []byte(`{"id":`)})
+	code, stdout, stderr := execCLI(t, "check", "--network", testNetwork, "--endpoint", srv.URL, accountOne)
+	if code != 1 {
+		t.Fatalf("exit code = %d, want 1 (stderr %q)", code, stderr)
 	}
-	if stdout != "" {
-		t.Errorf("a failed run wrote a report: %q", stdout)
+	for _, want := range []string{
+		"[high] acct-network-mismatch",
+		"no state read: the endpoint is on a different network",
+		"expected " + testPassphrase,
+		"endpoint reports " + mainnetPassphr,
+		"exit code: 1",
+	} {
+		if !strings.Contains(stdout, want) {
+			t.Errorf("stdout does not contain %q:\n%s", want, stdout)
+		}
 	}
 }

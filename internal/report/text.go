@@ -44,19 +44,26 @@ func writeAccount(b *strings.Builder, ar model.AccountReport) {
 	s := ar.Snapshot
 	fmt.Fprintf(b, "\naccount %s\n", s.ID)
 	fmt.Fprintf(b, "  endpoint: %s\n", emptyAs(s.Endpoint, "(none)"))
-	fmt.Fprintf(b, "  as of ledger %d, sequence %s\n", s.Ledger, emptyAs(s.Sequence, "(none)"))
-	fmt.Fprintf(b, "  thresholds: low %d, medium %d, high %d\n", s.Thresholds.Low, s.Thresholds.Medium, s.Thresholds.High)
-	fmt.Fprintf(b, "  flags: auth_required=%t auth_revocable=%t auth_immutable=%t clawback=%t\n",
-		s.Flags.AuthRequired, s.Flags.AuthRevocable, s.Flags.AuthImmutable, s.Flags.ClawbackEnabled)
-	fmt.Fprintf(b, "  home domain: %s\n", describedDomain(s.HomeDomain))
-	fmt.Fprintf(b, "  sponsor: %s\n", emptyAs(s.Sponsor, "(none)"))
-	fmt.Fprintf(b, "  signers: %d\n", len(s.Signers))
-	for _, signer := range s.Signers {
-		fmt.Fprintf(b, "    %s %s weight %d", signer.Key, signer.Type, signer.Weight)
-		if signer.Sponsor != "" {
-			fmt.Fprintf(b, " sponsored by %s", signer.Sponsor)
+	switch {
+	case ar.Missing:
+		b.WriteString("  not found on this endpoint (never created, or merged)\n")
+	case ar.Skipped != "":
+		fmt.Fprintf(b, "  no state read: %s\n", ar.Skipped)
+	default:
+		fmt.Fprintf(b, "  as of ledger %d, sequence %s\n", s.Ledger, emptyAs(s.Sequence, "(none)"))
+		fmt.Fprintf(b, "  thresholds: low %d, medium %d, high %d\n", s.Thresholds.Low, s.Thresholds.Medium, s.Thresholds.High)
+		fmt.Fprintf(b, "  flags: auth_required=%t auth_revocable=%t auth_immutable=%t clawback=%t\n",
+			s.Flags.AuthRequired, s.Flags.AuthRevocable, s.Flags.AuthImmutable, s.Flags.ClawbackEnabled)
+		fmt.Fprintf(b, "  home domain: %s\n", describedDomain(s.HomeDomain))
+		fmt.Fprintf(b, "  sponsor: %s\n", emptyAs(s.Sponsor, "(none)"))
+		fmt.Fprintf(b, "  signers: %d\n", len(s.Signers))
+		for _, signer := range s.Signers {
+			fmt.Fprintf(b, "    %s %s weight %d", signer.Key, signer.Type, signer.Weight)
+			if signer.Sponsor != "" {
+				fmt.Fprintf(b, " sponsored by %s", signer.Sponsor)
+			}
+			b.WriteString("\n")
 		}
-		b.WriteString("\n")
 	}
 
 	accepted := 0
