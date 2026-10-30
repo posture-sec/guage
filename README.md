@@ -22,18 +22,18 @@ Gauge is read-only and secret-free. It never accepts, stores or echoes a secret 
 
 ## Status
 
-Functional alpha (ROADMAP Phase 2, tasks 2.1 to 2.10). The policy loader, Horizon client, report renderers, orchestrator and CLI are implemented and tested:
+Functional alpha (ROADMAP Phase 2, tasks 2.1 to 2.10), plus the account and flag rules from Phase 3 (tasks 3.2 and 3.3). The policy loader, Horizon client, report renderers, orchestrator, rules and CLI are implemented and tested:
 
 ```bash
 go run ./cmd/stellar-gauge version
 go run ./cmd/stellar-gauge check --network testnet --endpoint https://horizon-testnet.stellar.org G...
 ```
 
-A run reads the account, prints what the chain shows and exits `0`, `2` or `3`. No audit rule is registered yet, so it cannot emit a finding or exit `1`; that arrives with Phase 3. There is no release to install.
+A run reads the account, prints what the chain shows and exits `0`, `1`, `2` or `3`. A missing account or an endpoint on the wrong network is a HIGH finding and exits `1` by default, as does any run that could not complete. Declared flag drift and an undeclared clawback are warnings and exit `1` under `--fail-on warn`. The remaining twelve rules and role-based severities arrive later in Phase 3. There is no release to install.
 
-## What it will check
+## What it checks
 
-Sixteen rules in v0.1, each with a stable kebab-case ID. Severity depends on the account's declared role (issuer and treasury are held to a tighter bar than merchant and distribution).
+Sixteen rules in v0.1, each with a stable kebab-case ID. Four are implemented today: `acct-missing`, `acct-network-mismatch`, `flag-drift` and `flag-undeclared-clawback`. Severity depends on the account's declared role (issuer and treasury are held to a tighter bar than merchant and distribution) once role profiles land in task 3.4; until then the four rules use their baseline severity.
 
 | Family | Rules |
 | --- | --- |

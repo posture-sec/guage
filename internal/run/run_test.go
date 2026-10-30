@@ -10,6 +10,7 @@ import (
 
 	"github.com/posture-sec/guage/internal/model"
 	"github.com/posture-sec/guage/internal/policy"
+	"github.com/posture-sec/guage/internal/rules"
 	"github.com/posture-sec/guage/internal/source"
 )
 
@@ -94,13 +95,13 @@ func TestRunEndToEnd(t *testing.T) {
 		},
 	}
 	job := baseJob(fs)
-	job.Evaluate = func(account policy.Account, snap model.AccountSnapshot) []model.Finding {
-		if account.ID != accountOne {
+	job.Evaluate = func(c rules.Context) []model.Finding {
+		if c.Account.ID != accountOne {
 			return nil
 		}
 		return []model.Finding{
-			model.NewFinding("sig-test-warn", model.SevWarn, snap.ID, "a warning", "evidence"),
-			model.NewFinding("sig-test-high", model.SevHigh, snap.ID, "a high finding", "evidence"),
+			model.NewFinding("sig-test-warn", model.SevWarn, c.Snapshot.ID, "a warning", "evidence"),
+			model.NewFinding("sig-test-high", model.SevHigh, c.Snapshot.ID, "a high finding", "evidence"),
 		}
 	}
 
@@ -185,11 +186,11 @@ func TestRunAccepts(t *testing.T) {
 			if len(tt.accepts) == 1 && tt.accepts[0].Rule == "sig-threshold-unreachable" {
 				rule = tt.accepts[0].Rule
 			}
-			job.Evaluate = func(_ policy.Account, snap model.AccountSnapshot) []model.Finding {
-				if snap.ID != accountOne {
+			job.Evaluate = func(c rules.Context) []model.Finding {
+				if c.Snapshot.ID != accountOne {
 					return nil
 				}
-				return []model.Finding{model.NewFinding(rule, model.SevHigh, snap.ID, "message", "evidence")}
+				return []model.Finding{model.NewFinding(rule, model.SevHigh, c.Snapshot.ID, "message", "evidence")}
 			}
 
 			result, err := Run(context.Background(), job)
@@ -228,11 +229,11 @@ func TestRunFailOn(t *testing.T) {
 			}
 			job := baseJob(fs)
 			job.FailOn = tt.failOn
-			job.Evaluate = func(_ policy.Account, snap model.AccountSnapshot) []model.Finding {
-				if snap.ID != accountOne {
+			job.Evaluate = func(c rules.Context) []model.Finding {
+				if c.Snapshot.ID != accountOne {
 					return nil
 				}
-				return []model.Finding{model.NewFinding("sig-test", tt.sev, snap.ID, "message", "evidence")}
+				return []model.Finding{model.NewFinding("sig-test", tt.sev, c.Snapshot.ID, "message", "evidence")}
 			}
 			result, err := Run(context.Background(), job)
 			if err != nil {
@@ -245,15 +246,61 @@ func TestRunFailOn(t *testing.T) {
 	}
 }
 
-func TestRunRejectsWrongNetworkBeforeFetching(t *testing.T) {
+func TestRunReportsWrongNetworkWithoutFetching(t *testing.T) {
 	t.Parallel()
 	fs := &fakeSource{info: model.NetworkInfo{Passphrase: "Public Global Stellar Network ; September 2015", Ledger: 1}}
-	_, err := Run(context.Background(), baseJob(fs))
-	if !errors.Is(err, source.ErrPassphraseMismatch) {
-		t.Fatalf("err = %v, want ErrPassphraseMismatch", err)
+	job := baseJob(fs)
+	job.Evaluate = rules.Evaluate
+	result, err := Run(context.Background(), job)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
 	}
 	if calls := fs.called(); len(calls) != 0 {
-		t.Fatalf("accounts were fetched: %v", calls)
+		t.Fatalf("accounts were fetched from the wrong network: %v", calls)
+	}
+	if result.ExitCode != model.ExitFindings {
+		t.Fatalf("exit = %d, want %d", result.ExitCode, model.ExitFindings)
+	}
+	if len(result.Accounts) != 2 {
+		t.Fatalf("accounts = %d, want 2", len(result.Accounts))
+	}
+	for _, account := range result.Accounts {
+		if account.Skipped == "" {
+			t.Fatalf("account %s was not marked skipped", account.Snapshot.ID)
+		}
+		if len(account.Findings) != 1 || account.Findings[0].RuleID != "acct-network-mismatch" || account.Findings[0].Severity != model.SevHigh {
+			t.Fatalf("findings = %+v", account.Findings)
+		}
+	}
+}
+
+func TestRunTreatsAMissingAccountAsAFinding(t *testing.T) {
+	t.Parallel()
+	fs := &fakeSource{
+		info:      model.NetworkInfo{Passphrase: testnet, Ledger: 1},
+		snapshots: map[string]model.AccountSnapshot{accountTwo: snapshot(accountTwo, 2)},
+	}
+	job := baseJob(fs)
+	job.Evaluate = rules.Evaluate
+	result, err := Run(context.Background(), job)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	missing := result.Accounts[0]
+	if !missing.Missing {
+		t.Fatal("the missing account was not marked missing")
+	}
+	if missing.Snapshot.ID != accountOne || missing.Snapshot.Endpoint != job.Endpoints[0] {
+		t.Fatalf("missing snapshot = %+v", missing.Snapshot)
+	}
+	if len(missing.Findings) != 1 || missing.Findings[0].RuleID != "acct-missing" || missing.Findings[0].Severity != model.SevHigh {
+		t.Fatalf("findings = %+v", missing.Findings)
+	}
+	if result.Accounts[1].Missing || len(result.Accounts[1].Findings) != 0 {
+		t.Fatalf("the readable account was affected: %+v", result.Accounts[1])
+	}
+	if result.ExitCode != model.ExitFindings {
+		t.Fatalf("exit = %d, want %d", result.ExitCode, model.ExitFindings)
 	}
 }
 
@@ -279,13 +326,6 @@ func TestRunReturnsSourceErrors(t *testing.T) {
 			},
 			want: source.ErrStatus,
 		},
-		{
-			name: "account is missing",
-			fs: &fakeSource{
-				info: model.NetworkInfo{Passphrase: testnet, Ledger: 1},
-			},
-			want: source.ErrNotFound,
-		},
 	}
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
@@ -305,8 +345,8 @@ func TestRunRecoversRulePanics(t *testing.T) {
 		snapshots: map[string]model.AccountSnapshot{accountOne: snapshot(accountOne, 1), accountTwo: snapshot(accountTwo, 2)},
 	}
 	job := baseJob(fs)
-	job.Evaluate = func(_ policy.Account, snap model.AccountSnapshot) []model.Finding {
-		if snap.ID == accountOne {
+	job.Evaluate = func(c rules.Context) []model.Finding {
+		if c.Snapshot.ID == accountOne {
 			panic("a rule broke")
 		}
 		return nil
@@ -369,8 +409,8 @@ func TestCheckBuildsAccountsWithoutExpectations(t *testing.T) {
 		Accounts:    []string{accountOne},
 		FailOn:      model.SevHigh,
 		NewSource:   stubFactory(fs),
-		Evaluate: func(account policy.Account, _ model.AccountSnapshot) []model.Finding {
-			seen = account
+		Evaluate: func(c rules.Context) []model.Finding {
+			seen = c.Account
 			return nil
 		},
 	})
@@ -424,9 +464,9 @@ func TestAuditUsesPolicyNetworkAndAccepts(t *testing.T) {
 		FailOn:      model.SevHigh,
 		NewSource:   stubFactory(fs),
 		Now:         func() time.Time { return time.Date(2026, 10, 30, 0, 0, 0, 0, time.UTC) },
-		Evaluate: func(account policy.Account, snap model.AccountSnapshot) []model.Finding {
-			seen = account
-			return []model.Finding{model.NewFinding("sig-test", model.SevHigh, snap.ID, "message", "evidence")}
+		Evaluate: func(c rules.Context) []model.Finding {
+			seen = c.Account
+			return []model.Finding{model.NewFinding("sig-test", model.SevHigh, c.Snapshot.ID, "message", "evidence")}
 		},
 	})
 	if err != nil {
@@ -455,7 +495,7 @@ func TestFetchConcurrencyIsBounded(t *testing.T) {
 	fs := &blockingSource{started: started, release: release, inflight: &inflight, peak: &peak}
 	job := baseJob(fs)
 	job.Concurrency = 1
-	job.Evaluate = func(policy.Account, model.AccountSnapshot) []model.Finding { return nil }
+	job.Evaluate = func(rules.Context) []model.Finding { return nil }
 
 	done := make(chan error, 1)
 	go func() {

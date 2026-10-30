@@ -57,8 +57,8 @@ guage/
       {fetch,guard,parse}.go               # guarded identity acquisition; no networking yet (3.5)
       {fetch_test,guard_test}.go           # reserved SSRF and parser tests
     rules/
-      {rules,account,signers,thresholds,flags,identity,facts}.go # pure rule boundaries (3.1 to 3.7)
-      rules_test.go                       # reserved positive and negative cases
+      {rules,account,signers,thresholds,flags,identity,facts}.go # registry and pure rule boundaries (3.2, 3.3 done)
+      rules_test.go                       # positive and negative cases from the testnet fixtures (3.2, 3.3)
     report/
       {text,json,exit}.go                  # P0 renderers, limits footer and outcome mapping (2.6)
       markdown.go                         # P1 output (5.3)
@@ -104,7 +104,7 @@ Drafted but not finished: `README.md` (1.10) and `CONTRIBUTING.md`, `SECURITY.md
 
 Still absent, not silently implemented: a release workflow (4.5) and a scheduled-audit template (5.4). `go.sum` holds Go's own checksums for the one approved module (ADR-004, added in 2.4); no lockfile is hand-drafted. The local `files/` briefing copies are Git-ignored; the root documents are the maintained source of truth.
 
-Checks that run today: `gofmt -l .`, `go build ./...`, `go vet ./...`, `go test ./... -race -count=1`, `staticcheck ./...`, `govulncheck ./...`, `scripts/check_roadmap_touched.sh origin/main`, `scripts/roadmap_progress.sh --check`, `scripts/test_roadmap_gate.sh`, `scripts/generate_issues.sh --check`. OSSF Scorecard runs on pushes to `main` and weekly (`scorecard / analysis`), not on pull requests, because it audits the default branch and publishes results. `stellar-gauge version` prints the version, and `check` and `audit` read real accounts through the Horizon client and render a report; no rule is registered yet, so a run can exit 0, 2 or 3 but cannot yet exit 1. The implemented packages are `model`, `strkey`, `sanitize`, `policy`, `source`, `report`, `run` and `cmd/stellar-gauge` (2.1 to 2.10), and `strkey` and `sanitize` carry fuzz targets. `internal/threshold`, `internal/sep1` and `internal/rules` are still placeholders.
+Checks that run today: `gofmt -l .`, `go build ./...`, `go vet ./...`, `go test ./... -race -count=1`, `staticcheck ./...`, `govulncheck ./...`, `scripts/check_roadmap_touched.sh origin/main`, `scripts/roadmap_progress.sh --check`, `scripts/test_roadmap_gate.sh`, `scripts/generate_issues.sh --check`. OSSF Scorecard runs on pushes to `main` and weekly (`scorecard / analysis`), not on pull requests, because it audits the default branch and publishes results. `stellar-gauge version` prints the version, and `check` and `audit` read real accounts through the Horizon client, evaluate the four registered rules and render a report; a missing account or a network mismatch exits 1 by default, and flag drift or an undeclared clawback exits 1 under `--fail-on warn`. The implemented packages are `model`, `strkey`, `sanitize`, `policy`, `source`, `report`, `rules`, `run` and `cmd/stellar-gauge` (2.1 to 2.10, 3.2, 3.3), and `strkey` and `sanitize` carry fuzz targets. `internal/threshold` and `internal/sep1` are still placeholders, and `internal/rules` has the account and flag rules but no signer, threshold or identity rule yet.
 
 Not built on purpose (do not create without a roadmap decision): a watch daemon, alert integrations, a rules language or plugin loader, a web UI, reputation scoring, contract-account auditing. See `ARCHITECTURE.md` 14.3.
 

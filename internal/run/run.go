@@ -10,6 +10,7 @@ import (
 	"github.com/posture-sec/guage/internal/model"
 	"github.com/posture-sec/guage/internal/policy"
 	"github.com/posture-sec/guage/internal/report"
+	"github.com/posture-sec/guage/internal/rules"
 	"github.com/posture-sec/guage/internal/source"
 )
 
@@ -18,10 +19,10 @@ const defaultConcurrency = 8
 // ErrUsage reports a request the orchestrator will not run.
 var ErrUsage = errors.New("run: invalid request")
 
-// Evaluator returns the findings for one observed account. It must be pure:
-// no I/O, no globals, no time and no randomness, so the same snapshot and
-// policy always produce the same findings.
-type Evaluator func(account policy.Account, snapshot model.AccountSnapshot) []model.Finding
+// Evaluator returns the findings for one observation. It must be pure: no I/O,
+// no globals, no time and no randomness, so the same observation and policy
+// always produce the same findings.
+type Evaluator func(rules.Context) []model.Finding
 
 // SourceFactory builds one source for an endpoint. Tests inject fakes here.
 type SourceFactory func(endpoint string) (source.Source, error)
@@ -66,11 +67,18 @@ func Run(ctx context.Context, job Job) (model.Report, error) {
 	if err != nil {
 		return model.Report{}, fmt.Errorf("run: reading the network: %w", err)
 	}
+	// A mismatch is a finding about the endpoint, not a transport failure, so
+	// the run reports it per account instead of stopping. Nothing is read from
+	// an endpoint on the wrong network.
+	mismatch := false
 	if err := source.CheckPassphrase(info, job.Network); err != nil {
-		return model.Report{}, fmt.Errorf("run: %w", err)
+		if !errors.Is(err, source.ErrPassphraseMismatch) {
+			return model.Report{}, fmt.Errorf("run: %w", err)
+		}
+		mismatch = true
 	}
 
-	snapshots, err := fetchAll(ctx, src, job.Accounts, job.Concurrency)
+	observations, err := observe(ctx, src, job.Endpoints[0], job.Accounts, job.Concurrency, mismatch)
 	if err != nil {
 		return model.Report{}, fmt.Errorf("run: %w", err)
 	}
@@ -82,16 +90,25 @@ func Run(ctx context.Context, job Job) (model.Report, error) {
 		Accounts:    make([]model.AccountReport, 0, len(job.Accounts)),
 	}
 	panicked := false
-	for i, snapshot := range snapshots {
+	for i, obs := range observations {
+		snapshot := obs.snapshot
 		snapshot.Network = info.Passphrase
-		findings, recovered := evaluate(job.Evaluate, job.Accounts[i], snapshot)
+		findings, recovered := evaluate(job.Evaluate, rules.Context{
+			Account:  job.Accounts[i],
+			Snapshot: snapshot,
+			Missing:  obs.missing,
+			Mismatch: mismatch,
+			Network:  info.Passphrase,
+			Expected: job.Network,
+		})
 		panicked = panicked || recovered
 		applyAccepts(findings, job.Accepts, now())
 		model.SortFindings(findings)
-		result.Accounts = append(result.Accounts, model.AccountReport{
-			Snapshot: snapshot,
-			Findings: findings,
-		})
+		report := model.AccountReport{Snapshot: snapshot, Findings: findings, Missing: obs.missing}
+		if mismatch {
+			report.Skipped = "the endpoint is on a different network"
+		}
+		result.Accounts = append(result.Accounts, report)
 	}
 
 	result.ExitCode = report.Exit(result, job.FailOn)
@@ -133,13 +150,34 @@ func horizonFactory(version string) SourceFactory {
 	}
 }
 
-// fetchAll keeps the policy order, runs at most limit fetches at a time and
-// stops every worker on the first failure.
-func fetchAll(ctx context.Context, src source.Source, accounts []policy.Account, limit int) ([]model.AccountSnapshot, error) {
+// observation is one account's result: a snapshot, or the fact that the
+// endpoint reported the account as missing.
+type observation struct {
+	snapshot model.AccountSnapshot
+	missing  bool
+}
+
+// observe keeps the policy order, runs at most limit fetches at a time and
+// stops every worker on the first failure that is not a missing account. A
+// missing account is observation, not an orchestration failure, because
+// acct-missing is a finding. When the endpoint is on the wrong network nothing
+// is fetched at all.
+func observe(ctx context.Context, src source.Source, endpoint string, accounts []policy.Account, limit int, mismatch bool) ([]observation, error) {
+	if mismatch {
+		out := make([]observation, len(accounts))
+		for i, account := range accounts {
+			out[i].snapshot = model.AccountSnapshot{ID: account.ID, Endpoint: endpoint}
+		}
+		return out, nil
+	}
+	return fetchAll(ctx, src, endpoint, accounts, limit)
+}
+
+func fetchAll(ctx context.Context, src source.Source, endpoint string, accounts []policy.Account, limit int) ([]observation, error) {
 	if limit <= 0 {
 		limit = defaultConcurrency
 	}
-	snapshots := make([]model.AccountSnapshot, len(accounts))
+	observed := make([]observation, len(accounts))
 	fetchCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -166,11 +204,18 @@ func fetchAll(ctx context.Context, src source.Source, accounts []policy.Account,
 			}
 			defer func() { <-sem }()
 			snapshot, err := src.Account(fetchCtx, accounts[i].ID)
+			if errors.Is(err, source.ErrNotFound) {
+				observed[i] = observation{
+					snapshot: model.AccountSnapshot{ID: accounts[i].ID, Endpoint: endpoint},
+					missing:  true,
+				}
+				return
+			}
 			if err != nil {
 				fail(fmt.Errorf("account %s: %w", accounts[i].ID, err))
 				return
 			}
-			snapshots[i] = snapshot
+			observed[i] = observation{snapshot: snapshot}
 		}(i)
 	}
 	wg.Wait()
@@ -181,10 +226,10 @@ func fetchAll(ctx context.Context, src source.Source, accounts []policy.Account,
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	return snapshots, nil
+	return observed, nil
 }
 
-func evaluate(evaluator Evaluator, account policy.Account, snapshot model.AccountSnapshot) (findings []model.Finding, recovered bool) {
+func evaluate(evaluator Evaluator, c rules.Context) (findings []model.Finding, recovered bool) {
 	if evaluator == nil {
 		return nil, false
 	}
@@ -193,14 +238,14 @@ func evaluate(evaluator Evaluator, account policy.Account, snapshot model.Accoun
 			findings = []model.Finding{model.NewFinding(
 				"src-rule-panic",
 				model.SevHigh,
-				snapshot.ID,
+				c.Snapshot.ID,
 				"a rule panicked, so this account's result is incomplete",
 				"rule evaluation recovered from a panic",
 			)}
 			recovered = true
 		}
 	}()
-	return evaluator(account, snapshot), false
+	return evaluator(c), false
 }
 
 func applyAccepts(findings []model.Finding, accepts []policy.Acceptance, now time.Time) {

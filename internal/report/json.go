@@ -60,7 +60,12 @@ func prepare(r model.Report) model.Report {
 			findings[j] = f
 		}
 		model.SortFindings(findings)
-		out.Accounts[i] = model.AccountReport{Snapshot: snapshot, Findings: findings}
+		out.Accounts[i] = model.AccountReport{
+			Snapshot: snapshot,
+			Findings: findings,
+			Missing:  ar.Missing,
+			Skipped:  sanitize.Text(ar.Skipped),
+		}
 	}
 	return out
 }

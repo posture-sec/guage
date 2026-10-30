@@ -14,14 +14,14 @@ Working notes for applying `posture-sec/guage` to a Stellar Wave cycle. Program 
 One hard reason and one polish gap.
 
 1. No cycle is open, so there is nothing to apply into today.
-2. The check works but cannot yet produce a finding. As of 2026-10-30 `stellar-gauge check` reads a real account through the Horizon client and prints the facts it sees, exiting `0`, `2` or `3`; no audit rule is registered until Phase 3, so exit `1` is unreachable and a demo shows observed state rather than findings. A submission is stronger once at least one rule family lands, and the downside is asymmetric: a rejected repository cannot simply be re-applied, appeals go through the dashboard, are capped at three, and carry waiting periods.
+2. The rule set is thin. As of 2026-10-30 `stellar-gauge check` reads a real account through the Horizon client and evaluates four rules, so exit `1` is reachable: a missing account and a wrong network are HIGH findings, and declared flag drift and an undeclared clawback are warnings under `--fail-on warn`. Signer, threshold and identity rules plus role-based severities are still open (3.1, 3.4, 3.5), so a demo shows account and flag findings rather than the full rule catalog. A submission is stronger once a signer rule family lands, and the downside is asymmetric: a rejected repository cannot simply be re-applied, appeals go through the dashboard, are capped at three, and carry waiting periods.
 
 ## 3. Gate list before clicking Apply
 
 - [x] PR #2 merged, so `main` carries CI, the roadmap gate, `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CODEOWNERS`, issue forms and the banner. (merged 2026-10-30 as `ae6a05d`; the first push-event CI run on `main` passed)
 - [x] Task 1.3 closed by observing the direct-push refusal against `main` itself, not a probe branch. (refused 2026-10-30 with "Changes must be made through a pull request", `main` unchanged)
 - [x] Task 1.7 done: a Scorecard run where Branch-Protection returns a score. (2026-10-30: score 4, overall 6.2, Scorecard v5.6.0, badge live in the README. The three warnings about required approvals are accepted under D-14 because the repository has one maintainer, and they will keep the score down until a second reviewer exists.)
-- [x] Task 2.9 done, so `stellar-gauge check` reads a real account and prints a report. (2026-10-30: the CLI, orchestration and Horizon client are merged and tested; gate G3 passes. No rule is registered yet, so the report is facts only.)
+- [x] Task 2.9 done, so `stellar-gauge check` reads a real account and prints a report. (2026-10-30: the CLI, orchestration and Horizon client are merged and tested; gate G3 passes. Tasks 3.2 and 3.3 then registered four rules, so the report can carry findings and exit 1.)
 - [ ] A short screen recording of that run end to end, which the playbook treats as the difference between a submission and an unfinished one.
 - [ ] Task 0.4 answered with named operators, since the pitch rests on people who would run this on a schedule.
 - [ ] Task 4.2 at least partly done: a rule reference a contributor can work from without reading Go source.

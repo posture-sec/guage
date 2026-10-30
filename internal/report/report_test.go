@@ -210,6 +210,71 @@ func TestExit(t *testing.T) {
 	}
 }
 
+func TestMissingAndSkippedAccountsRender(t *testing.T) {
+	t.Parallel()
+	r := model.Report{
+		ToolVersion: "development",
+		Network:     "Test SDF Network ; September 2015",
+		Accounts: []model.AccountReport{
+			{
+				Snapshot: model.AccountSnapshot{ID: accountOne, Endpoint: "https://horizon-testnet.stellar.org"},
+				Missing:  true,
+				Findings: []model.Finding{model.NewFinding("acct-missing", model.SevHigh, accountOne,
+					"the account was not found on this endpoint", "endpoint https://horizon-testnet.stellar.org returned not found")},
+			},
+			{
+				Snapshot: model.AccountSnapshot{ID: accountTwo, Endpoint: "https://horizon-testnet.stellar.org"},
+				Skipped:  "the endpoint is on a different network\x1b[31m",
+			},
+		},
+		ExitCode: model.ExitFindings,
+	}
+
+	var text bytes.Buffer
+	if err := Text(&text, r); err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"not found on this endpoint (never created, or merged)",
+		"no state read: the endpoint is on a different network",
+		"[high] acct-missing",
+		"exit code: 1",
+	} {
+		if !strings.Contains(text.String(), want) {
+			t.Errorf("text output does not contain %q:\n%s", want, text.String())
+		}
+	}
+	if strings.ContainsRune(text.String(), 0x1b) {
+		t.Fatal("text output kept the escape from the skipped reason")
+	}
+
+	var document bytes.Buffer
+	if err := JSON(&document, r); err != nil {
+		t.Fatal(err)
+	}
+	var payload struct {
+		Accounts []struct {
+			Missing bool   `json:"missing"`
+			Skipped string `json:"skipped"`
+		} `json:"accounts"`
+	}
+	if err := json.Unmarshal(document.Bytes(), &payload); err != nil {
+		t.Fatalf("output is not JSON: %v\n%s", err, document.String())
+	}
+	if len(payload.Accounts) != 2 {
+		t.Fatalf("got %d accounts, want 2", len(payload.Accounts))
+	}
+	if !payload.Accounts[0].Missing {
+		t.Error("the missing account did not carry missing=true")
+	}
+	if payload.Accounts[1].Skipped != "the endpoint is on a different network" {
+		t.Errorf("skipped reason is %q", payload.Accounts[1].Skipped)
+	}
+	if strings.ContainsRune(document.String(), 0x1b) {
+		t.Fatal("JSON output kept the escape from the skipped reason")
+	}
+}
+
 func TestEmptyReportRenders(t *testing.T) {
 	t.Parallel()
 	var buf bytes.Buffer
