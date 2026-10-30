@@ -122,3 +122,93 @@ func TestExitCodeValues(t *testing.T) {
 		})
 	}
 }
+
+func TestSeverityString(t *testing.T) {
+	t.Parallel()
+	for _, tt := range []struct {
+		severity model.Severity
+		want     string
+	}{
+		{model.SevInfo, "info"},
+		{model.SevWarn, "warn"},
+		{model.SevHigh, "high"},
+	} {
+		t.Run(tt.want, func(t *testing.T) {
+			t.Parallel()
+			if got := tt.severity.String(); got != tt.want {
+				t.Fatalf("String() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNewFindingFingerprint(t *testing.T) {
+	t.Parallel()
+	f := model.NewFinding("sig-single-key-high", model.SevHigh, "account-reference", "message", "evidence")
+	if len(f.Fingerprint) != 64 {
+		t.Fatalf("fingerprint length = %d, want 64 hex characters", len(f.Fingerprint))
+	}
+	if f.Accepted {
+		t.Fatal("a new finding is marked accepted")
+	}
+	if f.RuleID != "sig-single-key-high" || f.Severity != model.SevHigh || f.Account != "account-reference" {
+		t.Fatal("constructor dropped a field")
+	}
+
+	same := model.NewFinding("sig-single-key-high", model.SevHigh, "account-reference", "message", "  evidence\t")
+	if same.Fingerprint != f.Fingerprint {
+		t.Fatal("whitespace around evidence changed the fingerprint")
+	}
+	inner := model.NewFinding("sig-single-key-high", model.SevHigh, "account-reference", "message", "evi  dence")
+	if inner.Fingerprint == f.Fingerprint {
+		t.Fatal("inner whitespace did not change the fingerprint")
+	}
+
+	for _, other := range []model.Finding{
+		model.NewFinding("sig-other", model.SevHigh, "account-reference", "message", "evidence"),
+		model.NewFinding("sig-single-key-high", model.SevHigh, "other-account", "message", "evidence"),
+		model.NewFinding("sig-single-key-high", model.SevHigh, "account-reference", "message", "other evidence"),
+	} {
+		if other.Fingerprint == f.Fingerprint {
+			t.Fatal("a different finding shares a fingerprint")
+		}
+	}
+}
+
+func TestSortFindings(t *testing.T) {
+	t.Parallel()
+	findings := []model.Finding{
+		model.NewFinding("thr-b", model.SevWarn, "acct-b", "m", "e"),
+		model.NewFinding("sig-z", model.SevHigh, "acct-b", "m", "e"),
+		model.NewFinding("sig-a", model.SevHigh, "acct-b", "m", "e"),
+		model.NewFinding("sig-a", model.SevHigh, "acct-a", "m", "e"),
+		model.NewFinding("flag-a", model.SevInfo, "acct-a", "m", "e"),
+		model.NewFinding("sig-c", model.SevWarn, "acct-a", "m", "e"),
+	}
+	model.SortFindings(findings)
+	want := []string{
+		"acct-a/sig-a/high",
+		"acct-b/sig-a/high",
+		"acct-b/sig-z/high",
+		"acct-a/sig-c/warn",
+		"acct-b/thr-b/warn",
+		"acct-a/flag-a/info",
+	}
+	for i, f := range findings {
+		got := f.Account + "/" + f.RuleID + "/" + f.Severity.String()
+		if got != want[i] {
+			t.Fatalf("position %d = %s, want %s", i, got, want[i])
+		}
+	}
+}
+
+func TestSortFindingsIsStable(t *testing.T) {
+	t.Parallel()
+	first := model.NewFinding("sig-a", model.SevHigh, "acct-a", "first", "evidence one")
+	second := model.NewFinding("sig-a", model.SevHigh, "acct-a", "second", "evidence two")
+	findings := []model.Finding{first, second}
+	model.SortFindings(findings)
+	if findings[0].Message != "first" || findings[1].Message != "second" {
+		t.Fatal("finding order among equal keys changed")
+	}
+}
