@@ -48,9 +48,9 @@ guage/
       {decode,validate,roles}.go           # strict loading, rejection kinds and network passphrases (2.4, 3.4)
       {config_test,accept_test}.go         # loader and rejection tests; acceptance tests pending (3.4)
     source/
-      source.go                           # context-aware Source interface only
-      {horizon,http,errors}.go             # source implementation and failure behavior (2.7)
-      horizon_test.go                     # reserved fake-server tests
+      source.go                           # Source interface and the passphrase comparison
+      {horizon,http,errors}.go             # Horizon client: caps, retries, strict decode (2.7)
+      horizon_test.go                     # fake-server success and failure-mode tests (2.7)
     sep1/
       {fetch,guard,parse}.go               # guarded identity acquisition; no networking yet (3.5)
       {fetch_test,guard_test}.go           # reserved SSRF and parser tests

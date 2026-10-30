@@ -1,2 +1,2 @@
-// Package source reserves the account-data retrieval boundary.
+// Package source reads observed account state from a Stellar endpoint.
 package source
