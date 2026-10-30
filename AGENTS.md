@@ -2,7 +2,7 @@
 
 Instructions for any coding agent (Claude Code, Codex, Cursor, Copilot and others) working in this repository. Humans can read it too. Keep it short; deep detail lives in the linked docs.
 
-> **Roadmap rule (every contribution):** any change, however small, must update `ROADMAP.md` in the same pull request: tick or add tasks, add a changelog entry, refresh the progress table and the `Last updated` line. A task is not finished until `ROADMAP.md` is current. CI enforces this once task 1.9 is done; until then, enforce it on yourself.
+> **Roadmap rule (every contribution):** any change, however small, must update `ROADMAP.md` in the same pull request: tick or add tasks, add a changelog entry, refresh the progress table and the `Last updated` line. A task is not finished until `ROADMAP.md` is current. CI enforces this as the required `roadmap-check / gate` check (task 1.9, done), so a pull request that changes files but not `ROADMAP.md` cannot merge.
 
 ## 1. What this project is
 

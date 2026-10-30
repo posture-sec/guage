@@ -174,5 +174,5 @@ If a code change contradicts a doc, fix the doc in the same PR. If a doc stateme
 
 ## 8. Generated and derived files
 
-- The progress table in `ROADMAP.md` is computed by `scripts/roadmap_progress.sh`; do not edit its numbers by hand once the script exists.
+- The progress table in `ROADMAP.md` is computed by `scripts/roadmap_progress.sh`; regenerate it instead of editing numbers by hand.
 - Golden files are regenerated only with an explicit `-update` flag and reviewed like code.

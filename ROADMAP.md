@@ -1,6 +1,6 @@
 # ROADMAP: Gauge (working name)
 
-Last updated: 2026-10-30T06:55Z (repo hygiene branch `chore/1.5-repo-hygiene`)
+Last updated: 2026-10-30T07:10Z (repo hygiene branch `chore/1.5-repo-hygiene`)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
@@ -13,11 +13,11 @@ Each PR must:
 
 1. **Tick, untick or add tasks.** Change `[ ]` to `[x]` only when the task's "Done when" is true. Add a task (next free ID in its phase) for any work discovered along the way.
 2. **Add a changelog entry** in section 9: date (UTC), PR or commit, one-line summary, task IDs touched.
-3. **Refresh the progress table** in section 2 (run `scripts/roadmap_progress.sh` once it exists, task 1.9; until then count by hand).
+3. **Refresh the progress table** in section 2 with `scripts/roadmap_progress.sh`; `--check` fails when the committed numbers are stale.
 4. **Update `Last updated`** at the top of this file.
 5. **Update the decision log** (section 7) if a decision was made, and the risk register (section 8) if a risk changed.
 
-Enforcement: `scripts/check_roadmap_touched.sh` runs in CI as a required check (task 1.9) and the PR template carries a checkbox. Until task 1.9 is done, reviewers enforce this rule by hand. A PR that only edits this file is always allowed. The rule is repeated in `PRD.md` (16), `ARCHITECTURE.md` (16), `ARCHITECTURE_ESSENTIALS.md` (0), `project_structure.md`, `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md` and the PR template.
+Enforcement (task 1.9, done 2026-10-28): `roadmap-check / gate` runs `scripts/check_roadmap_touched.sh`, `scripts/roadmap_progress.sh --check` and `scripts/test_roadmap_gate.sh`, and the context is listed in the `protect main` required checks. The PR template carries the matching checkbox. A PR that only edits this file is always allowed. The rule is repeated in `PRD.md` (16), `ARCHITECTURE.md` (16), `ARCHITECTURE_ESSENTIALS.md` (0), `project_structure.md`, `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md` and the PR template.
 
 Conventions: sizes are relative effort, not calendar time (S under a couple of hours, M about half a day, L one to two days, XL several days). They are unmeasured guesses. "Deps" lists task IDs that must be done first. Task IDs are stable: never renumber, never reuse.
 
@@ -209,7 +209,7 @@ Newest first. One row per merged change.
 
 | Date (UTC) | Change | Tasks |
 |---|---|---|
-| 2026-10-30 | Backlog and evidence: `scripts/generate_issues.sh` opens one issue per open task and gate from this file (issues #5 to #75 on the remote, idempotent through a marker line in each body), the roadmap gate is proven on both sides (PR #4 failed `roadmap-check / gate` for a change with no roadmap edit, PR #2 passes it), CI is green on the skeleton, and a probe ruleset with the same configuration as `protect main` refused a direct push with "Changes must be made through a pull request" | 1.5, 1.9, 1.13, 1.14 |
+| 2026-10-30 | Backlog, evidence and enforcement wording: `scripts/generate_issues.sh` opens one issue per open task and gate from this file (issues #5 to #75 on the remote, idempotent through a marker line in each body), the roadmap gate is proven on both sides (PR #4 failed `roadmap-check / gate` for a change with no roadmap edit, PR #2 passes it), CI is green on the skeleton, and a probe ruleset with the same configuration as `protect main` refused a direct push with "Changes must be made through a pull request" | 1.5, 1.9, 1.13, 1.14 |
 | 2026-10-28 | Repo hygiene for program submission: CI and roadmap-gate workflows, gate and progress scripts with an eight-case self-test, Dependabot, CODEOWNERS, issue forms, README/CONTRIBUTING/SECURITY rewritten to the verified approved-repo pattern, banner, plus a `protect main` ruleset, label taxonomy, topics and a roadmap-derived issue backlog | 1.13, 1.3, 1.5, 1.6, 1.8, 1.9, 1.10, D-11, D-12, 5.8 |
 | 2026-10-28 | Owner-authorized scaffold: root brief copies, Go module, package and file placeholders, model and policy declarations, source interface, non-operational CLI, README/CONTRIBUTING/SECURITY/PR-template drafts, structure and decision documentation | 1.1, 1.4, 1.8, 1.10, 1.11, 1.12, D-01 to D-04, D-09, D-10 |
 | 2026-10-28 | First drafts of the full doc set (PRD, ARCHITECTURE, ESSENTIALS, project_structure, AGENTS, CLAUDE, ROADMAP) with a red-team pass | 0.1 |

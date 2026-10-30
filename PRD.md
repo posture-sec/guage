@@ -293,7 +293,7 @@ Full tables with task IDs: `ARCHITECTURE.md` section 14.
 2. Add a changelog entry (date, change, task IDs).
 3. Refresh the progress table and the `Last updated` line.
 
-Enforcement: `scripts/check_roadmap_touched.sh` in CI and a PR template checkbox (task 1.9). Until that task is done, reviewers enforce it by hand. If you change behavior described here, update `ARCHITECTURE.md`, `ARCHITECTURE_ESSENTIALS.md` and `project_structure.md` in the same PR.
+Enforcement: the required `roadmap-check / gate` check runs `scripts/check_roadmap_touched.sh` (task 1.9, done), and the PR template carries a checkbox. If you change behavior described here, update `ARCHITECTURE.md`, `ARCHITECTURE_ESSENTIALS.md` and `project_structure.md` in the same PR.
 
 ---
 
