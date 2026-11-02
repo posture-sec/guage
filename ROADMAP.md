@@ -1,6 +1,6 @@
 # ROADMAP: Gauge (working name)
 
-Last updated: 2026-10-30T12:30Z (account and flag rules)
+Last updated: 2026-10-30T13:10Z (documentation site v1 on GitHub Pages)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
@@ -38,10 +38,10 @@ The repository is 100% ready when every task in Phases 0 to 6 is done and every 
 | 2 | Core | 9 | 10 | 90% |
 | 3 | Rules | 2 | 7 | 28% |
 | 4 | Dogfood and release v0.1.0 | 0 | 9 | 0% |
-| 5 | v0.2 features | 0 | 8 | 0% |
+| 5 | v0.2 features | 1 | 9 | 11% |
 | 6 | Release v0.2.0 and community | 0 | 5 | 0% |
 | 7 (backlog) | Backlog | 0 | 4 | 0% |
-| **Phases 0 to 6** | **Readiness total** | **35** | **67** | **52%** |
+| **Phases 0 to 6** | **Readiness total** | **36** | **68** | **52%** |
 | Gates | G1 to G10 | 1 | 10 | 10% |
 <!-- PROGRESS:END -->
 
@@ -64,9 +64,11 @@ All must be true for 100%.
 
 Current work (2026-10-30): tasks 3.2 and 3.3 added the first four rules (`acct-missing`, `acct-network-mismatch`, `flag-drift`, `flag-undeclared-clawback`), so `check` and `audit` now produce findings and exit 1 for a missing account or a network mismatch by default, and for flag drift or an undeclared clawback under `--fail-on warn`. Phase 3 is 2 of 7. What stays blocked is unchanged: 0.7 needs a transaction the project forbids, which blocks 2.3 and therefore the signer and threshold rules in 3.1; the identity rules in 3.5 wait on the guarded SEP-1 fetcher. Role-based severities are task 3.4.
 
+Task 5.9 shipped the same day: the documentation site is live on GitHub Pages at `https://posture-sec.github.io/guage/`, seven static pages under `site/` deployed by `.github/workflows/pages.yml`. Phase 5 is 1 of 9. It is deliberately not 5.8: that task still waits on 4.2 and 4.3, and its economic-model and contract-reference clauses describe the Soroban project the wave playbook assumed rather than this CLI, so what is left there is persona depth once more rules exist. Read the site as a mirror of the code: where behavior is parsed but not yet compared, the page says so.
+
 Task 1.13: repo hygiene for program submission, on the owner's instruction of 2026-10-28 to set the repository up following the Stellar Wave playbook. The pattern was verified against live approved repos rather than assumed: `soroauth/soroauth-go` (ruleset `protect main`, `CODEOWNERS`, `ISSUE_TEMPLATE`, `dependabot.yml`, `ci / go` style job names, an `status: unaudited` badge, labels with `area:` and `complexity:` prefixes) and `plimsoll-protocol/plimsoll-indexer` (banner, badge row, maintainer table, cross-repo table, GitBook docs).
 
-Two things the playbook assumes that do not apply here, so they are not being built: the contract and app phases (its 4 to 9) describe a Soroban contract plus frontend, and Gauge is a Go CLI with neither. Its Phase 11 documentation site is recorded as task 5.8 rather than done now.
+Two things the playbook assumes that do not apply here, so they are not being built: the contract and app phases (its 4 to 9) describe a Soroban contract plus frontend, and Gauge is a Go CLI with neither. Its Phase 11 documentation site became task 5.9 and went live on GitHub Pages on 2026-10-30; 5.8 stays open for the persona depth that needs more rules first.
 
 Feature work is no longer blocked by sequencing: D-04 is Decided (proceed now, share conventions with Airlock) and 0.2 and 0.3 are closed. What still blocks specific tasks is named in each task: 0.4 needs three real operators before G4 dogfooding can be claimed, 0.6 needs its fixtures committed before the `source` parser is written against real shapes, and 0.7 cannot be closed by observation because the states it wants to see require a transaction submission that this project never performs. The original documents in `files/` remain untouched local briefing inputs; the root documents are authoritative for development.
 
@@ -158,7 +160,8 @@ Constraint on the two remaining experimental tasks: Gauge never builds or submit
 - [ ] **5.5** Trustline exposure facts (issuer flags for each held asset). M. Deps: 0.6.
 - [ ] **5.6** SEP-29 memo-required check for merchant accounts. S. Deps: 0.8.
 - [ ] **5.7** Performance and rate-limit tests with many accounts. S. Deps: 2.7.
-- [ ] **5.8** Documentation site separate from the README (GitBook or equivalent): introduction with cited figures, protocol mechanics and the economic model with worked numbers, contract and rule reference, end-user guides per persona, developer guide, contributing guide. M. Deps: 4.2, 4.3. Done when: the site is linked from `README.md` and every page reflects the shipped behavior.
+- [ ] **5.8** Documentation site separate from the README (GitBook or equivalent): introduction with cited figures, protocol mechanics and the economic model with worked numbers, contract and rule reference, end-user guides per persona, developer guide, contributing guide. M. Deps: 4.2, 4.3. Done when: the site is linked from `README.md` and every page reflects the shipped behavior. Stays open after 5.9: its deps 4.2 and 4.3 are unreached, and the economic-model and contract-reference clauses describe a Soroban project, not this CLI, so what is left here is persona depth once more rules ship.
+- [x] **5.9** Documentation site v1 on GitHub Pages, separate from the README: hand-written static HTML, CSS and vanilla JS under `site/` (no generator, so the dependency rule holds), deployed by the `pages` workflow. Seven pages: overview, rules, policy, mechanics, guides, status and a 404. M. Deps: none (8.2 and 4.3 are not preconditions for documenting what already ships; 5.8's economic-model and contract clauses do not apply to a Go CLI). Done when: the site is live at `https://posture-sec.github.io/guage/`, linked from `README.md`, and every page states shipped behavior only. (done 2026-10-30: the design is flat, no gradients, every claim traced to code or an observed testnet run; the pages that describe unshipped behavior say so, e.g. `policy.html` records that only network, existence and flags are compared today.)
 
 ### Phase 6: Release v0.2.0 and community
 
@@ -222,6 +225,7 @@ Newest first. One row per merged change.
 
 | Date (UTC) | Change | Tasks |
 |---|---|---|
+| 2026-10-30 | Documentation site v1, live on GitHub Pages: seven hand-written static pages under `site/` (overview, rules, policy, mechanics, guides, status, `404.html`) with one stylesheet, a clipboard-only script and a generated `og.png`. No generator and no build step, so the dependency rule is untouched; `.github/workflows/pages.yml` (checkout v7.0.1, configure-pages v6.0.0, upload-pages-artifact v5.0.0 and deploy-pages v5.0.1, each pinned to a SHA resolved from its tag through `gh api`) publishes `site/` as the Pages artifact on push to `main`. Design is flat with zero gradients: dark ink-and-paper palette, Archivo plus IBM Plex Mono, and one signature element, a paper report card with a hard amber offset shadow and a rotated exit stamp. Every number and behavior on the pages is read from the code or from the four recorded testnet runs; pages state what does not run yet rather than implying it does (expectations parse today but only network, existence and flags are compared; role severities are 3.4). `docs/banner.svg` now reads `unaudited · functional alpha` instead of `scaffold`, and `README.md` and `project_structure.md` point at the site. 5.8 stays open with the reason | 5.9, 5.8, G7 |
 | 2026-10-30 | Account and flag rules, plus the run semantics they need: `internal/rules` registers `acct-missing` and `acct-network-mismatch` (HIGH, non-acceptable), `flag-drift` and `flag-undeclared-clawback` (WARN, because role severities are task 3.4). A 404 becomes a per-account observation instead of aborting the run, and a passphrase mismatch fetches nothing and reports every account as skipped with `acct-network-mismatch`; every other source failure still exits 3. `model.AccountReport` gained `missing` and `skipped`, rendered in text and JSON and sanitized like every other field. Rule tests read the committed testnet fixtures; CLI tests cover exit 1 for a missing account (text and JSON), a mismatch, declared drift and an undeclared clawback. Live testnet runs on 2026-10-30 exited 1 for an unfunded account (5467749), for a mainnet request against the testnet endpoint, and for `--fail-on warn` on the clawback account (5467759). Gate G3 still requires a non-zero exit for a wrong passphrase, now with a report rather than empty stdout | 3.2, 3.3, G3 |
 | 2026-10-30 | Orchestrator and CLI: `internal/run` compares the passphrase before any account read, fetches in policy order through a bounded pool that cancels on the first failure, evaluates an injected rule stage with panic recovery that exits 3, applies accepts only to acceptable rules with an inclusive expiry, and maps the result to 0 or 1. `cmd/stellar-gauge` dispatches `check`, `audit` and `version` in process with no `os/exec`, maps usage and policy failures to 2 and source failures to 3, refuses `M`, `W`, `C` and `S` arguments without echoing them, and reports markdown as not implemented. `policy.validEndpoint` now allows plain HTTP for loopback only, matching `internal/source`, whose guard remains the enforcement point. Gate G3 passes: every listed failure exits non-zero with empty stdout, and the CLI tests run against a local endpoint serving the committed fixtures | 2.8, 2.9, 2.10, G3 |
 | 2026-10-30 | Horizon source client: one shared `http.Client` that refuses redirects, a per-request timeout, a 1 MiB body cap with an explicit overflow check, a semaphore bounding concurrent requests, and three retries with capped exponential backoff on transport errors, 429 and 5xx. `Retry-After` is honoured only as integer seconds and capped at 5 s. `thresholds` and `flags` decode strictly, signer types map from the three documented Horizon values with the key checked against the matching strkey kind, and an unmodelled asset type stops the read. A 404 becomes `ErrNotFound`; `CheckPassphrase` compares the root passphrase without echoing either value. Fake-server tests cover every failure mode, and no response body reaches an error | 2.7 |

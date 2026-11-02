@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How Stellar account control works · Gauge docs</title>
+  <meta name="description" content="Signers, weights, thresholds and flags: the on-chain facts Gauge reads, and how a run turns them into findings and an exit code.">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="How Stellar account control works · Gauge docs">
+  <meta property="og:description" content="The account control model Gauge audits, and the order a run follows.">
+  <meta property="og:url" content="https://posture-sec.github.io/guage/mechanics.html">
+  <meta property="og:image" content="https://posture-sec.github.io/guage/assets/og.png">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/site.css">
+  <script src="assets/site.js" defer></script>
+</head>
+<body data-page="mechanics">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="site">
+    <header class="topbar">
+      <a class="brand" href="index.html"><span class="brand-mark"></span>Gauge<span class="brand-sub">docs</span></a>
+      <div class="topbar-right">
+        <span class="status-pill">Functional alpha</span>
+        <span class="version-pill">v0.1.0-dev</span>
+        <a class="icon-link" href="https://github.com/posture-sec/guage">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.2-1.7-1.2-1.7-1-.7.1-.7.1-.7 1.1.1 1.7 1.2 1.7 1.2 1 1.7 2.6 1.2 3.2.9.1-.7.4-1.2.7-1.5-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0C17.1 4.2 18.1 4.5 18.1 4.5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </header>
+
+    <aside class="sidebar">
+      <p class="side-label">Documentation</p>
+      <nav class="side-nav" aria-label="Documentation">
+        <a href="index.html">Overview <span>start</span></a>
+        <a href="mechanics.html" aria-current="page">Mechanics <span>how</span></a>
+        <a href="rules.html">Rules <span>16</span></a>
+        <a href="policy.html">Policy <span>toml</span></a>
+        <a href="guides.html">Guides <span>run</span></a>
+        <a href="status.html">Status <span>now</span></a>
+      </nav>
+      <div class="side-meta">
+        <p>Docs updated 2026-10-30<br>Gauge 0.1.0-dev</p>
+        <a href="https://github.com/posture-sec/guage">Repository</a>
+        <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
+        <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
+      </div>
+    </aside>
+
+    <main class="main" id="main">
+      <div class="content">
+        <p class="eyebrow">Mechanics</p>
+        <h1>Control is a set of weights.</h1>
+        <p class="lede">A Stellar account does not have an owner in the usual sense. It has signers, thresholds and flags, and the protocol checks them on every operation. Gauge reads those public values, then asks whether they match what you said you expected.</p>
+
+        <section class="section">
+          <h2>Weights and thresholds</h2>
+          <p>Every signer carries a weight. Every transaction carries one or more signatures, and each signature contributes its signer's weight. The protocol groups operations into three security tiers, each with its own threshold. An operation is authorized when the weights of the valid signatures reach the threshold for its tier.</p>
+          <p>Consider three signers and two thresholds:</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Signer</th><th>Weight</th><th>Notes</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>A</td><td>1</td><td>An ordinary ed25519 key</td></tr>
+                <tr><td>B</td><td>1</td><td>An ordinary ed25519 key</td></tr>
+                <tr><td>C</td><td>2</td><td>Holds more weight than A or B alone</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-wrap" style="margin-top:14px">
+            <table>
+              <thead>
+                <tr><th>Tier</th><th>Threshold</th><th>What reaches it</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Medium</td><td>2</td><td>A and B together, or C alone</td></tr>
+                <tr><td>High</td><td>3</td><td>All three signers, or C plus one other</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-caption">The protocol decides which operations sit in each tier. Gauge reports the threshold values and the signer weights as stored; it does not reinterpret them.</p>
+        </section>
+
+        <section class="section">
+          <h2>The master key is a signer</h2>
+          <p>Horizon lists the account's master key inside the <code>signers</code> array, not as a separate field. Its weight is what older Stellar material calls the master weight. A master key with weight 0 cannot sign, even though it still owns the account in every other sense.</p>
+          <p>Stellar also supports <code>hash(x)</code> and pre-authorized transaction signers. Gauge decodes and labels those types, but the signer rules that would judge them are not shipped yet. Task 3.1 is blocked on threshold semantics that cannot be verified without submitting a transaction, which this project does not do.</p>
+        </section>
+
+        <section class="section">
+          <h2>Flags belong to issuers</h2>
+          <p>Four flags change what an issuing account can do to the assets it issues. They are stored on the account and are public.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Flag</th><th>What it means</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>auth_required</td><td>A trustline must be authorized by the issuer before the holder can use the asset.</td></tr>
+                <tr><td>auth_revocable</td><td>The issuer can revoke authorization for a trustline.</td></tr>
+                <tr><td>auth_immutable</td><td>The issuer can never change these flags again.</td></tr>
+                <tr><td>clawback</td><td>The issuer can claw back the issued asset from holders.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-caption">Gauge compares a flag only when the policy declares a value. An omitted flag means "not declared", not false.</p>
+        </section>
+
+        <section class="section">
+          <h2>Home domain and SEP-1</h2>
+          <p>The home domain is where an account publishes a <code>stellar.toml</code> file at <code>/.well-known/stellar.toml</code>. SEP-1 defines the fields an issuer can publish, including <code>NETWORK_PASSPHRASE</code>, <code>SIGNING_KEY</code> and the list of <code>ACCOUNTS</code> it operates.</p>
+          <p>Gauge prints the home domain today. The guarded identity checks are specified but not shipped. One captured testnet issuer served its <code>stellar.toml</code> as HTTP 200 with an HTML body, so the planned check keys on a strict TOML parse rather than on the response's content type.</p>
+        </section>
+
+        <section class="section">
+          <h2>What one run does, in order</h2>
+          <ol class="status-list">
+            <li><b>Validate</b><span>The request is checked: network present, exactly one endpoint at v0.1, at least one account, a known failure threshold.</span></li>
+            <li><b>Read network</b><span>The endpoint's root document supplies its network passphrase and latest ledger.</span></li>
+            <li><b>Compare passphrase</b><span>A mismatch is recorded before any account read. Nothing is fetched from the wrong network.</span></li>
+            <li><b>Fetch accounts</b><span>Accounts are read in policy order through a pool of at most eight requests. The first non-404 failure cancels the rest.</span></li>
+            <li><b>Evaluate rules</b><span>Pure functions read the snapshot and the policy. A rule panic becomes an internal finding and exit 3.</span></li>
+            <li><b>Apply accepts</b><span>A live acceptance marks a finding accepted. Account rules, network rules and unreachable thresholds cannot be accepted.</span></li>
+            <li><b>Render and exit</b><span>The report carries the limits footer. Findings at or above <code>--fail-on</code> produce exit 1; a completed run with none exits 0.</span></li>
+          </ol>
+        </section>
+
+        <section class="section">
+          <h2>Network and endpoint</h2>
+          <p>The network is always explicit. <code>--network</code> accepts <code>mainnet</code>, <code>testnet</code> or a full passphrase, and there is no default. The endpoint must be HTTPS, except for a loopback address, which exists for local tests. A read has a 10 second request timeout, a 1 MiB body cap, at most eight concurrent requests and three retries with capped backoff. Redirects are refused, and no response body is ever logged.</p>
+          <div class="note">
+            <p><strong>Why the passphrase check comes first.</strong> A testnet account and a mainnet account can share an ID. Reading an account from the wrong network would produce a confident report about the wrong chain, so the run refuses to read anything until the endpoint proves it is on the network you asked for.</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <p class="eyebrow">The boundary</p>
+          <blockquote class="limits">
+            Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls.
+            <cite>Report limits footer</cite>
+          </blockquote>
+          <p class="lede">Control on-chain is not control in practice. A signer can be one person with two devices, a key can be stored badly, and a policy file can be edited by the same attacker who can edit CI. Gauge reports what the chain shows against what you declared, and nothing more.</p>
+        </section>
+
+        <footer class="footer">
+          <p>Functional alpha, unaudited. Every page reflects the shipped code as of 2026-10-30.</p>
+          <div class="footer-links">
+            <a href="rules.html">Next: rule catalog</a>
+            <a href="status.html">Status and limits</a>
+            <a href="https://github.com/posture-sec/guage">GitHub</a>
+          </div>
+        </footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

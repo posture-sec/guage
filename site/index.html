@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gauge: read-only posture audits for Stellar accounts</title>
+  <meta name="description" content="Gauge reads a Stellar account's signers, thresholds and flags, compares them with the policy you declared, and exits nonzero when they disagree. Read-only, secret-free, fail-closed.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Gauge: read-only posture audits for Stellar accounts">
+  <meta property="og:description" content="Compare the signers, thresholds and flags Stellar holds with the policy you declared. Read-only. Secret-free. Fail-closed.">
+  <meta property="og:url" content="https://posture-sec.github.io/guage/">
+  <meta property="og:image" content="https://posture-sec.github.io/guage/assets/og.png">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/site.css">
+  <script src="assets/site.js" defer></script>
+</head>
+<body data-page="overview">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="site">
+    <header class="topbar">
+      <a class="brand" href="index.html"><span class="brand-mark"></span>Gauge<span class="brand-sub">docs</span></a>
+      <div class="topbar-right">
+        <span class="status-pill">Functional alpha</span>
+        <span class="version-pill">v0.1.0-dev</span>
+        <a class="icon-link" href="https://github.com/posture-sec/guage">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.2-1.7-1.2-1.7-1-.7.1-.7.1-.7 1.1.1 1.7 1.2 1.7 1.2 1 1.7 2.6 1.2 3.2.9.1-.7.4-1.2.7-1.5-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0C17.1 4.2 18.1 4.5 18.1 4.5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </header>
+
+    <aside class="sidebar">
+      <p class="side-label">Documentation</p>
+      <nav class="side-nav" aria-label="Documentation">
+        <a href="index.html" aria-current="page">Overview <span>start</span></a>
+        <a href="mechanics.html">Mechanics <span>how</span></a>
+        <a href="rules.html">Rules <span>16</span></a>
+        <a href="policy.html">Policy <span>toml</span></a>
+        <a href="guides.html">Guides <span>run</span></a>
+        <a href="status.html">Status <span>now</span></a>
+      </nav>
+      <div class="side-meta">
+        <p>Docs updated 2026-10-30<br>Gauge 0.1.0-dev</p>
+        <a href="https://github.com/posture-sec/guage">Repository</a>
+        <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
+        <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
+      </div>
+    </aside>
+
+    <main class="main" id="main">
+      <div class="content">
+        <section class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow">Stellar account posture / read-only</p>
+            <h1>The chain knows. <em>Your policy should too.</em></h1>
+            <p class="lede">Gauge reads an account's signers, thresholds and flags, compares them with what you declared, and exits nonzero when they disagree. It never holds a key, never builds a transaction, and treats every downloaded value as hostile.</p>
+            <div class="hero-actions">
+              <a class="button" href="guides.html">Run the first check</a>
+              <a class="button button--ghost" href="rules.html">Read the rules</a>
+            </div>
+            <ul class="hero-meta">
+              <li>Go 1.27.3</li>
+              <li>Apache-2.0</li>
+              <li>Testnet verified 2026-10-30</li>
+            </ul>
+          </div>
+
+          <figure class="report" aria-label="Excerpt of a Gauge report from a testnet run">
+            <figcaption class="report-head">
+              <span class="report-title">Posture report</span>
+              <span>testnet / ledger 5467759</span>
+            </figcaption>
+            <pre class="report-body"><span class="report-line report-line--dim" style="--i:0">$ stellar-gauge check --network testnet \
+    --endpoint \
+    https://horizon-testnet.stellar.org \
+    GDSX2WUF…BEVG</span><span class="report-line" style="--i:1">account GDSX2WUF…BEVG</span><span class="report-line" style="--i:2">  flags: auth_required=true clawback=true</span><span class="report-line" style="--i:3">  findings: 1 (0 accepted)</span><span class="report-line report-line--warn" style="--i:4">    [warn] flag-undeclared-clawback</span><span class="report-line" style="--i:5">      clawback is enabled and the policy</span><span class="report-line" style="--i:6">      does not declare it</span><span class="report-line" style="--i:7">      evidence: clawback observed true</span><span class="report-line" style="--i:8">result: 1 finding (1 warn, 0 accepted)</span><span class="report-line report-line--high" style="--i:9">exit code: 1<span class="caret" aria-hidden="true"></span></span></pre>
+            <span class="stamp">Exit 1</span>
+          </figure>
+        </section>
+
+        <section class="rail" aria-label="Exit codes">
+          <div class="rail-item">
+            <span class="rail-code">0</span>
+            <span class="rail-label">Pass</span>
+            <p class="rail-copy">The run completed and every rule it evaluated agreed with the policy.</p>
+          </div>
+          <div class="rail-item">
+            <span class="rail-code">1</span>
+            <span class="rail-label">Findings</span>
+            <p class="rail-copy">At least one finding reached the <code>--fail-on</code> threshold.</p>
+          </div>
+          <div class="rail-item">
+            <span class="rail-code">2</span>
+            <span class="rail-label">Config or usage</span>
+            <p class="rail-copy">A bad flag, a rejected policy, an unknown key or a secret seed.</p>
+          </div>
+          <div class="rail-item">
+            <span class="rail-code">3</span>
+            <span class="rail-label">Source or internal</span>
+            <p class="rail-copy">Unreachable endpoint, oversized body, malformed response or a rule panic.</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">The comparison</p>
+              <h2>Two inputs. One result.</h2>
+            </div>
+            <p>Gauge is a state comparison, not a scanner. It needs something to compare against, and it says so when that something is missing.</p>
+          </div>
+          <div class="flow">
+            <div class="flow-card">
+              <h3>Declared</h3>
+              <p>Your <code>gauge.toml</code>: the account's role, expected signers, thresholds, flags and home domain.</p>
+              <ul class="flow-list">
+                <li>role = "treasury"</li>
+                <li>expected_signers = [...]</li>
+                <li>expected_flags = { ... }</li>
+              </ul>
+            </div>
+            <div class="flow-op" aria-hidden="true"><span>Compare</span></div>
+            <div class="flow-card">
+              <h3>Observed</h3>
+              <p>A snapshot fetched through Horizon, decoded strictly and sanitized before it reaches any output.</p>
+              <ul class="flow-list">
+                <li>network passphrase</li>
+                <li>signers and weights</li>
+                <li>thresholds and flags</li>
+              </ul>
+            </div>
+          </div>
+          <p class="table-caption">A disagreement becomes a finding with a stable rule ID, a severity, an evidence line and a fingerprint. An accepted risk matches on rule and account; the fingerprint is a stable identifier for the finding.</p>
+        </section>
+
+        <section class="section">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Scope</p>
+              <h2>What Gauge reads</h2>
+            </div>
+            <p>Public ledger state, through one Horizon endpoint. Nothing else is downloaded, and no response body is ever logged.</p>
+          </div>
+          <dl class="ledger">
+            <div class="ledger-row">
+              <dt>Signers</dt>
+              <dd><strong>Who can sign, and with how much weight.</strong> The master key is a signer like any other, and sponsored signers are named.</dd>
+            </div>
+            <div class="ledger-row">
+              <dt>Thresholds</dt>
+              <dd><strong>How much weight each operation tier requires.</strong> Low, medium and high thresholds are read as stored, without interpretation.</dd>
+            </div>
+            <div class="ledger-row">
+              <dt>Flags</dt>
+              <dd><strong>What the issuer enabled.</strong> Authorization required, revocable, immutable and clawback are compared only where the policy declares a value.</dd>
+            </div>
+            <div class="ledger-row">
+              <dt>Home domain</dt>
+              <dd><strong>The identity the account points at.</strong> Printed as a fact today; the guarded SEP-1 identity checks are specified but not shipped.</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="section">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Shipped today</p>
+              <h2>Four rules live, twelve specified</h2>
+            </div>
+            <p>The account and flag families work now. Role-based severities and the signer, threshold and identity rules are still open.</p>
+          </div>
+          <div class="cards">
+            <article class="card">
+              <span class="chip chip--live">Live</span>
+              <h3><code>acct-missing</code></h3>
+              <p>The endpoint answered 404. The account was never created, or it was merged. HIGH, and it cannot be accepted.</p>
+            </article>
+            <article class="card">
+              <span class="chip chip--live">Live</span>
+              <h3><code>acct-network-mismatch</code></h3>
+              <p>The endpoint's passphrase differs from the requested network. No account is read. HIGH, and it cannot be accepted.</p>
+            </article>
+            <article class="card">
+              <span class="chip chip--live">Live</span>
+              <h3><code>flag-drift</code></h3>
+              <p>A declared flag disagrees with the chain. Only declared flags are compared. WARN baseline, HIGH for an issuer once role profiles land.</p>
+            </article>
+            <article class="card">
+              <span class="chip chip--live">Live</span>
+              <h3><code>flag-undeclared-clawback</code></h3>
+              <p>Clawback is enabled and the policy does not declare it. WARN baseline, HIGH for an issuer once role profiles land.</p>
+            </article>
+          </div>
+          <p class="table-caption"><a href="rules.html">See the full catalog with severities and rationale</a></p>
+        </section>
+
+        <section class="section">
+          <p class="eyebrow">The boundary</p>
+          <blockquote class="limits">
+            A clean report is a posture result, not proof that the account cannot be compromised.
+            <cite>Every report footer</cite>
+          </blockquote>
+          <p class="lede">Gauge cannot see who holds a key, whether signers are separate people, or what happens off-chain. It does not audit transactions, balances, offers, claimable balances, liquidity pools or Soroban contracts. It never describes an account as secure or safe.</p>
+        </section>
+
+        <section class="section">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Start here</p>
+              <h2>Run it from source</h2>
+            </div>
+            <p>There is no tagged release yet. The repository is the install path.</p>
+          </div>
+          <div class="code" data-copy>
+            <div class="code-label"><span>Shell</span></div>
+            <pre>git clone https://github.com/posture-sec/guage
+cd guage
+go run ./cmd/stellar-gauge check \
+  --network testnet \
+  --endpoint https://horizon-testnet.stellar.org \
+  G...</pre>
+          </div>
+          <p class="small muted">Requires Go 1.27.3. The first command reads one account and exits 0, 1, 2 or 3. <a href="guides.html">Guides for check, audit and CI</a>.</p>
+        </section>
+
+        <footer class="footer">
+          <p>Gauge is functional alpha and unaudited. It reports posture against your declarations, never a guarantee. Read the <a href="status.html">status and limits</a> before relying on a result.</p>
+          <div class="footer-links">
+            <a href="https://github.com/posture-sec/guage">GitHub</a>
+            <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
+            <a href="https://github.com/posture-sec/guage/blob/main/CONTRIBUTING.md">Contributing</a>
+            <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
+          </div>
+        </footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

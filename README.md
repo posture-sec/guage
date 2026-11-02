@@ -87,6 +87,8 @@ Imports point one way: `model <- strkey, threshold, sanitize <- policy, source, 
 
 ## Documentation
 
+Docs site: [posture-sec.github.io/guage](https://posture-sec.github.io/guage/). Every page describes shipped behavior, and where a feature is parsed but not yet compared the page says so. It is built from `site/` and deployed by the `pages` workflow on each push to `main`.
+
 - `PRD.md`: scope, users, requirements
 - `ARCHITECTURE.md`: design, data models, decision records, red-team review
 - `ARCHITECTURE_ESSENTIALS.md`: the hard rules an agent must not break

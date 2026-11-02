@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Status and evidence · Gauge docs</title>
+  <meta name="description" content="What Gauge does today: shipped components, the four live rules, fail-closed behavior, testnet evidence from 2026-10-30, and the limits of that evidence.">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Status and evidence · Gauge docs">
+  <meta property="og:description" content="Functional alpha, testnet verified, unaudited. The exact state of every component and the runs behind it.">
+  <meta property="og:url" content="https://posture-sec.github.io/guage/status.html">
+  <meta property="og:image" content="https://posture-sec.github.io/guage/assets/og.png">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/site.css">
+  <script src="assets/site.js" defer></script>
+</head>
+<body data-page="status">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="site">
+    <header class="topbar">
+      <a class="brand" href="index.html"><span class="brand-mark"></span>Gauge<span class="brand-sub">docs</span></a>
+      <div class="topbar-right">
+        <span class="status-pill">Functional alpha</span>
+        <span class="version-pill">v0.1.0-dev</span>
+        <a class="icon-link" href="https://github.com/posture-sec/guage">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.2-1.7-1.2-1.7-1-.7.1-.7.1-.7 1.1.1 1.7 1.2 1.7 1.2 1 1.7 2.6 1.2 3.2.9.1-.7.4-1.2.7-1.5-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0C17.1 4.2 18.1 4.5 18.1 4.5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </header>
+
+    <aside class="sidebar">
+      <p class="side-label">Documentation</p>
+      <nav class="side-nav" aria-label="Documentation">
+        <a href="index.html">Overview <span>start</span></a>
+        <a href="mechanics.html">Mechanics <span>how</span></a>
+        <a href="rules.html">Rules <span>16</span></a>
+        <a href="policy.html">Policy <span>toml</span></a>
+        <a href="guides.html">Guides <span>run</span></a>
+        <a href="status.html" aria-current="page">Status <span>now</span></a>
+      </nav>
+      <div class="side-meta">
+        <p>Docs updated 2026-10-30<br>Gauge 0.1.0-dev</p>
+        <a href="https://github.com/posture-sec/guage">Repository</a>
+        <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
+        <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
+      </div>
+    </aside>
+
+    <main class="main" id="main">
+      <div class="content">
+        <p class="eyebrow">Status</p>
+        <h1>Functional alpha. Testnet verified. Unaudited.</h1>
+        <p class="lede">Gauge reads real Horizon data and produces real findings. It is also early: four of sixteen rules are live, there is no tagged release, and every observation below comes from testnet. This page records what was run, when, and what it does not prove.</p>
+        <div class="chip-row">
+          <span class="chip chip--live">Functional alpha</span>
+          <span class="chip chip--warn">Unaudited</span>
+          <span class="chip">Testnet only</span>
+        </div>
+
+        <section class="section">
+          <h2>Implementation matrix</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Component</th><th>State</th><th>What that means</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>strict policy loader</td><td><span class="chip chip--live">Shipped</span></td><td>Unknown keys, duplicate accounts, bad values and secret seeds are rejected with exit 2.</td></tr>
+                <tr><td>Horizon source</td><td><span class="chip chip--live">Shipped</span></td><td>Timeouts, a 1 MiB cap, retries, bounded concurrency, no redirects and a passphrase check before any account read.</td></tr>
+                <tr><td>check and audit</td><td><span class="chip chip--live">Shipped</span></td><td>Text and JSON output, a stable exit code, and the limits footer on every report.</td></tr>
+                <tr><td>rules</td><td><span class="chip chip--warn">4 of 16</span></td><td>The account and flag families work. Signer, threshold and identity rules are specified but not registered.</td></tr>
+                <tr><td>role severities</td><td><span class="chip chip--warn">Not shipped</span></td><td>Every live rule uses its baseline severity. Task 3.4.</td></tr>
+                <tr><td>SEP-1 identity checks</td><td><span class="chip chip--warn">Not shipped</span></td><td>The guarded fetcher and its three rules are task 3.5.</td></tr>
+                <tr><td>tagged release</td><td><span class="chip chip--warn">None</span></td><td>No version is tagged and no artifact is signed. Build from source.</td></tr>
+                <tr><td>this documentation site</td><td><span class="chip chip--live">Live</span></td><td>Static pages deployed from the repository by GitHub Actions. Task 5.9.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-caption">"Shipped" means the code is merged and covered by tests, not that it has been audited or used on mainnet.</p>
+        </section>
+
+        <section class="section">
+          <h2>Fail-closed behavior</h2>
+          <p>A run either produces a report it trusts or refuses to produce one. These cases are exercised by the CLI tests, including gate G3.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Condition</th><th>Exit</th><th>Report</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Endpoint unreachable</td><td>3</td><td>No report. The source failed.</td></tr>
+                <tr><td>Oversized response</td><td>3</td><td>No report. The body cap was hit.</td></tr>
+                <tr><td>Malformed JSON</td><td>3</td><td>No report. Strict decode failed.</td></tr>
+                <tr><td>Wrong network passphrase</td><td>1</td><td>Report with <code>acct-network-mismatch</code>. No account was read.</td></tr>
+                <tr><td>Account absent (404)</td><td>1</td><td>Report with <code>acct-missing</code> for that account.</td></tr>
+                <tr><td>Unknown policy key</td><td>2</td><td>No report. The policy is rejected before any request.</td></tr>
+                <tr><td>Secret seed in the policy or arguments</td><td>2</td><td>No report, and the seed is never echoed.</td></tr>
+                <tr><td>Missing policy file</td><td>2</td><td>No report.</td></tr>
+                <tr><td>Rule panic</td><td>3</td><td>Report with <code>src-rule-panic</code>; the account's result is incomplete.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-caption">A non-zero exit is the expected behavior for the first three rows. Treating exit 3 as a flaky pass is the failure mode this design tries to prevent.</p>
+        </section>
+
+        <section class="section">
+          <h2>Testnet evidence</h2>
+          <p>These runs were made on 2026-10-30 against <code>https://horizon-testnet.stellar.org</code>. Ledger numbers are the endpoint's latest ledger at read time. Testnet resets, so a later run may not find the same accounts.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Account or request</th><th>Ledger</th><th>Result</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>GBK4NFJ7…UKE7M3</td>
+                  <td>5467515</td>
+                  <td>Exit 0. Facts printed, limits footer present.</td>
+                </tr>
+                <tr>
+                  <td>GC2HHIM6…43LO2II (unfunded)</td>
+                  <td>5467749</td>
+                  <td>Exit 1. <code>acct-missing</code>.</td>
+                </tr>
+                <tr>
+                  <td>Mainnet requested from the testnet endpoint</td>
+                  <td>5467749</td>
+                  <td>Exit 1. <code>acct-network-mismatch</code>; no account read.</td>
+                </tr>
+                <tr>
+                  <td>GDSX2WUF…UVBEVG, <code>--fail-on warn</code></td>
+                  <td>5467759</td>
+                  <td>Exit 1. <code>flag-undeclared-clawback</code>.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="note">
+            <p><strong>What this does not prove.</strong> Mainnet was not probed, per the project's testnet-only verification decision. A mainnet account can have a different population of flags or signer shapes than the fixtures here. The committed Horizon fixtures are testnet captures and are marked perishable for the same reason.</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Roadmap position</h2>
+          <div class="rail">
+            <div class="rail-item">
+              <span class="rail-code">52%</span>
+              <span class="rail-label">Readiness</span>
+              <p class="rail-copy">36 of 68 tasks across Phases 0 to 6 are done.</p>
+            </div>
+            <div class="rail-item">
+              <span class="rail-code">1/10</span>
+              <span class="rail-label">Gates</span>
+              <p class="rail-copy">G3, fail-closed tests, is green. The rest are open.</p>
+            </div>
+            <div class="rail-item">
+              <span class="rail-code">4/16</span>
+              <span class="rail-label">Rules</span>
+              <p class="rail-copy">Account and flag rules only. Role severities are open.</p>
+            </div>
+            <div class="rail-item">
+              <span class="rail-code">0</span>
+              <span class="rail-label">Releases</span>
+              <p class="rail-copy">No tag, no signed artifact, no attestation yet.</p>
+            </div>
+          </div>
+          <p>Phase 3 is 2 of 7. The signer and threshold rules are blocked by task 0.7, which needs a transaction submission that Gauge forbids itself to make. The identity rules wait on the guarded SEP-1 fetcher. <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Read the full roadmap</a>.</p>
+        </section>
+
+        <section class="section">
+          <h2>Security and project hygiene</h2>
+          <ul class="flow-list">
+            <li>OpenSSF Scorecard runs on every push to main and weekly; the README badge reports its current score.</li>
+            <li>Dependabot watches the Go module and the pinned GitHub Actions.</li>
+            <li><code>govulncheck</code>, <code>staticcheck</code> and <code>go vet</code> run in CI.</li>
+            <li>No secret is accepted, stored or echoed. A seed found anywhere in a policy is a hard failure.</li>
+            <li>The repository has a security policy and a private reporting route. Read <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">SECURITY.md</a> before reporting.</li>
+          </ul>
+          <p class="table-caption">Passing checks are not an audit. No third party has reviewed this code, and the project says so in every banner and release note.</p>
+        </section>
+
+        <section class="section">
+          <p class="eyebrow">The boundary</p>
+          <blockquote class="limits">
+            Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls.
+            <cite>Report limits footer</cite>
+          </blockquote>
+          <p class="lede">A clean report is a posture result, not proof that the account cannot be compromised. A failing report is evidence of a disagreement, not necessarily an incident. Read both with the policy file open beside them.</p>
+        </section>
+
+        <footer class="footer">
+          <p>Functional alpha, unaudited. Evidence on this page was observed on testnet on 2026-10-30 and is not a statement about mainnet.</p>
+          <div class="footer-links">
+            <a href="index.html">Back to overview</a>
+            <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
+            <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
+          </div>
+        </footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
