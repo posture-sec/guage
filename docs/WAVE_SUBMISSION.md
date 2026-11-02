@@ -1,13 +1,14 @@
 # Drips Wave submission packet: Gauge
 
-Working notes for applying `posture-sec/guage` to a Stellar Wave cycle. Program facts below were read from the sources listed in section 6 on 2026-10-30, not recalled. Nothing in this file claims the repository is approved; it is not.
+Working notes for applying `posture-sec/guage` to a Stellar Wave cycle. Program facts below were read from the sources listed in section 6 on 2026-10-30 and re-read on 2026-11-02, not recalled. Nothing in this file claims the repository is approved; it is not. Section 7 covers the second repository the organization now has, because it changes what "applying" means.
 
 ## 1. Where the program stands
 
 - Drips Wave launched with the Stellar ecosystem in January 2026, with waves typically running one week per month.
-- As of 2026-10-30 the Stellar Wave page shows ten waves completed and states there are no active or upcoming waves at the moment. A recent cycle window in the page data ran from 2026-10-15T13:00:46Z to 2026-10-22T13:00:56Z. Recent budgets shown are $75,000, with earlier waves at $60,000.
-- The same page listed 839 repositories approved for the Stellar Wave program on 2026-10-30. The sample on the first page includes early-stage repos alongside funded protocols, so an unbuilt product is not automatically out of scope.
+- Re-read 2026-11-02: the Stellar Wave page still shows ten waves concluded and states "There are no active or upcoming Waves at the moment", with budgets of $75000 and $60000 shown. A cycle window in the 2026-10-30 page data ran from 2026-10-15T13:00:46Z to 2026-10-22T13:00:56Z.
+- Approved repositories on that page: 839 on 2026-10-30, 838 on 2026-11-02. The count moves by one between reads, which is worth stating so nobody reads a stale number as a trend. The sample on the first page includes early-stage repos alongside funded protocols, so an unbuilt product is not automatically out of scope.
 - Not verified: whether this repository is already on that list. The only reliable check is the Maintainers dashboard after signing in with GitHub.
+- Changed since the first draft of this file: `posture-sec` is no longer a one-repository organization. `posture-sec/airlock` arrived on 2026-11-02 (section 7), so the per-org budget and cap questions now have two applicants drawing on one pool.
 
 ## 2. Why this repository is not applying yet
 
@@ -25,7 +26,7 @@ One hard reason and one polish gap.
 - [ ] A short screen recording of that run end to end, which the playbook treats as the difference between a submission and an unfinished one.
 - [ ] Task 0.4 answered with named operators, since the pitch rests on people who would run this on a schedule.
 - [ ] Task 4.2 at least partly done: a rule reference a contributor can work from without reading Go source.
-- [ ] The per-user and per-org repository caps for the cycle checked before deciding what to submit.
+- [ ] The per-user and per-org repository caps for the cycle checked before deciding what to submit. These are not published anywhere in the maintainer docs; the dashboard is the only source. As of 2026-11-02 the organization has two candidate repositories (section 7), so this check decides between them rather than only gating this one, and a rejected application consumes the cap without refunding it.
 
 ## 4. Maintainer runbook for the cycle
 
@@ -56,5 +57,29 @@ Refresh every number here on the day of filing; they were counted on 2026-10-30.
 - `https://docs.drips.network/wave/maintainers/faq/` (Add to Wave, GitHub-added issues defaulting to Trivial at 100 points, appeal path, phone verification, one to two hours scoping good first issues, daily dashboard checks)
 - `https://docs.drips.network/wave/maintainers/repo-application-limits/` (per-user and per-org caps, rejected repos cannot be re-applied, three appeals)
 - `https://docs.drips.network/wave/maintainers/points-budgets/` (Trivial at 100 points, per-project and per-org budget ceilings, audits triggered by adding issues or raising tiers)
-- `https://www.drips.network/wave/stellar` and `https://www.drips.network/wave/stellar/repos` (ten waves completed, no active or upcoming wave, budgets, 839 approved repositories)
+- `https://www.drips.network/wave/stellar` and `https://www.drips.network/wave/stellar/repos` (ten waves concluded, no active or upcoming wave, budgets, 839 approved repositories on 2026-10-30 and 838 on 2026-11-02)
 - `https://nansen.ai/post/stellar-q2-2026-report` (Q2 2026 network figures quoted in section 5)
+
+## 7. The organization has a second repository now
+
+`posture-sec/airlock` went public on 2026-11-02. It is the sibling scanner: a Python 3.11 CLI that audits Stellar and Soroban *repositories* for supply-chain compromise and release-integrity gaps, where Gauge audits *account configuration* on-chain. Same owner, same conventions, no shared code, and it arrived by recovery rather than by plan: the account that owned it (`airlock-sec`) was suspended, so the repository, its history and its documentation were moved here and re-pointed, which is task 1.15 in its own roadmap.
+
+State read on 2026-11-02, from that repository's files and the live GitHub API rather than from this one:
+
+| | Airlock |
+|---|---|
+| Roadmap | 45 of 95 tasks across Phases 0 to 8, 47%; Phase 1 is 12 of 15; its own gates row reads 0 of 10 |
+| Rules and detectors | 22 rules in four rule files, seven detector modules |
+| Tests | 709 passed, 1 skipped, run locally today; `ruff`, `mypy --strict` and its self-scan all clean, self-scan exit 0 |
+| Public surfaces | docs site live at `https://posture-sec.github.io/airlock/`, `v0.0.1` cut as a pre-release, 23 labels, 12 topics, `protect main` ruleset requiring its two real checks, direct push observed refused |
+| Wave work drafted | fifteen scoped issues written under `docs/wave/`, deliberately not published, plus its own `docs/wave/application.md` and settings runbook |
+| Known blemish | 46 of the 78 commits on `main` are authored under the two identities of the account that was suspended (`Gabriel Onwachie <121898101+Gabbydunkk@…>` and `gabbydunkk <…@gmail.com>`), kept rather than rewritten so the merge records its changelog cites stay intact; the pre-release notes say so |
+
+What changes here is not Gauge's readiness but the shape of the decision:
+
+1. One Drips Wave App installation at org scope covers both repositories, so the install and phone-verification steps happen once.
+2. The per-org cap and the per-org budget ceiling are shared. Nothing in the maintainer docs says how large either is, so the cost of applying both in one cycle is unknown, and a rejection is not refundable: the docs say a rejected repository cannot be re-applied and appeals are capped at three with waiting periods between them.
+3. Airlock is the more complete submission today, on every count in that table, and its fifteen issues are already scoped with acceptance criteria. Gauge has the better story to demonstrate (a live read of a real account, a docs site, a Scorecard badge) but is thinner on rules until the signer family lands.
+4. That ordering is not a reason to submit Airlock first anyway. Its own runbook puts the Drips application *before* publishing the issues, because on an unapproved repository the `Stellar Wave` label is stripped silently and the issues score nothing; its gate list in `docs/wave/application.md` is what decides, not this file.
+
+The practical consequence for this packet: read the caps on the dashboard first, and if the cap allows one repository per cycle, spend that one on whichever of the two has its gate list clear on the day the window opens. If it allows two, they still want different cycles, because a maintainer has to review contributor pull requests during the active week and one person running two waves at once is how issues end up unresolved at the deadline, which costs the contributor their points rather than costing the organization anything.

@@ -36,7 +36,7 @@ Hard constraints:
 | Static checks | `gofmt`, `go vet`, `staticcheck`, `govulncheck` | Dev-time and CI |
 | Build | `go build -trimpath`, static binaries for Linux, macOS and Windows | Reproducible-leaning builds |
 | Release integrity | Tagged releases with build provenance attestations; consumers verify before use | Matches Airlock |
-| CI | GitHub Actions, every action pinned by hash, top-level `contents: read` | Dogfoods Airlock |
+| CI | GitHub Actions, every action pinned by hash, top-level `contents: read` | Airlock dogfoods itself; Gauge is meant to run it too, at roadmap 4.7, and does not yet |
 
 ## 3. Architecture overview
 
@@ -323,7 +323,7 @@ Role severity matrix: `PRD.md` Appendix A. Key definitions:
 - Rulesets: no force pushes, no deletion, required status checks; `CODEOWNERS` on `internal/`, `cmd/`, `.github/`, `scripts/` and `go.mod`.
 - Hardware-key 2FA and a protected recovery email for maintainers; org-level 2FA requirement. These matter more than any code.
 - `govulncheck`, `staticcheck` and `go vet` run in CI. Dependabot for `gomod` and Actions, grouped weekly; the TOML dependency is reviewed by hand on every bump.
-- Airlock scans this repository in CI (dogfooding both ways).
+- Airlock is intended to scan this repository in CI (roadmap 4.7). It does not today: `grep -rn airlock .github/workflows` returns nothing on `main`, and the dependency it waits on, a released Airlock, does not exist yet. Airlock's own CI runs its own scanner; that is the dogfooding that has happened.
 - `scripts/check_roadmap_touched.sh` runs as a required check (section 16).
 
 ## 12. Testing strategy
