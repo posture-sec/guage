@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Status and evidence · Gauge docs</title>
-  <meta name="description" content="What Gauge does today: shipped components, the four live rules, fail-closed behavior, testnet evidence from 2026-10-30, and the limits of that evidence.">
+  <meta name="description" content="What Gauge does today: shipped components, the four live rules, fail-closed behavior, testnet evidence from 2026-10-30 and 2026-11-02, and the limits of that evidence.">
   <meta property="og:type" content="article">
   <meta property="og:title" content="Status and evidence · Gauge docs">
   <meta property="og:description" content="Functional alpha, testnet verified, unaudited. The exact state of every component and the runs behind it.">
@@ -43,7 +43,7 @@
         <a href="status.html" aria-current="page">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-10-30<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-02<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -109,7 +109,7 @@
 
         <section class="section">
           <h2>Testnet evidence</h2>
-          <p>These runs were made on 2026-10-30 against <code>https://horizon-testnet.stellar.org</code>. Ledger numbers are the endpoint's latest ledger at read time. Testnet resets, so a later run may not find the same accounts.</p>
+          <p>These runs were made against <code>https://horizon-testnet.stellar.org</code> on 2026-10-30 and again on 2026-11-02. Ledger numbers are the endpoint's latest ledger at read time. Testnet resets, so a later run may not find the same accounts.</p>
           <div class="table-wrap">
             <table>
               <thead>
@@ -135,6 +135,11 @@
                   <td>GDSX2WUF…UVBEVG, <code>--fail-on warn</code></td>
                   <td>5467759</td>
                   <td>Exit 1. <code>flag-undeclared-clawback</code>.</td>
+                </tr>
+                <tr>
+                  <td>GDSX2WUF…UVBEVG again on 2026-11-02, <code>--fail-on warn</code></td>
+                  <td>5517199</td>
+                  <td>Exit 1. Same finding; this run is the report excerpt on the overview page.</td>
                 </tr>
               </tbody>
             </table>
@@ -193,7 +198,7 @@
         </section>
 
         <footer class="footer">
-          <p>Functional alpha, unaudited. Evidence on this page was observed on testnet on 2026-10-30 and is not a statement about mainnet.</p>
+          <p>Functional alpha, unaudited. Evidence on this page was observed on testnet on 2026-10-30 and 2026-11-02 and is not a statement about mainnet.</p>
           <div class="footer-links">
             <a href="index.html">Back to overview</a>
             <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>

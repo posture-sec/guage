@@ -43,7 +43,7 @@
         <a href="status.html">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-10-30<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-02<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -64,19 +64,20 @@
             <ul class="hero-meta">
               <li>Go 1.27.3</li>
               <li>Apache-2.0</li>
-              <li>Testnet verified 2026-10-30</li>
+              <li>Testnet verified 2026-11-02</li>
             </ul>
           </div>
 
           <figure class="report" aria-label="Excerpt of a Gauge report from a testnet run">
             <figcaption class="report-head">
               <span class="report-title">Posture report</span>
-              <span>testnet / ledger 5467759</span>
+              <span>testnet / ledger 5517199</span>
             </figcaption>
             <pre class="report-body"><span class="report-line report-line--dim" style="--i:0">$ stellar-gauge check --network testnet \
+    --fail-on warn \
     --endpoint \
     https://horizon-testnet.stellar.org \
-    GDSX2WUF…BEVG</span><span class="report-line" style="--i:1">account GDSX2WUF…BEVG</span><span class="report-line" style="--i:2">  flags: auth_required=true clawback=true</span><span class="report-line" style="--i:3">  findings: 1 (0 accepted)</span><span class="report-line report-line--warn" style="--i:4">    [warn] flag-undeclared-clawback</span><span class="report-line" style="--i:5">      clawback is enabled and the policy</span><span class="report-line" style="--i:6">      does not declare it</span><span class="report-line" style="--i:7">      evidence: clawback observed true</span><span class="report-line" style="--i:8">result: 1 finding (1 warn, 0 accepted)</span><span class="report-line report-line--high" style="--i:9">exit code: 1<span class="caret" aria-hidden="true"></span></span></pre>
+    GDSX2WUF…UVBEVG</span><span class="report-line" style="--i:1">account GDSX2WUF…UVBEVG</span><span class="report-line" style="--i:2">  findings: 1 (0 accepted)</span><span class="report-line report-line--warn" style="--i:3">    [warn] flag-undeclared-clawback</span><span class="report-line" style="--i:4">      clawback is enabled and the policy</span><span class="report-line" style="--i:5">      does not declare it</span><span class="report-line" style="--i:6">      evidence: clawback observed true,</span><span class="report-line" style="--i:7">      and no clawback expectation is</span><span class="report-line" style="--i:8">      declared</span><span class="report-line" style="--i:9">result: 1 findings (0 high, 1 warn,</span><span class="report-line" style="--i:10">  0 info), 0 accepted</span><span class="report-line report-line--high" style="--i:11">exit code: 1<span class="caret" aria-hidden="true"></span></span></pre>
             <span class="stamp">Exit 1</span>
           </figure>
         </section>
