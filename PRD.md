@@ -7,7 +7,7 @@
 | Owner | Ademola |
 | Working name | Gauge. Binary `stellar-gauge`. Scaffold repository `posture-sec/guage`, Apache-2.0; final product naming remains open (section 13) |
 | Language | Go |
-| Sibling project | Airlock (`airlock-sec/airlock`): a Python scanner for Stellar and Soroban repositories. Gauge audits on-chain account configuration. They share conventions, not code |
+| Sibling project | Airlock (`posture-sec/airlock`, public since 2026-11-02): a Python scanner for Stellar and Soroban repositories. Gauge audits on-chain account configuration. They share conventions, not code, and one owner organization |
 | Companion docs | `ARCHITECTURE.md`, `ARCHITECTURE_ESSENTIALS.md`, `ROADMAP.md`, `project_structure.md`, `AGENTS.md`, `CLAUDE.md` |
 
 Conventions: **[Verified]** was checked against a source during research. **[Unverified]** is believed but not checked, or untested. Every Unverified item is repeated in section 14 so none silently becomes a requirement.
@@ -229,7 +229,7 @@ expires = "2027-04-27"                   # optional
 No calendar dates. Phases and exit criteria live in `ROADMAP.md`.
 
 - **v0.1.0:** Phases 0 to 4. **v0.2.0:** Phases 5 and 6. **Backlog:** Phase 7.
-- Feature sequencing is settled: D-04 was decided on 2026-10-30 to build Gauge now and share conventions, not code, with Airlock. The scaffold-only exception (ROADMAP D-09) that covered the first pull requests is spent; Phase 0 stands at 10 of 13 with 0.4, 0.6 and 0.7 open, and the readiness gates in `ROADMAP.md` section 3 still decide when a version can be tagged.
+- Feature sequencing is settled: D-04 was decided on 2026-10-30 to build Gauge now and share conventions, not code, with Airlock. The scaffold-only exception (ROADMAP D-09) that covered the first pull requests is spent; Phase 0 stands at 11 of 13 with 0.4 and 0.7 open, and the readiness gates in `ROADMAP.md` section 3 still decide when a version can be tagged. Airlock came back online on 2026-11-02 at `posture-sec/airlock`, 45 of its 95 tasks done and its only tag a `v0.0.1` pre-release, so the version D-04 declined to wait for still does not exist and the decision is unchanged by it.
 
 ## 10. Risks and mitigations
 
@@ -283,7 +283,7 @@ No calendar dates. Phases and exit criteria live in `ROADMAP.md`.
 | D-01 | Project and repo name | Decided 2026-10-30 | Working name Gauge, binary `stellar-gauge`, module `github.com/posture-sec/guage`. The slug question is D-15 in `ROADMAP.md` |
 | D-02 | Host organization | Decided 2026-10-28: `posture-sec` | Existing repository; module `github.com/posture-sec/guage` |
 | D-03 | License | Decided 2026-10-28: Apache-2.0 | Retain the existing LICENSE |
-| D-04 | Sequencing | Decided 2026-10-30: proceed with Gauge now | Share conventions, not code, with Airlock. No public Airlock repository exists to wait for, and the 0.5 search found no duplicate of this job |
+| D-04 | Sequencing | Decided 2026-10-30: proceed with Gauge now | Share conventions, not code, with Airlock. The 0.5 search found no duplicate of this job. Re-read 2026-11-02: Airlock is public again at `posture-sec/airlock` and still has no v0.1.0, so the decision holds on its original reasoning |
 | D-05 | Data source | Confirmed 2026-10-30: Horizon first, behind an interface | RPC is a feasible second source; 0.9 observed `getLedgerEntries` serving a classic account entry |
 | D-06 | TOML parser | Confirmed 2026-10-30: `github.com/BurntSushi/toml` v1.6.0 | MIT, no transitive dependencies, last push 2026-08-18; owner approved it as the only third-party dependency |
 | D-07 | Funding or program applications | Open | After v0.2.0 and adoption evidence |
