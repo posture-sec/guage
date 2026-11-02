@@ -1,5 +1,6 @@
 /* Gauge documentation site.
-   Flat ink and paper palette. No gradients anywhere. */
+   Flat ink and paper palette in two themes. No gradients anywhere.
+   Dark is the default; [data-theme="light"] on <html> switches the tokens. */
 
 :root {
   color-scheme: dark;
@@ -11,21 +12,62 @@
   --line-strong: #3a4c5e;
   --bone: #e9e6dd;
   --mute: #93a2b2;
+  --micro: #7a8fa1;
   --amber: #f2b33d;
   --amber-deep: #c98a12;
+  --on-accent: #101720;
+  --accent-block: #f2b33d;
   --paper: #ede8da;
   --paper-line: #c7bfa9;
   --ink: #101720;
   --ink-mute: #5a6570;
   --ink-warn: #8a5200;
   --ink-high: #a3320f;
+  --ink-pass: #1d6b58;
   --teal: #69c9b0;
+  --sig-high: #ff9b91;
+  --sig-high-line: #6b312c;
+  --sig-warn-line: #6b5326;
+  --sig-pass-line: #2f5c50;
   --font-sans: "Archivo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --font-serif: Georgia, "Times New Roman", serif;
   --sidebar: 284px;
   --content: 840px;
   --topbar: 64px;
+}
+
+/* Light: the same ink and paper identity read the other way round, a dark
+   ink sheet on a pale desk. Accent values darken so every text pair keeps at
+   least 4.5:1; the block shadow stays bright amber so the signature holds. */
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --void: #f2f0e9;
+  --deck: #e8e5db;
+  --panel: #fbfaf5;
+  --panel-2: #f6f4ec;
+  --line: #d5cebc;
+  --line-strong: #8a8069;
+  --bone: #131a22;
+  --mute: #54616f;
+  --micro: #5a6672;
+  --amber: #8a5a06;
+  --amber-deep: #6d4703;
+  --on-accent: #ffffff;
+  --accent-block: #f2b33d;
+  --paper: #ffffff;
+  --paper-line: #c9c2ae;
+  --ink: #101720;
+  --ink-mute: #55606b;
+  --ink-warn: #7d4a00;
+  --ink-high: #9a2c0b;
+  --ink-pass: #155c4a;
+  --teal: #0f6d55;
+  --sig-high: #b3261e;
+  --sig-high-line: #e2b7b1;
+  --sig-warn-line: #e0cb96;
+  --sig-pass-line: #a8d2c4;
 }
 
 *,
@@ -57,7 +99,7 @@ body {
 
 ::selection {
   background: var(--amber);
-  color: var(--ink);
+  color: var(--on-accent);
 }
 
 a {
@@ -88,6 +130,15 @@ pre {
   font-family: var(--font-mono);
 }
 
+/* A long inline token (an install command, a URL) otherwise sets a floor under
+   the paragraph width and pushes the page past a 320px viewport. Block code
+   keeps its own horizontal scroll. */
+p code,
+li code,
+dd code {
+  overflow-wrap: anywhere;
+}
+
 .skip-link {
   position: absolute;
   left: 16px;
@@ -95,7 +146,7 @@ pre {
   z-index: 100;
   padding: 10px 14px;
   background: var(--amber);
-  color: var(--ink);
+  color: var(--on-accent);
   font: 600 12px/1 var(--font-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -207,6 +258,51 @@ pre {
   height: 14px;
 }
 
+/* Theme toggle. The icon and label name the mode the click gives you: a sun and
+   "Light" while the page is dark. It stays hidden until the head script marks
+   the document ready, because an inert toggle is worse than no toggle. */
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--bone);
+  font: 500 11px/1 var(--font-mono);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+  text-decoration: none;
+}
+
+.theme-toggle svg {
+  width: 14px;
+  height: 14px;
+}
+
+.theme-toggle .icon-moon {
+  display: none;
+}
+
+:root[data-theme="light"] .theme-toggle .icon-sun {
+  display: none;
+}
+
+:root[data-theme="light"] .theme-toggle .icon-moon {
+  display: inline;
+}
+
+html:not([data-theme-ready]) .theme-toggle {
+  display: none;
+}
+
 /* Sidebar */
 
 .sidebar {
@@ -262,7 +358,9 @@ pre {
 }
 
 .side-nav a span {
-  color: var(--line-strong);
+  /* 9px mono, so it needs the same 4.5:1 as body text. --line-strong reads as
+     a hairline on a dark surface (2.2:1) and fails as type. */
+  color: var(--micro);
   font: 500 9px/1 var(--font-mono);
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -442,7 +540,7 @@ hr {
   padding: 12px 18px;
   border: 1px solid var(--amber);
   background: var(--amber);
-  color: var(--ink);
+  color: var(--on-accent);
   font: 600 12px/1 var(--font-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -503,7 +601,7 @@ hr {
   border: 1px solid var(--paper-line);
   background: var(--paper);
   color: var(--ink);
-  box-shadow: 10px 10px 0 var(--amber);
+  box-shadow: 10px 10px 0 var(--accent-block);
   font-family: var(--font-mono);
   font-size: 12px;
   line-height: 1.75;
@@ -554,7 +652,7 @@ hr {
 }
 
 .report-line--pass {
-  color: #1d6b58;
+  color: var(--ink-pass);
   font-weight: 500;
 }
 
@@ -846,17 +944,17 @@ hr {
 }
 
 .chip--high {
-  border-color: #6b312c;
-  color: #ff9b91;
+  border-color: var(--sig-high-line);
+  color: var(--sig-high);
 }
 
 .chip--warn {
-  border-color: #6b5326;
+  border-color: var(--sig-warn-line);
   color: var(--amber);
 }
 
 .chip--pass {
-  border-color: #2f5c50;
+  border-color: var(--sig-pass-line);
   color: var(--teal);
 }
 
@@ -1257,7 +1355,7 @@ ol.status-list b::before {
 
   .side-nav a {
     flex: none;
-    padding: 8px 12px;
+    padding: 10px 12px;
     border-left: 0;
     border-bottom: 2px solid transparent;
     font-size: 13px;
@@ -1340,6 +1438,19 @@ ol.status-list b::before {
     letter-spacing: 0.06em;
   }
 
+  /* Keep the row label in view while the rest of the table is swiped. */
+  .table-wrap:not(.table-wrap--cards) th:first-child,
+  .table-wrap:not(.table-wrap--cards) td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    box-shadow: 1px 0 0 var(--line);
+  }
+
+  .table-wrap:not(.table-wrap--cards) td:first-child {
+    background: var(--void);
+  }
+
   .table-wrap--cards {
     overflow: visible;
     border: 0;
@@ -1414,7 +1525,7 @@ ol.status-list b::before {
 
   .report {
     font-size: 11px;
-    box-shadow: 6px 6px 0 var(--amber);
+    box-shadow: 6px 6px 0 var(--accent-block);
   }
 
   .stamp {
@@ -1445,6 +1556,14 @@ ol.status-list b::before {
     padding: 8px;
   }
 
+  .theme-toggle span {
+    display: none;
+  }
+
+  .theme-toggle {
+    padding: 8px;
+  }
+
   .main {
     padding: 28px 16px 48px;
   }
@@ -1471,9 +1590,30 @@ ol.status-list b::before {
     display: block;
   }
 
-  body {
-    background: #fff;
+  /* Printing must not inherit whichever theme is on screen: backgrounds are
+     dropped by the printer, so every text colour has to work on paper. */
+  body,
+  h1,
+  h2,
+  h3,
+  h4,
+  p,
+  li,
+  a,
+  th,
+  td,
+  code,
+  pre,
+  .chip {
+    background: transparent;
     color: #111;
+  }
+
+  .table-wrap,
+  table,
+  th,
+  td {
+    border-color: #999;
   }
 
   .report {
