@@ -78,6 +78,16 @@ guage/
     banner.svg                            # README banner; wordmark plus status line
     WAVE_SUBMISSION.md                    # verified Drips Wave facts, gate list, runbook        (1.15, D-13)
 
+  site/                                   # documentation site v1, deployed to GitHub Pages      (5.9)
+    index.html                            # overview
+    rules.html                            # rule reference
+    policy.html                           # policy file reference
+    mechanics.html                        # how a run works
+    guides.html                           # clone to failing build
+    status.html                           # what ships, what is verified, what does not
+    404.html                              # Pages 404; root-relative asset paths
+    assets/{site.css,site.js,favicon.svg,og.png}  # one stylesheet, clipboard-only script, share card
+
   scripts/
     check_roadmap_touched.sh              # gate: a PR that changes files must change ROADMAP.md   (1.9)
     roadmap_progress.sh                   # computes the progress table; --check fails when stale   (1.9)
@@ -95,6 +105,7 @@ guage/
       ci.yml                              # ci / go (gofmt, vet, build, test -race, staticcheck) and ci / vuln (1.5)
       roadmap-check.yml                   # roadmap-check / gate: touched, table, backlog rows, self-test (1.9, 1.14)
       scorecard.yml                       # scorecard / analysis: OSSF Scorecard, SARIF and badge  (1.7)
+      pages.yml                           # pages / deploy: publishes site/ to GitHub Pages        (5.9)
 ```
 
 Remote state set up alongside these files (task 1.13, not visible in the tree): a `protect main` ruleset requiring a pull request and the three CI checks, the label taxonomy listed in `CONTRIBUTING.md`, repository topics, GitHub Discussions, and 73 issues (#5 to #77), one per open roadmap task in Phases 0 to 6 plus the ten readiness gates, produced by `scripts/generate_issues.sh`. The 1.3 direct-push rejection was observed against `main` itself on 2026-10-30, after PR #2 merged: an empty-commit push was refused with "Changes must be made through a pull request" and `main` did not move. Absent on purpose: no release tag (D-12), and no scheduled-audit or release workflow yet (4.5, 5.4).

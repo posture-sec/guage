@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rule catalog · Gauge docs</title>
+  <meta name="description" content="All sixteen Gauge rules with their conditions and severities, including the four account and flag rules that are live today.">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Rule catalog · Gauge docs">
+  <meta property="og:description" content="Sixteen checks, four shipped: every rule has a stable ID, a condition and a severity.">
+  <meta property="og:url" content="https://posture-sec.github.io/guage/rules.html">
+  <meta property="og:image" content="https://posture-sec.github.io/guage/assets/og.png">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/site.css">
+  <script src="assets/site.js" defer></script>
+</head>
+<body data-page="rules">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="site">
+    <header class="topbar">
+      <a class="brand" href="index.html"><span class="brand-mark"></span>Gauge<span class="brand-sub">docs</span></a>
+      <div class="topbar-right">
+        <span class="status-pill">Functional alpha</span>
+        <span class="version-pill">v0.1.0-dev</span>
+        <a class="icon-link" href="https://github.com/posture-sec/guage">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.2-1.7-1.2-1.7-1-.7.1-.7.1-.7 1.1.1 1.7 1.2 1.7 1.2 1 1.7 2.6 1.2 3.2.9.1-.7.4-1.2.7-1.5-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0C17.1 4.2 18.1 4.5 18.1 4.5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </header>
+
+    <aside class="sidebar">
+      <p class="side-label">Documentation</p>
+      <nav class="side-nav" aria-label="Documentation">
+        <a href="index.html">Overview <span>start</span></a>
+        <a href="mechanics.html">Mechanics <span>how</span></a>
+        <a href="rules.html" aria-current="page">Rules <span>16</span></a>
+        <a href="policy.html">Policy <span>toml</span></a>
+        <a href="guides.html">Guides <span>run</span></a>
+        <a href="status.html">Status <span>now</span></a>
+      </nav>
+      <div class="side-meta">
+        <p>Docs updated 2026-10-30<br>Gauge 0.1.0-dev</p>
+        <a href="https://github.com/posture-sec/guage">Repository</a>
+        <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
+        <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
+      </div>
+    </aside>
+
+    <main class="main" id="main">
+      <div class="content">
+        <p class="eyebrow">Rule catalog</p>
+        <h1>Sixteen checks. Four shipped.</h1>
+        <p class="lede">Every rule has a stable kebab-case ID, a written condition and a severity. A finding names the rule, the account, an evidence line and a fingerprint that accepted risks key on.</p>
+        <div class="chip-row">
+          <span class="chip chip--live">4 live</span>
+          <span class="chip">12 specified</span>
+          <span class="chip">Baseline severities until 3.4</span>
+        </div>
+
+        <section class="section">
+          <h2>The catalog</h2>
+          <div class="table-wrap table-wrap--cards">
+            <table class="rule-table">
+              <thead>
+                <tr><th>Family</th><th>Rule</th><th>Fires when</th><th>Severity</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Account</td>
+                  <td>acct-missing</td>
+                  <td>The endpoint answers 404: the account was never created or was merged.</td>
+                  <td><span class="chip chip--high">HIGH</span></td>
+                  <td><span class="chip chip--live">Live</span></td>
+                </tr>
+                <tr>
+                  <td>Account</td>
+                  <td>acct-network-mismatch</td>
+                  <td>The endpoint's passphrase differs from the requested network.</td>
+                  <td><span class="chip chip--high">HIGH</span></td>
+                  <td><span class="chip chip--live">Live</span></td>
+                </tr>
+                <tr>
+                  <td>Signers</td>
+                  <td>sig-no-signing-weight</td>
+                  <td>No signer has weight above zero, so the account can never sign again.</td>
+                  <td><span class="chip chip--high">HIGH</span></td>
+                  <td><span class="chip">Specified</span></td>
+                </tr>
+                <tr>
+                  <td>Signers</td>
+                  <td>sig-threshold-unreachable</td>
+                  <td>Total signer weight is below a threshold, so that tier can never authorize.</td>
+                  <td><span class="chip chip--high">HIGH</span></td>
+                  <td><span class="chip">Specified</span></td>
+                </tr>
+                <tr>
+                  <td>Signers</td>
+                  <td>sig-threshold-order</td>
+                  <td>Thresholds do not satisfy low &lt;= medium &lt;= high.</td>
+                  <td><span class="chip chip--warn">WARN</span></td>
+                  <td><span class="chip">Specified</span></td>
+                </tr>
+                <tr>
+                  <td>Signers</td>
+                  <td>sig-single-key-high</td>
+                  <td>One signer alone reaches the high threshold.</td>
+                  <td>By role</td>
+                  <td><span class="chip">Specified</span></td>
+                </tr>
+                <tr>
+                  <td>Signers</td>
+                  <td>sig-hashx</td>
+                  <td>A <code>hash(x)</code> signer exists; HIGH if it alone reaches medium.</td>
+                  <td>WARN or HIGH</td>
+                  <td><span class="chip">Specified</span></td>
+                </tr>
+                <tr>
+                  <td>Signers</td>
+                  <td>sig-unexpected-signer</td>
+                  <td>A signer is not in <code>expected_signers</code>, only when the list is declared.</td>
+                  <td>By role</td>
+                  <td><span class="chip">Specified</span></td>
+                </tr>
+                <tr>
+                  <td>Signers</td>
+                  <td>sig-missing-expected</td>
+                  <td>A declared signer is absent from the chain.</td>
+                  <td><span class="chip chip--high">HIGH</span></td>
+                  <td><span class="chip">Specified</span></td>
+                </tr>
+                <tr>
+                  <td>Signers</td>
+                  <td>sig-weight-drift</td>
+                  <td>A declared signer's weight differs from the chain.</td>
+                  <td>By role</td>
+                  <td><span class="chip">Specified</span></td>
+                </tr>
+                <tr>
+                  <td>Thresholds</td>
+                  <td>thr-drift</td>
+                  <td>Declared thresholds differ from the chain.</td>
+                  <td>By role</td>
+                  <td><span class="chip">Specified</span></td>
+                </tr>
+                <tr>
+                  <td>Flags</td>
+                  <td>flag-drift</td>
+                  <td>A declared flag differs from the chain.</td>
+                  <td>WARN*</td>
+                  <td><span class="chip chip--live">Live</span></td>
+                </tr>
+                <tr>
+                  <td>Flags</td>
+                  <td>flag-undeclared-clawback</td>
+                  <td>Clawback is enabled and the policy declares no clawback value.</td>
+                  <td>WARN*</td>
+                  <td><span class="chip chip--live">Live</span></td>
+                </tr>
+                <tr>
+                  <td>Identity</td>
+                  <td>id-no-home-domain</td>
+                  <td>No home domain on an account whose role expects one.</td>
+                  <td><span class="chip chip--warn">WARN</span></td>
+                  <td><span class="chip">Specified</span></td>
+                </tr>
+                <tr>
+                  <td>Identity</td>
+                  <td>id-toml-unreachable</td>
+                  <td><code>stellar.toml</code> cannot be fetched or parsed under the SSRF guard.</td>
+                  <td><span class="chip chip--warn">WARN</span></td>
+                  <td><span class="chip">Specified</span></td>
+                </tr>
+                <tr>
+                  <td>Identity</td>
+                  <td>id-toml-account-unlisted</td>
+                  <td>The account is not listed in its home domain's <code>stellar.toml</code>.</td>
+                  <td><span class="chip chip--warn">WARN</span></td>
+                  <td><span class="chip">Specified</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-caption">* The two live flag rules use WARN for every role today. The specified catalog makes flag drift HIGH for an issuer and clawback WARN, raised to HIGH for an issuer. Role overrides are task 3.4.</p>
+        </section>
+
+        <section class="section">
+          <h2>The four live rules</h2>
+          <p>These are registered in <code>internal/rules</code>, covered by positive and negative fixture cases, and exercised end to end by the CLI tests.</p>
+
+          <article class="rule">
+            <div class="rule-head">
+              <h3>acct-missing</h3>
+              <span class="chip chip--high">HIGH</span>
+              <span class="chip chip--live">Live</span>
+            </div>
+            <p>A requested account returned 404. The endpoint answered, so this is a statement about the account, not about the network. The account may never have been created, or it may have been merged into another account. The run continues and reports the other accounts.</p>
+            <dl>
+              <dt>Evidence</dt>
+              <dd><code>endpoint URL returned not found</code></dd>
+              <dt>Acceptable</dt>
+              <dd>No. An acceptance cannot hide a missing account.</dd>
+              <dt>Exit effect</dt>
+              <dd>HIGH fails the default <code>--fail-on high</code> and produces exit 1.</dd>
+            </dl>
+          </article>
+
+          <article class="rule">
+            <div class="rule-head">
+              <h3>acct-network-mismatch</h3>
+              <span class="chip chip--high">HIGH</span>
+              <span class="chip chip--live">Live</span>
+            </div>
+            <p>The endpoint's network passphrase differs from the network the run requested. No account is fetched from that endpoint at all, because an account ID can exist on more than one network and the report would describe the wrong chain. Each requested account is listed as skipped with this finding.</p>
+            <dl>
+              <dt>Evidence</dt>
+              <dd><code>expected Test SDF Network ; September 2015, endpoint reports Public Global Stellar Network ; September 2015</code></dd>
+              <dt>Acceptable</dt>
+              <dd>No.</dd>
+              <dt>Exit effect</dt>
+              <dd>HIGH fails the default threshold and produces exit 1. The run did not read an account, but it did complete and name the disagreement.</dd>
+            </dl>
+          </article>
+
+          <article class="rule">
+            <div class="rule-head">
+              <h3>flag-drift</h3>
+              <span class="chip chip--warn">WARN</span>
+              <span class="chip chip--live">Live</span>
+            </div>
+            <p>A flag the policy declares disagrees with the chain. Only declared flags are compared, so an omitted flag can never drift. The comparison runs in a fixed order: <code>auth_required</code>, <code>auth_revocable</code>, <code>auth_immutable</code>, <code>clawback</code>. The evidence lists each disagreement.</p>
+            <dl>
+              <dt>Example</dt>
+              <dd><code>auth_required declared false, observed true</code></dd>
+              <dt>Acceptable</dt>
+              <dd>Yes, with a reason and an optional expiry. The owner adds accept entries.</dd>
+              <dt>Exit effect</dt>
+              <dd>WARN is below the default <code>--fail-on high</code>. It produces exit 1 only under <code>--fail-on warn</code>.</dd>
+            </dl>
+          </article>
+
+          <article class="rule">
+            <div class="rule-head">
+              <h3>flag-undeclared-clawback</h3>
+              <span class="chip chip--warn">WARN</span>
+              <span class="chip chip--live">Live</span>
+            </div>
+            <p>Clawback is enabled and the policy says nothing about clawback. A declared value, true or false, suppresses this rule: declared true is a declaration, and declared false that disagrees with the chain is <code>flag-drift</code> instead.</p>
+            <dl>
+              <dt>Evidence</dt>
+              <dd><code>clawback observed true, and no clawback expectation is declared</code></dd>
+              <dt>Acceptable</dt>
+              <dd>Yes, with a reason and an optional expiry.</dd>
+              <dt>Exit effect</dt>
+              <dd>WARN. Exit 1 only under <code>--fail-on warn</code>.</dd>
+            </dl>
+          </article>
+        </section>
+
+        <section class="section">
+          <h2>What is not shipped</h2>
+          <p>The twelve specified rules are a contract for the next phases, not behavior you can rely on today. The signer and threshold rules wait on threshold semantics that task 0.7 could not verify without submitting a transaction, which Gauge forbids itself to do. The identity rules wait on the guarded SEP-1 fetcher. Role-based severities are task 3.4.</p>
+          <div class="note">
+            <p><strong>Read the status before trusting a pass.</strong> A run evaluates the four rules above. A clean result means those four agreed with your policy; it says nothing about signers, thresholds, home domain or any rule marked Specified.</p>
+          </div>
+          <p><a href="status.html">Current implementation status</a> · <a href="policy.html">How to declare expectations</a></p>
+        </section>
+
+        <footer class="footer">
+          <p>Functional alpha, unaudited. Rule severities and conditions are taken from <code>PRD.md</code> 6.1 and the shipped registry.</p>
+          <div class="footer-links">
+            <a href="policy.html">Next: policy reference</a>
+            <a href="https://github.com/posture-sec/guage/blob/main/PRD.md">PRD</a>
+            <a href="https://github.com/posture-sec/guage">GitHub</a>
+          </div>
+        </footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

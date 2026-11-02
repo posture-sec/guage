@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Guides · Gauge docs</title>
+  <meta name="description" content="Run the first check, audit a policy, wire Gauge into CI, and work on the codebase: commands, flags, exit codes and contributor checks.">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Guides · Gauge docs">
+  <meta property="og:description" content="From a clone to a failing build: check, audit, CI wiring and contributor commands.">
+  <meta property="og:url" content="https://posture-sec.github.io/guage/guides.html">
+  <meta property="og:image" content="https://posture-sec.github.io/guage/assets/og.png">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/site.css">
+  <script src="assets/site.js" defer></script>
+</head>
+<body data-page="guides">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="site">
+    <header class="topbar">
+      <a class="brand" href="index.html"><span class="brand-mark"></span>Gauge<span class="brand-sub">docs</span></a>
+      <div class="topbar-right">
+        <span class="status-pill">Functional alpha</span>
+        <span class="version-pill">v0.1.0-dev</span>
+        <a class="icon-link" href="https://github.com/posture-sec/guage">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.2-1.7-1.2-1.7-1-.7.1-.7.1-.7 1.1.1 1.7 1.2 1.7 1.2 1 1.7 2.6 1.2 3.2.9.1-.7.4-1.2.7-1.5-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0C17.1 4.2 18.1 4.5 18.1 4.5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </header>
+
+    <aside class="sidebar">
+      <p class="side-label">Documentation</p>
+      <nav class="side-nav" aria-label="Documentation">
+        <a href="index.html">Overview <span>start</span></a>
+        <a href="mechanics.html">Mechanics <span>how</span></a>
+        <a href="rules.html">Rules <span>16</span></a>
+        <a href="policy.html">Policy <span>toml</span></a>
+        <a href="guides.html" aria-current="page">Guides <span>run</span></a>
+        <a href="status.html">Status <span>now</span></a>
+      </nav>
+      <div class="side-meta">
+        <p>Docs updated 2026-10-30<br>Gauge 0.1.0-dev</p>
+        <a href="https://github.com/posture-sec/guage">Repository</a>
+        <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
+        <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
+      </div>
+    </aside>
+
+    <main class="main" id="main">
+      <div class="content">
+        <p class="eyebrow">Guides</p>
+        <h1>From a clone to a failing build.</h1>
+        <p class="lede">There is no tagged release. The repository is the install path, and the first useful run takes one command. This page covers the two commands, the flags they accept, a CI job that fails on findings, and the checks a contribution has to pass.</p>
+
+        <section class="section">
+          <h2>Prerequisites</h2>
+          <p>Go 1.27.3 or newer. No credentials, no wallet, no Stellar SDK and no configuration beyond the command. Gauge reads public Horizon data over HTTPS, so a network that reaches <code>horizon-testnet.stellar.org</code> is enough for the first run.</p>
+          <div class="code" data-copy>
+            <div class="code-label"><span>Shell</span></div>
+            <pre>git clone https://github.com/posture-sec/guage
+cd guage
+go build -o stellar-gauge ./cmd/stellar-gauge
+./stellar-gauge version</pre>
+          </div>
+          <p class="table-caption">Building once is faster than <code>go run</code> on every invocation, and it gives CI a binary to cache. Both paths run the same code.</p>
+        </section>
+
+        <section class="section">
+          <h2>check: one account, no policy file</h2>
+          <p><code>check</code> takes the network, one endpoint and one or more G addresses. It applies the four live rules and prints a report.</p>
+          <div class="code" data-copy>
+            <div class="code-label"><span>Shell</span></div>
+            <pre>./stellar-gauge check \
+  --network testnet \
+  --endpoint https://horizon-testnet.stellar.org \
+  --fail-on warn \
+  GDSX2WUFUT7KCMTUNG3IUQWIUQSC4XNKQ5NTGEZRKLTMLCSJTCUVBEVG</pre>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Flag</th><th>Default</th><th>Notes</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>--network</td><td>(required)</td><td><code>mainnet</code>, <code>testnet</code> or a full passphrase. There is no default and no discovery.</td></tr>
+                <tr><td>--endpoint</td><td>(required)</td><td>May be repeated by the parser, but exactly one is accepted at v0.1. Must be HTTPS, except loopback.</td></tr>
+                <tr><td>--format</td><td>text</td><td><code>text</code> or <code>json</code>. Any other value exits 2.</td></tr>
+                <tr><td>--fail-on</td><td>high</td><td><code>high</code> or <code>warn</code>. Sets the severity at which a finding produces exit 1.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-caption">Positional arguments are the accounts. Each must be a canonical G address. An M address, a C address, a secret seed or an arbitrary string is refused with a specific message, and the value is never echoed.</p>
+        </section>
+
+        <section class="section">
+          <h2>audit: the whole policy</h2>
+          <p><code>audit</code> reads <code>gauge.toml</code> and audits every declared account. It has no positional arguments and no network flag, because both come from the file.</p>
+          <div class="code" data-copy>
+            <div class="code-label"><span>Shell</span></div>
+            <pre>./stellar-gauge audit --config gauge.toml --fail-on warn
+./stellar-gauge audit --config gauge.toml --format json</pre>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Flag</th><th>Default</th><th>Notes</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>--config</td><td>gauge.toml</td><td>Path to the policy. A missing or rejected file exits 2 before any request.</td></tr>
+                <tr><td>--format</td><td>text</td><td><code>text</code> or <code>json</code>. <code>markdown</code> is refused with "not implemented yet".</td></tr>
+                <tr><td>--fail-on</td><td>high</td><td><code>high</code> or <code>warn</code>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Accounts are fetched in policy order through a pool of at most eight requests. A 404 becomes the <code>acct-missing</code> finding and the run continues. Any other read failure cancels the remaining fetches and exits 3, so a partial report is never rendered as a full one.</p>
+        </section>
+
+        <section class="section">
+          <h2>Reading the result</h2>
+          <div class="rail">
+            <div class="rail-item">
+              <span class="rail-code">0</span>
+              <span class="rail-label">Pass</span>
+              <p class="rail-copy">The run completed and every evaluated rule agreed with the policy.</p>
+            </div>
+            <div class="rail-item">
+              <span class="rail-code">1</span>
+              <span class="rail-label">Findings</span>
+              <p class="rail-copy">A finding reached <code>--fail-on</code>. The report is complete and trustworthy.</p>
+            </div>
+            <div class="rail-item">
+              <span class="rail-code">2</span>
+              <span class="rail-label">Config or usage</span>
+              <p class="rail-copy">A bad flag, a rejected policy, an unknown key or a secret seed. Fix the input.</p>
+            </div>
+            <div class="rail-item">
+              <span class="rail-code">3</span>
+              <span class="rail-label">Source or internal</span>
+              <p class="rail-copy">Unreachable endpoint, malformed or oversized response, or a rule panic. Do not treat it as a pass.</p>
+            </div>
+          </div>
+          <div class="note">
+            <p><strong>A failing job is the product working.</strong> Exit 1 means the chain and the policy disagree in a way you asked to be told about. Exit 3 means Gauge could not form a trustworthy opinion, which is also not a pass. Alerting should distinguish the two: exit 1 is a posture change, exit 3 is an availability or data problem.</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Wire it into CI</h2>
+          <p>A scheduled or pull-request job needs no secrets. This example audits on every push and once a day, and keeps the report as an artifact for the run that failed.</p>
+          <div class="code" data-copy>
+            <div class="code-label"><span>.github/workflows/gauge.yml</span></div>
+            <pre>name: gauge
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: "1.27.3"
+      - run: go build -o stellar-gauge ./cmd/stellar-gauge
+      - name: Audit the declared accounts
+        run: ./stellar-gauge audit --config gauge.toml --format json &gt; report.json
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gauge-report
+          path: report.json</pre>
+          </div>
+          <p class="table-caption">Start on testnet. Moving to mainnet changes <code>network</code> and <code>endpoints</code> in the policy, and nothing in the job. The repository pins its own actions by commit SHA; consumer workflows can use release tags.</p>
+          <p>For a merge gate, run the audit on the pull request and leave the policy file under review like any other code. An acceptance that changes a red job to green should arrive as a visible policy diff with a reason, not as a CI variable.</p>
+        </section>
+
+        <section class="section">
+          <h2>Working with JSON</h2>
+          <p><code>--format json</code> prints one object with <code>tool_version</code>, <code>network</code>, <code>ledger</code>, <code>accounts</code>, <code>exit_code</code> and <code>limits</code>. Each account carries a <code>snapshot</code> and a <code>findings</code> array; findings carry <code>rule_id</code>, <code>severity</code>, <code>account</code>, <code>message</code>, <code>evidence</code>, <code>fingerprint</code> and <code>accepted</code>. The output is indented, stable and HTML-escaped off.</p>
+          <div class="code" data-copy>
+            <div class="code-label"><span>Shell</span></div>
+            <pre>./stellar-gauge check --network testnet \
+  --endpoint https://horizon-testnet.stellar.org \
+  --format json G... \
+  | jq '{ledger, exit_code, rules: [.accounts[].findings[].rule_id]}'</pre>
+          </div>
+          <p class="table-caption">The report header includes the ledger the endpoint reported at read time, so an archived report can be tied to a point in chain history. The limits footer is part of the JSON, not only the text output.</p>
+        </section>
+
+        <section class="section">
+          <h2>Advice by account role</h2>
+          <dl class="ledger">
+            <div class="ledger-row">
+              <dt>Issuer</dt>
+              <dd><strong>Declare all four flags explicitly.</strong> An issuer's flags decide what it can do to holders. Leaving clawback undeclared is what <code>flag-undeclared-clawback</code> exists to catch.</dd>
+            </div>
+            <div class="ledger-row">
+              <dt>Treasury</dt>
+              <dd><strong>Declare every flag as false unless the account issues.</strong> A treasury that has clawback enabled is a fact worth failing a build over, even before role severities land.</dd>
+            </div>
+            <div class="ledger-row">
+              <dt>Distribution</dt>
+              <dd><strong>Start with flags, then add expectations as rules ship.</strong> Signer and threshold expectations are validated now, but no live rule compares them yet.</dd>
+            </div>
+            <div class="ledger-row">
+              <dt>Merchant</dt>
+              <dd><strong>Use <code>check</code> for a quick read and a policy once the set of accounts is stable.</strong> A merchant account is usually the simplest to describe, so drift stands out.</dd>
+            </div>
+          </dl>
+          <p class="table-caption">These are authoring recommendations, not severity profiles. Role-based severity overrides are task 3.4 and are not active.</p>
+        </section>
+
+        <section class="section">
+          <h2>Working on Gauge</h2>
+          <p>Every contribution starts from the roadmap. Find the task, check its dependencies, write the failing test first, then the smallest change that passes.</p>
+          <div class="code" data-copy>
+            <div class="code-label"><span>Checks before a pull request</span></div>
+            <pre>gofmt -l .                       # must print nothing
+go vet ./...
+staticcheck ./...                # v0.8.2
+go test ./... -race -count=1
+govulncheck ./...                # v1.9.0
+scripts/check_roadmap_touched.sh origin/main
+scripts/roadmap_progress.sh --check ROADMAP.md
+scripts/generate_issues.sh --check</pre>
+          </div>
+          <p class="small muted">Install the pinned tools with <code>go install honnef.co/go/tools/cmd/staticcheck@v0.8.2</code> and <code>go install golang.org/x/vuln/cmd/govulncheck@v1.9.0</code>. The fuzz smoke run waits for its targets in <code>internal/strkey</code> and <code>internal/sanitize</code>.</p>
+          <p>Adding a rule means a new pure function in <code>internal/rules</code>, a registration entry, a positive and a negative fixture, updated golden files, and matching updates to <code>PRD.md</code> 6.1 and <code>ARCHITECTURE_ESSENTIALS.md</code> 8. The roadmap rule applies to every change, including documentation: <code>ROADMAP.md</code> is updated in the same pull request.</p>
+        </section>
+
+        <section class="section">
+          <p class="eyebrow">The boundary</p>
+          <blockquote class="limits">
+            A green job means the rules that ran agreed with your policy. It does not mean the account is safe.
+            <cite>Gauge documentation</cite>
+          </blockquote>
+          <p class="lede">Gauge reads public ledger state, compares it with a file and reports the difference. It cannot see key custody, signer independence, off-chain approvals or who can edit the CI job that runs it.</p>
+        </section>
+
+        <footer class="footer">
+          <p>Functional alpha, unaudited. Commands and flags on this page match the v0.1 CLI as of 2026-10-30.</p>
+          <div class="footer-links">
+            <a href="status.html">Next: status and evidence</a>
+            <a href="policy.html">Policy reference</a>
+            <a href="https://github.com/posture-sec/guage/blob/main/CONTRIBUTING.md">Contributing</a>
+          </div>
+        </footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
