@@ -59,7 +59,7 @@
         <a href="status.html">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-02<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-03<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -130,7 +130,8 @@
         <section class="section">
           <h2>Home domain and SEP-1</h2>
           <p>The home domain is where an account publishes a <code>stellar.toml</code> file at <code>/.well-known/stellar.toml</code>. SEP-1 defines the fields an issuer can publish, including <code>NETWORK_PASSPHRASE</code>, <code>SIGNING_KEY</code> and the list of <code>ACCOUNTS</code> it operates.</p>
-          <p>Gauge prints the home domain today. The guarded identity checks are specified but not shipped. One captured testnet issuer served its <code>stellar.toml</code> as HTTP 200 with an HTML body, so the planned check keys on a strict TOML parse rather than on the response's content type.</p>
+          <p>Gauge reads that document, through a guard that sits at the dial rather than in a pre-flight check. The host name is resolved, every address in the answer is classified against a table that rejects loopback, private, link-local including the cloud metadata address, unique-local, carrier-grade NAT and unspecified ranges, and the socket is then opened to the numeric address that was validated. That order is the point: a record that changes between the check and the connection cannot smuggle a private host through, and a redirect re-enters the guard with fresh resolution instead of inheriting the first answer. At most three hops, each required to be https with no credentials and no port but 443, one body cap of 102400 bytes, one deadline over the whole chain.</p>
+          <p>One captured testnet issuer served its <code>stellar.toml</code> as HTTP 200 with an HTML body, so validity keys on a strict TOML parse that yields at least one recognized identity field, never on the content type. Nothing from the document reaches the report: an unreachable domain names the step that failed and quotes no body. Three rules sit on that result, all WARN, and a home domain that was observed but never fetched is a warning rather than a pass. No test in this repository dials a real domain, so this fetcher has not been run against one.</p>
         </section>
 
         <section class="section">
@@ -140,7 +141,8 @@
             <li><b>Read network</b><span>The endpoint's root document supplies its network passphrase and latest ledger.</span></li>
             <li><b>Compare passphrase</b><span>A mismatch is recorded before any account read. Nothing is fetched from the wrong network.</span></li>
             <li><b>Fetch accounts</b><span>Accounts are read in policy order through a pool of at most eight requests. The first non-404 failure cancels the rest.</span></li>
-            <li><b>Evaluate rules</b><span>Pure functions read the snapshot and the policy. A rule panic becomes an internal finding and exit 3.</span></li>
+            <li><b>Fetch identity</b><span>Each account that published a home domain is asked about it, under the same bound of eight, through the dial-time guard. A domain that was not published is not fetched, and the whole stage is skipped when the endpoint is on the wrong network.</span></li>
+            <li><b>Evaluate rules</b><span>Pure functions read the snapshot, the policy and the identity result. A rule panic becomes an internal finding and exit 3.</span></li>
             <li><b>Apply accepts</b><span>A live acceptance marks a finding accepted. Account rules, network rules and unreachable thresholds cannot be accepted.</span></li>
             <li><b>Render and exit</b><span>The report carries the limits footer. Findings at or above <code>--fail-on</code> produce exit 1; a completed run with none exits 0.</span></li>
           </ol>

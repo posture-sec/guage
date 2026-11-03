@@ -12,7 +12,7 @@ import (
 	"github.com/posture-sec/guage/internal/run"
 )
 
-func auditCommand(args []string, stdout, stderr io.Writer) int {
+func auditCommand(args []string, stdout, stderr io.Writer, d deps) int {
 	fs := newFlagSet("audit", stderr,
 		"usage: stellar-gauge audit [--config gauge.toml] [--format text|json] [--fail-on high|warn]")
 	configPath := fs.String("config", "gauge.toml", "policy file to load")
@@ -46,6 +46,8 @@ func auditCommand(args []string, stdout, stderr io.Writer) int {
 	result, err := run.Audit(context.Background(), cfg, run.AuditOptions{
 		ToolVersion: version,
 		FailOn:      severity,
+		NewSource:   d.newSource,
+		NewIdentity: d.newIdentity,
 	})
 	if err != nil {
 		return reportError(stderr, err)

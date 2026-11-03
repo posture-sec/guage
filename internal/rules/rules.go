@@ -7,15 +7,19 @@ package rules
 import (
 	"github.com/posture-sec/guage/internal/model"
 	"github.com/posture-sec/guage/internal/policy"
+	"github.com/posture-sec/guage/internal/sep1"
 )
 
 // Context is everything one rule may read. Missing marks an account the
 // endpoint reported as not found, and Mismatch marks an endpoint whose
 // passphrase differs from the one the run requested; in the second case no
-// snapshot is read at all.
+// snapshot is read at all. Identity is what the guarded fetcher observed for
+// the account's home domain, or nil when nothing was fetched: a rule reads a
+// result, it never goes and gets one.
 type Context struct {
 	Account  policy.Account
 	Snapshot model.AccountSnapshot
+	Identity *sep1.Result
 	Missing  bool
 	Mismatch bool
 	Network  string
@@ -36,6 +40,9 @@ var registry = []Rule{
 	{ID: "acct-network-mismatch", Check: accountNetworkMismatch},
 	{ID: "flag-drift", Check: flagDrift},
 	{ID: "flag-undeclared-clawback", Check: flagUndeclaredClawback},
+	{ID: "id-no-home-domain", Check: idNoHomeDomain},
+	{ID: "id-toml-unreachable", Check: idTomlUnreachable},
+	{ID: "id-toml-account-unlisted", Check: idTomlAccountUnlisted},
 }
 
 // All returns the registered rules in evaluation order.

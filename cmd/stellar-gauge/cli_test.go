@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/base32"
 	"encoding/json"
 	"net/http"
@@ -9,7 +10,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
+
+	"github.com/posture-sec/guage/internal/sep1"
 )
 
 const (
@@ -84,9 +88,49 @@ func readFixture(t *testing.T, name string) []byte {
 
 func execCLI(t *testing.T, args ...string) (int, string, string) {
 	t.Helper()
+	return execCLIWith(t, offlineDeps(nil), args...)
+}
+
+func execCLIWith(t *testing.T, d deps, args ...string) (int, string, string) {
+	t.Helper()
 	var stdout, stderr bytes.Buffer
-	code := runCLI(args, &stdout, &stderr)
+	code := runCLI(args, &stdout, &stderr, d)
 	return code, stdout.String(), stderr.String()
+}
+
+// offlineIdentity is the stellar.toml fetcher the CLI tests use. It never touches
+// a socket: internal/sep1 puts a real guarded client against a real HTTP stack,
+// and these tests prove only that a run asks about the observed domain and prints
+// what it was told. The default answer is an unreachable document, because "this
+// test fetched nothing" is not a pass.
+type offlineIdentity struct {
+	results map[string]sep1.Result
+
+	mu    sync.Mutex
+	calls []string
+}
+
+func (o *offlineIdentity) Fetch(ctx context.Context, domain string) sep1.Result {
+	o.mu.Lock()
+	o.calls = append(o.calls, domain)
+	o.mu.Unlock()
+	if result, ok := o.results[domain]; ok {
+		return result
+	}
+	return sep1.Result{HomeDomain: domain, FailedAt: sep1.StepTransport, Detail: "the CLI test holds no document"}
+}
+
+func (o *offlineIdentity) fetched() []string {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	return append([]string(nil), o.calls...)
+}
+
+func offlineDeps(identity *offlineIdentity) deps {
+	if identity == nil {
+		identity = &offlineIdentity{}
+	}
+	return deps{newIdentity: func() (sep1.Fetcher, error) { return identity, nil }}
 }
 
 func TestDispatch(t *testing.T) {
@@ -488,6 +532,68 @@ func TestAuditReportsDeclaredFlagDrift(t *testing.T) {
 	}
 	if strings.Contains(stdout, "flag-undeclared-clawback") {
 		t.Errorf("a declared clawback expectation still raised the undeclared warning:\n%s", stdout)
+	}
+}
+
+func TestIdentityFindingsReachBothCommandsAndFormats(t *testing.T) {
+	t.Parallel()
+	// The clawback fixture is the only committed account that publishes a home
+	// domain, so it carries the identity warning alongside the flag one.
+	srv := startEndpoint(t, endpoint{balance: readFixture(t, fixtureClawback)})
+	cases := []struct {
+		name   string
+		format string
+		audit  bool
+	}{
+		{"check text", "text", false},
+		{"check json", "json", false},
+		{"audit text", "text", true},
+		{"audit json", "json", true},
+	}
+	for _, tt := range cases {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			fetches := &offlineIdentity{}
+			var args []string
+			if tt.audit {
+				args = []string{"audit", "--config", writePolicy(t, policyForAccount(srv.URL, accountMissing)),
+					"--format", tt.format, "--fail-on", "warn"}
+			} else {
+				args = []string{"check", "--network", testNetwork, "--endpoint", srv.URL,
+					"--format", tt.format, "--fail-on", "warn", accountMissing}
+			}
+			code, stdout, stderr := execCLIWith(t, offlineDeps(fetches), args...)
+			if code != 1 {
+				t.Fatalf("exit code = %d, want 1 (stderr %q)", code, stderr)
+			}
+			if !strings.Contains(stdout, "id-toml-unreachable") {
+				t.Errorf("stdout does not carry the identity warning:\n%s", stdout)
+			}
+			if !strings.Contains(stdout, "komunitin.org") {
+				t.Errorf("stdout does not name the domain it could not read:\n%s", stdout)
+			}
+			if strings.Contains(stdout, "exit code: 0") {
+				t.Errorf("stdout reports a pass despite the finding")
+			}
+			if got := fetches.fetched(); len(got) != 1 || got[0] != "komunitin.org" {
+				t.Errorf("identity fetches = %v, want exactly the observed home domain", got)
+			}
+		})
+	}
+}
+
+func TestIdentityStaysSilentWithoutAHomeDomain(t *testing.T) {
+	t.Parallel()
+	srv := startEndpoint(t, endpoint{})
+	fetches := &offlineIdentity{}
+	code, stdout, stderr := execCLIWith(t, offlineDeps(fetches),
+		"check", "--network", testNetwork, "--endpoint", srv.URL, "--fail-on", "warn", accountOne)
+	if code != 0 {
+		t.Fatalf("exit code = %d, want 0 (stderr %q)\n%s", code, stderr, stdout)
+	}
+	if got := fetches.fetched(); len(got) != 0 {
+		t.Fatalf("identity fetches = %v, want none for an account that publishes no home domain", got)
 	}
 }
 

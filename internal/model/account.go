@@ -1,5 +1,7 @@
 package model
 
+import "strings"
+
 type Thresholds struct {
 	Low    int `json:"low"`
 	Medium int `json:"medium"`
@@ -25,4 +27,14 @@ type AccountSnapshot struct {
 	HomeDomain string     `json:"home_domain"`
 	Sponsor    string     `json:"sponsor"`
 	Balances   []Balance  `json:"balances"`
+}
+
+// HasHomeDomain reports whether the account publishes a home domain. Horizon returns
+// the field exactly as the account set it, and one captured mainnet account carries a
+// single space there, so a value that is blank after trimming is an absent domain
+// rather than a host to contact. Every question of the form "does this account have a
+// home domain" asks it this way, including whether to fetch and what the identity
+// rules may speak about.
+func (a AccountSnapshot) HasHomeDomain() bool {
+	return strings.TrimSpace(a.HomeDomain) != ""
 }

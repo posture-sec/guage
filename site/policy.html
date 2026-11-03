@@ -59,7 +59,7 @@
         <a href="status.html">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-02<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-03<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -142,13 +142,13 @@ expect_locked = false
                 <tr><td>expected_signers</td><td>Array</td><td>Objects with a <code>key</code> and an integer <code>weight</code> from 0 to 255. Keys may be <code>G</code>, <code>T</code>, <code>X</code> or <code>P</code> strkeys. A duplicate key is rejected.</td></tr>
                 <tr><td>expected_thresholds</td><td>Table</td><td>Any of <code>low</code>, <code>medium</code> and <code>high</code>, each an integer from 0 to 255. Omitted tiers are not compared.</td></tr>
                 <tr><td>expected_flags</td><td>Table</td><td>Any of <code>auth_required</code>, <code>auth_revocable</code>, <code>auth_immutable</code> and <code>clawback</code>, each a boolean. Omitted flags are not compared.</td></tr>
-                <tr><td>home_domain</td><td>String</td><td>A bare host name. URLs, IP addresses, a trailing dot and characters such as <code>/</code>, <code>@</code>, <code>:</code> and <code>?</code> are rejected.</td></tr>
+                <tr><td>home_domain</td><td>String</td><td>A bare host name. URLs, IP addresses, a trailing dot and characters such as <code>/</code>, <code>@</code>, <code>:</code> and <code>?</code> are rejected. Declaring it is what lets <code>id-no-home-domain</code> fire when the chain shows none.</td></tr>
                 <tr><td>expect_locked</td><td>Boolean</td><td>Declares that a zero-weight, nonsigning issuer is intended. Parsed today; no live rule reads it yet.</td></tr>
               </tbody>
             </table>
           </div>
           <div class="note">
-            <p><strong>Most expectations do not run yet.</strong> Four rules are live and they read only the network, the account's existence and its flags. <code>expected_signers</code>, <code>expected_thresholds</code>, <code>home_domain</code> and <code>expect_locked</code> are validated and stored, but no shipped rule compares them. Declaring them now prepares the file for later tasks without changing today's result.</p>
+            <p><strong>Most expectations do not run yet.</strong> Seven rules are live: they read the network, the account's existence, its flags and its published <code>stellar.toml</code>. A declared <code>home_domain</code> is compared today, by <code>id-no-home-domain</code>, and an account that publishes one is fetched and checked. <code>expected_signers</code>, <code>expected_thresholds</code> and <code>expect_locked</code> are validated and stored, but no shipped rule compares them. Declaring them now prepares the file for later tasks without changing today's result.</p>
           </div>
         </section>
 
@@ -228,7 +228,7 @@ expect_locked = false
         </section>
 
         <footer class="footer">
-          <p>Functional alpha, unaudited. This page reflects the v0.1 loader and the four live rules as of 2026-11-02.</p>
+          <p>Functional alpha, unaudited. This page reflects the v0.1 loader and the seven live rules as of 2026-11-03.</p>
           <div class="footer-links">
             <a href="guides.html">Next: guides</a>
             <a href="rules.html">Rule catalog</a>

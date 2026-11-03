@@ -22,18 +22,18 @@ Gauge is read-only and secret-free. It never accepts, stores or echoes a secret 
 
 ## Status
 
-Functional alpha (ROADMAP Phase 2, tasks 2.1 to 2.10), plus the account and flag rules from Phase 3 (tasks 3.2 and 3.3). The policy loader, Horizon client, report renderers, orchestrator, rules and CLI are implemented and tested:
+Functional alpha (ROADMAP Phase 2, tasks 2.1 to 2.10), plus the account, flag and identity work from Phase 3 (tasks 3.2, 3.3 and 3.5). The policy loader, Horizon client, guarded `stellar.toml` fetcher, report renderers, orchestrator, rules and CLI are implemented and tested:
 
 ```bash
 go run ./cmd/stellar-gauge version
 go run ./cmd/stellar-gauge check --network testnet --endpoint https://horizon-testnet.stellar.org G...
 ```
 
-A run reads the account, prints what the chain shows and exits `0`, `1`, `2` or `3`. A missing account or an endpoint on the wrong network is a HIGH finding and exits `1` by default, as does any run that could not complete. Declared flag drift and an undeclared clawback are warnings and exit `1` under `--fail-on warn`. The remaining twelve rules and role-based severities arrive later in Phase 3. There is no release to install.
+A run reads the account, prints what the chain shows and exits `0`, `1`, `2` or `3`. A missing account or an endpoint on the wrong network is a HIGH finding and exits `1` by default, as does any run that could not complete. Declared flag drift, an undeclared clawback and a home domain whose `stellar.toml` cannot be read are warnings and exit `1` under `--fail-on warn`. A run also fetches the `stellar.toml` of any account that publishes a home domain, through a guard that resolves the name and then refuses loopback, private, link-local and other non-public addresses at dial time; an identity Gauge could not verify is a warning, never a pass. The remaining eight rules and role-based severities arrive later in Phase 3. There is no release to install.
 
 ## What it checks
 
-Sixteen rules in v0.1, each with a stable kebab-case ID. Four are implemented today: `acct-missing`, `acct-network-mismatch`, `flag-drift` and `flag-undeclared-clawback`. Severity depends on the account's declared role (issuer and treasury are held to a tighter bar than merchant and distribution) once role profiles land in task 3.4; until then the four rules use their baseline severity.
+Sixteen rules in v0.1, each with a stable kebab-case ID. Seven are implemented today: `acct-missing`, `acct-network-mismatch`, `flag-drift`, `flag-undeclared-clawback`, `id-no-home-domain`, `id-toml-unreachable` and `id-toml-account-unlisted`. Severity depends on the account's declared role (issuer and treasury are held to a tighter bar than merchant and distribution) once role profiles land in task 3.4; until then the seven rules use their baseline severity.
 
 | Family | Rules |
 | --- | --- |

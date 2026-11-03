@@ -12,7 +12,7 @@ import (
 	"github.com/posture-sec/guage/internal/strkey"
 )
 
-func checkCommand(args []string, stdout, stderr io.Writer) int {
+func checkCommand(args []string, stdout, stderr io.Writer, d deps) int {
 	fs := newFlagSet("check", stderr,
 		"usage: stellar-gauge check --network NETWORK --endpoint URL [--format text|json] [--fail-on high|warn] G...")
 	network := fs.String("network", "", "mainnet, testnet, or a full network passphrase")
@@ -54,6 +54,8 @@ func checkCommand(args []string, stdout, stderr io.Writer) int {
 		Endpoints:   *endpoints,
 		Accounts:    ids,
 		FailOn:      severity,
+		NewSource:   d.newSource,
+		NewIdentity: d.newIdentity,
 	})
 	if err != nil {
 		return reportError(stderr, err)

@@ -233,3 +233,27 @@ func TestSeverityJSONIsAName(t *testing.T) {
 		t.Fatal("numeric severity accepted")
 	}
 }
+
+// A home domain of only whitespace is a real shape on mainnet: one capture in
+// posture-sec/stellar-account-fixtures carries a single space in the field. Horizon
+// returns what the account set, so every caller has to read a blank as "publishes
+// none" rather than as a host name worth contacting.
+func TestAccountSnapshotHasHomeDomain(t *testing.T) {
+	t.Parallel()
+	for _, tt := range []struct {
+		value string
+		want  bool
+	}{
+		{"", false},
+		{" ", false},
+		{"   ", false},
+		{"\t\n ", false},
+		{"example.com", true},
+		{" example.com ", true},
+	} {
+		s := model.AccountSnapshot{HomeDomain: tt.value}
+		if got := s.HasHomeDomain(); got != tt.want {
+			t.Errorf("HasHomeDomain(%q) = %t, want %t", tt.value, got, tt.want)
+		}
+	}
+}

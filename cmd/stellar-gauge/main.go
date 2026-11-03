@@ -14,19 +14,29 @@ import (
 )
 
 func main() {
-	os.Exit(runCLI(os.Args[1:], os.Stdout, os.Stderr))
+	os.Exit(runCLI(os.Args[1:], os.Stdout, os.Stderr, deps{}))
 }
 
-func runCLI(args []string, stdout, stderr io.Writer) int {
+// deps are the network clients one CLI run builds, so that a test can substitute
+// an offline one and never dial outside this repository. The zero value is the
+// production value: internal/run builds the Horizon source and the guarded
+// stellar.toml fetcher, which keeps those defaults in one place instead of a copy
+// this package could weaken.
+type deps struct {
+	newSource   run.SourceFactory
+	newIdentity run.IdentityFactory
+}
+
+func runCLI(args []string, stdout, stderr io.Writer, d deps) int {
 	if len(args) == 0 {
 		usage(stderr)
 		return int(model.ExitUsage)
 	}
 	switch args[0] {
 	case "check":
-		return checkCommand(args[1:], stdout, stderr)
+		return checkCommand(args[1:], stdout, stderr, d)
 	case "audit":
-		return auditCommand(args[1:], stdout, stderr)
+		return auditCommand(args[1:], stdout, stderr, d)
 	case "version":
 		fmt.Fprintf(stdout, "stellar-gauge %s\n", version)
 		return int(model.ExitPass)

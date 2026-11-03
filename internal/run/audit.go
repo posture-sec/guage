@@ -17,6 +17,7 @@ type AuditOptions struct {
 
 	Concurrency int
 	NewSource   SourceFactory
+	NewIdentity IdentityFactory
 	Evaluate    Evaluator
 	Now         func() time.Time
 }
@@ -40,6 +41,7 @@ func Audit(ctx context.Context, cfg *policy.Config, opts AuditOptions) (model.Re
 		FailOn:      opts.FailOn,
 		Concurrency: opts.Concurrency,
 		NewSource:   opts.NewSource,
+		NewIdentity: opts.NewIdentity,
 		Evaluate:    evaluate,
 		Now:         opts.Now,
 	})

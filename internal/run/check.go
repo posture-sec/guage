@@ -21,12 +21,15 @@ type CheckRequest struct {
 
 	Concurrency int
 	NewSource   SourceFactory
+	NewIdentity IdentityFactory
 	Evaluate    Evaluator
 	Now         func() time.Time
 }
 
 // Check audits command-line accounts with the universal rules, using the role
-// "other" and no declared expectations because there is no policy file.
+// "other" and no declared expectations because there is no policy file. The
+// identity fetcher still runs: an account that publishes a home domain is asked
+// about it whether or not a policy declared one.
 func Check(ctx context.Context, req CheckRequest) (model.Report, error) {
 	accounts := make([]policy.Account, 0, len(req.Accounts))
 	for _, id := range req.Accounts {
@@ -48,6 +51,7 @@ func Check(ctx context.Context, req CheckRequest) (model.Report, error) {
 		FailOn:      req.FailOn,
 		Concurrency: req.Concurrency,
 		NewSource:   req.NewSource,
+		NewIdentity: req.NewIdentity,
 		Evaluate:    evaluate,
 		Now:         req.Now,
 	})
