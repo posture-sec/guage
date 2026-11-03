@@ -27,7 +27,7 @@ Out of scope:
 
 ## Status of this code
 
-**Unaudited.** No third party has reviewed Gauge, and the security checks in `AGENTS.md` section 5 (`govulncheck`, `staticcheck`, fuzzing of the sanitizer and strkey paths) are wired into CI but not all of them have targets yet.
+**Unaudited.** No third party has reviewed Gauge. `govulncheck` and `staticcheck` run in CI on every pull request, and the three fuzz targets over the sanitizer and strkey paths are not CI jobs: they are short local smoke runs a contributor makes before a release-facing change (`AGENTS.md` section 5), last run clean on 2026-11-03 for ten seconds each. Neither the CI checks nor the smokes are a review.
 
 **Functional alpha, unaudited.** As of the current commit there is a policy loader, a Horizon client with timeouts, size caps and bounded retries, strict decoding, report renderers, four account and flag rules, an orchestrator and a CLI. The signer, threshold and identity rules are not implemented, so a run reports observed state plus the four rules and cannot evaluate the rest of the catalog. The code has not been independently reviewed, so nothing here should be relied on to detect anything. See `ROADMAP.md` for what is actually implemented.
 
