@@ -52,6 +52,9 @@ func TestAllListsEveryRuleInOrder(t *testing.T) {
 		"acct-network-mismatch",
 		"flag-drift",
 		"flag-undeclared-clawback",
+		"id-no-home-domain",
+		"id-toml-unreachable",
+		"id-toml-account-unlisted",
 	}
 	all := All()
 	if len(all) != len(want) {
