@@ -249,7 +249,7 @@ scripts/check_roadmap_touched.sh origin/main
 scripts/roadmap_progress.sh --check ROADMAP.md
 scripts/generate_issues.sh --check</pre>
           </div>
-          <p class="small muted">Install the pinned tools with <code>go install honnef.co/go/tools/cmd/staticcheck@v0.8.2</code> and <code>go install golang.org/x/vuln/cmd/govulncheck@v1.9.0</code>. The fuzz smoke run waits for its targets in <code>internal/strkey</code> and <code>internal/sanitize</code>.</p>
+          <p class="small muted">Install the pinned tools with <code>go install honnef.co/go/tools/cmd/staticcheck@v0.8.2</code> and <code>go install golang.org/x/vuln/cmd/govulncheck@v1.9.0</code>. The fuzz targets run one at a time, because <code>-fuzz</code> refuses multiple packages: <code>go test ./internal/strkey -run '^$' -fuzz=FuzzClassify -fuzztime=10s</code>, then the same against <code>FuzzText</code> and <code>FuzzFenced</code> in <code>internal/sanitize</code>. They are smoke runs a contributor makes locally, not CI jobs.</p>
           <p>Adding a rule means a new pure function in <code>internal/rules</code>, a registration entry, a positive and a negative fixture, updated golden files, and matching updates to <code>PRD.md</code> 6.1 and <code>ARCHITECTURE_ESSENTIALS.md</code> 8. The roadmap rule applies to every change, including documentation: <code>ROADMAP.md</code> is updated in the same pull request.</p>
         </section>
 

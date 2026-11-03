@@ -67,10 +67,12 @@ scripts/test_roadmap_gate.sh                                                    
 scripts/generate_issues.sh --check          # backlog rows cover every open task      [roadmap-check / gate]
 ```
 
-Not available yet: the fuzz smoke run below waits for its targets in `internal/strkey` and `internal/sanitize` (tasks 2.2 and 2.5).
+Fuzz smoke runs, one target at a time. `-fuzz` cannot take multiple packages, so each target is a separate command; these are not CI jobs and there is no bracketed check behind them.
 
 ```
-go test ./internal/strkey ./internal/sanitize -run '^$' -fuzz=Fuzz -fuzztime=10s   # smoke fuzz, per target
+go test ./internal/strkey -run '^$' -fuzz=FuzzClassify -fuzztime=10s
+go test ./internal/sanitize -run '^$' -fuzz=FuzzText -fuzztime=10s
+go test ./internal/sanitize -run '^$' -fuzz=FuzzFenced -fuzztime=10s
 ```
 
 `staticcheck` and `govulncheck` are not part of the Go distribution. Install the pinned versions with `go install honnef.co/go/tools/cmd/staticcheck@v0.8.2` and `go install golang.org/x/vuln/cmd/govulncheck@v1.9.0`. If a command does not exist yet, say so in the PR instead of silently skipping it.

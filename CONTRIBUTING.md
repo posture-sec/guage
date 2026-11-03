@@ -35,10 +35,12 @@ scripts/roadmap_progress.sh --check ROADMAP.md
 scripts/test_roadmap_gate.sh                 # self-test for the roadmap gate
 ```
 
-CI runs the same set as `ci / go`, `ci / vuln` and `roadmap-check / gate`, with every action pinned by commit SHA and `permissions: contents: read`. Fuzz smoke tests exist once `internal/strkey` and `internal/sanitize` have targets:
+CI runs the same set as `ci / go`, `ci / vuln` and `roadmap-check / gate`, with every action pinned by commit SHA and `permissions: contents: read`. The fuzz targets in `internal/strkey` and `internal/sanitize` exist and are run as a smoke before a release-facing change, one target per command because `-fuzz` refuses multiple packages. They are not CI jobs:
 
 ```bash
-go test ./internal/strkey ./internal/sanitize -run '^$' -fuzz=Fuzz -fuzztime=10s
+go test ./internal/strkey -run '^$' -fuzz=FuzzClassify -fuzztime=10s
+go test ./internal/sanitize -run '^$' -fuzz=FuzzText -fuzztime=10s
+go test ./internal/sanitize -run '^$' -fuzz=FuzzFenced -fuzztime=10s
 ```
 
 Tests never touch the real network. A test that needs live Horizon carries the `livenet` build tag and is opt-in.
