@@ -1,6 +1,6 @@
 # ROADMAP: Gauge (working name)
 
-Last updated: 2026-11-03T08:20Z (1.21: four documents still described a fuzz smoke run as un-built and printed one command that cannot work; they now print three per-target commands, and the three ran clean)
+Last updated: 2026-11-03T08:26Z (1.21: four documents still described a fuzz smoke run as un-built and printed one command that cannot work; they now print three per-target commands, and the three ran clean twice, 08:15 and 08:24)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
