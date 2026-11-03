@@ -82,7 +82,7 @@ func (d *dialRecord) count() int {
 }
 
 // gated stands in for the socket only. A recorded address proves what the guard
-// passed down; an empty target means nothing may be dialled at all.
+// passed down; an empty target means nothing may be dialed at all.
 func (d *dialRecord) gated(ctx context.Context, network, addr string) (net.Conn, error) {
 	d.mu.Lock()
 	d.addrs = append(d.addrs, addr)
@@ -506,7 +506,7 @@ func TestFetchBadHostnameIsRefusedBeforeDNS(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			server := httptest.NewTLSServer(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
-				t.Error("a refused host must never be resolved or dialled")
+				t.Error("a refused host must never be resolved or dialed")
 			}))
 			defer server.Close()
 			c, res, rec := clientFor(t, server, map[string][]string{})
@@ -527,7 +527,7 @@ func TestFetchBadHostnameIsRefusedBeforeDNS(t *testing.T) {
 func TestFetchResolvesNothingOnDNSError(t *testing.T) {
 	t.Parallel()
 	server := httptest.NewTLSServer(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
-		t.Error("an unresolvable host must not be dialled")
+		t.Error("an unresolvable host must not be dialed")
 	}))
 	defer server.Close()
 	c, _, rec := clientFor(t, server, map[string][]string{})

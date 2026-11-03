@@ -112,7 +112,7 @@ func TestParseKeepsValidAccountsAndCountsTheRest(t *testing.T) {
 	}
 }
 
-func TestParseRejectsAIdentityKeyOfTheWrongType(t *testing.T) {
+func TestParseRejectsAnIdentityKeyOfTheWrongType(t *testing.T) {
 	t.Parallel()
 	cases := map[string]string{
 		"accounts is a table":    "ACCOUNTS = { one = \"" + validAccount + "\" }\n",
