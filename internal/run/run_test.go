@@ -761,6 +761,53 @@ func TestRunAsksIdentityOnlyAboutObservedDomains(t *testing.T) {
 	}
 }
 
+// The orchestration half of the same rule: a home domain that is only whitespace,
+// which is what one corpus capture actually carries, is an account that publishes
+// nothing. No fetch is attempted for it, so no identity finding can be raised about
+// it. A padded but real domain is the opposite case and is fetched.
+func TestRunTreatsABlankObservedDomainAsAbsent(t *testing.T) {
+	t.Parallel()
+	for _, tc := range []struct {
+		name      string
+		domain    string
+		wantFetch bool
+	}{
+		{"single space", " ", false},
+		{"tab", "\t", false},
+		{"padded real domain", " example.org ", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			fs := &fakeSource{
+				info: model.NetworkInfo{Passphrase: testnet, Ledger: 1},
+				snapshots: map[string]model.AccountSnapshot{
+					accountOne: withDomain(snapshot(accountOne, 10), tc.domain),
+				},
+			}
+			fetches := &fakeIdentity{results: map[string]sep1.Result{"example.org": reachable("example.org")}}
+			job := baseJob(fs)
+			job.Accounts = []policy.Account{{ID: accountOne, Role: model.RoleOther}}
+			job.NewIdentity = identityStub(fetches)
+			job.Evaluate = rules.Evaluate
+			result, err := Run(context.Background(), job)
+			if err != nil {
+				t.Fatalf("Run: %v", err)
+			}
+			attempted := len(fetches.fetched()) > 0
+			if attempted != tc.wantFetch {
+				t.Fatalf("identity fetches = %q, want attempted = %t", fetches.fetched(), tc.wantFetch)
+			}
+			if !tc.wantFetch {
+				for _, account := range result.Accounts {
+					if len(account.Findings) != 0 {
+						t.Fatalf("findings for %s = %+v, want none", account.Snapshot.ID, account.Findings)
+					}
+				}
+			}
+		})
+	}
+}
+
 func TestIdentityConcurrencyIsBounded(t *testing.T) {
 	t.Parallel()
 	started := make(chan struct{}, 2)

@@ -16,7 +16,7 @@ func idNoHomeDomain(c Context) []model.Finding {
 		return nil
 	}
 	declared := c.Account.HomeDomain
-	if declared == nil || *declared == "" || c.Snapshot.HomeDomain != "" {
+	if declared == nil || *declared == "" || c.Snapshot.HasHomeDomain() {
 		return nil
 	}
 	return []model.Finding{model.NewFinding(
@@ -30,18 +30,18 @@ func idNoHomeDomain(c Context) []model.Finding {
 
 // idTomlUnreachable fires when a stellar.toml could not be fetched or parsed under
 // the guard, and equally when one was observed on the account and never fetched: an
-// unverified identity claim is not a pass. The evidence names the step, so a dead
-// domain is distinguishable from a domain that serves a document Gauge cannot read.
-// Nothing from the document is ever quoted; Detail is a phrase this repository wrote.
+// unverified identity claim is not a pass. A home domain that is blank after trimming
+// is no domain at all, so the rule stays silent about it rather than reporting an
+// unverified claim, and a document that is present but refuses validation is the
+// opposite case and is reported. The evidence names the step, so a dead domain is
+// distinguishable from a domain that serves a document Gauge cannot read. Nothing from
+// the document is ever quoted; Detail is a phrase this repository wrote.
 func idTomlUnreachable(c Context) []model.Finding {
-	if c.Missing || c.Mismatch {
+	if c.Missing || c.Mismatch || !c.Snapshot.HasHomeDomain() {
 		return nil
 	}
 	result := c.Identity
 	if result == nil {
-		if c.Snapshot.HomeDomain == "" {
-			return nil
-		}
 		return []model.Finding{model.NewFinding(
 			"id-toml-unreachable",
 			model.SevWarn,
@@ -71,7 +71,7 @@ func idTomlUnreachable(c Context) []model.Finding {
 // valid on both networks, and inventing an ID or borrowing another rule's would be
 // an owner decision. The value travels in the result so task 3.7 can print it.
 func idTomlAccountUnlisted(c Context) []model.Finding {
-	if c.Missing || c.Mismatch {
+	if c.Missing || c.Mismatch || !c.Snapshot.HasHomeDomain() {
 		return nil
 	}
 	result := c.Identity

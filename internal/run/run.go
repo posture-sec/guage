@@ -260,9 +260,10 @@ func fetchAll(ctx context.Context, src source.Source, endpoint string, accounts 
 // identify reads the identity document of every account that publishes a home
 // domain. It runs once the accounts are known, because the observed field is the
 // only thing Gauge asks a document about: a declared domain the chain does not show
-// is the id-no-home-domain rule's business, not a fetch. A nil result means "not
-// asked about", and the rule reading it decides whether that is silence or a
-// warning.
+// is the id-no-home-domain rule's business, not a fetch. A field that is blank after
+// trimming shows nothing, which is the shape one captured mainnet account carries, so
+// it is not a fetch either. A nil result means "not asked about", and the rule reading
+// it decides whether that is silence or a warning.
 //
 // An unreachable document is not an error here: id-toml-unreachable turns it into a
 // warning, the way acct-missing turns a 404 into a finding. Only a run that cannot
@@ -302,7 +303,7 @@ func identify(ctx context.Context, job Job, observations []observation, mismatch
 	}
 
 	for i, obs := range observations {
-		if obs.missing || obs.snapshot.HomeDomain == "" {
+		if obs.missing || !obs.snapshot.HasHomeDomain() {
 			continue
 		}
 		wg.Add(1)

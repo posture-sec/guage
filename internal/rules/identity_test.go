@@ -289,3 +289,32 @@ func TestIdentityGapsAreFactsNotFindings(t *testing.T) {
 		t.Fatal("the document's passphrase was dropped, so no later rule or fact can name it")
 	}
 }
+
+// A home domain that is only whitespace is an account that publishes nothing, which
+// is the shape one corpus capture actually carries. It must not raise an unverified
+// identity finding, it must not hide a domain the policy declared, and a stale result
+// left in the context by some other caller must not make the toml rules speak about it.
+// A non-ASCII host keeps the opposite behavior, refused at the guard and reported as
+// unreachable, which internal/sep1's tests pin.
+func TestABlankObservedDomainIsNoDomain(t *testing.T) {
+	t.Parallel()
+	for _, tc := range []struct{ name, value string }{
+		{"empty", ""},
+		{"single space", " "},
+		{"tab and space", "\t "},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			snapshot := model.AccountSnapshot{HomeDomain: tc.value}
+			if got := Evaluate(identityContext(policy.Account{}, snapshot, nil)); len(got) != 0 {
+				t.Fatalf("findings = %+v, want none for a domain that is only whitespace", got)
+			}
+			stale := failed(sep1.StepHostname, "the home domain is not a host name Gauge will contact", 0)
+			if got := Evaluate(identityContext(policy.Account{}, snapshot, stale)); len(got) != 0 {
+				t.Fatalf("findings = %+v, want the toml rules silent about an account that publishes no domain", got)
+			}
+			ctx := identityContext(declared(testDomain), snapshot, nil)
+			wantOneFinding(t, idNoHomeDomain(ctx), "id-no-home-domain")
+		})
+	}
+}
