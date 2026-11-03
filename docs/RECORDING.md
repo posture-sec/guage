@@ -299,5 +299,5 @@ Say these, or have the packet say them.
 - Mainnet account shapes. The one mainnet request was a root document, per D-16. No mainnet account was read, so the population of flags and signer shapes on mainnet is still unverified.
 - The identity success path, and any home domain beyond the one this account publishes.
 - The dial-time guard against an attacker. The address classes it refuses, the three-hop redirect cap and the rebinding case where the record changes between resolution and connection are proven by unit tests and by a simulated resolver. Nothing in this run dialed a hostile domain, and nothing here proves that a real one would be stopped.
-- Every signer and threshold rule. Eight `sig-` rules and `thr-drift` are specified, written out on `site/rules.html`, and registered nowhere. The absence in run 2's two findings out of three possible is that gap, not a pass.
+- Every signer and threshold rule. Eight `sig-` rules and `thr-drift` are specified and registered nowhere; PR #109 writes each of them out on `site/rules.html` with the chain that blocks it. The absence in run 2's two findings out of three possible is that gap, not a pass.
 - Role-based severity. The demo policy sets `role = "treasury"` and the role changes nothing, because 3.4 is open.

@@ -148,7 +148,7 @@ What SLSA v1 build provenance proves: the bytes were produced by a specific work
 
 ## 5. Cutting the tag (task 4.8)
 
-1. Confirm 4.1 to 4.6 are done in `ROADMAP.md`, and that section 4.5's own checkbox has its Done-when satisfied: a test release verified.
+1. Confirm 4.1 to 4.6 are done in `ROADMAP.md`, and that task 4.5's own checkbox has its Done-when satisfied: a test release verified.
 2. Set the version in `cmd/stellar-gauge/version.go` to `0.1.0` in the same pull request that removes the `0.1.0-dev` comment, so a checkout of `main` after the release is not stamped as a development build of the released version.
 3. Build from the tag, not from `main`, per section 2.
 4. Publish the release with the five archives, `checksums.txt` as text in the body, the verification commands from section 3 for all three platforms, and the limits paragraph from the report footer.
