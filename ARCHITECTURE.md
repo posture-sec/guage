@@ -331,7 +331,7 @@ Role severity matrix: `PRD.md` Appendix A. Key definitions:
 - **Unit tests** for every package, with `-race`.
 - **Threshold math:** exhaustive tables plus randomized comparison with a brute-force search.
 - **Fake Horizon** via `httptest`: success, 404, 429 with `Retry-After`, 5xx, slow responses, oversized bodies, malformed JSON, wrong passphrase, redirects.
-- **Captured fixtures** in `testdata/horizon/` from real mainnet and testnet accounts for each scenario in `PRD.md` Appendix B (task 0.6).
+- **Captured fixtures** in `testdata/horizon/`: five response bodies from `https://horizon-testnet.stellar.org` on 2026-10-30 under D-16, namely three funded accounts, one 404 `problem+json` for a valid but unfunded address and the network root, with `testdata/horizon/README.md` recording the ledger each carries. Mainnet account shapes come from `posture-sec/stellar-account-fixtures` (public since 2026-11-02): sorted-key re-serialisations of `GET /accounts/<id>` beside a sidecar holding the URL, capture time, `last_modified_ledger`, Horizon version and the SHA-256 of those bytes, which `validate.py` recomputes and refuses if the label set does not match. Nothing from that corpus is vendored here yet, and the shapes it does not carry either (master weight 0, `hash(x)`, pre-auth) stay hand-built and labelled as such: task 3.6 assembles the Appendix B fixture set and is where that split gets decided with a run behind it.
 - **Golden files** for text, JSON and markdown output.
 - **Fuzzing:** strkey classification, config decoding, SEP-1 parsing, sanitizer.
 - **SSRF tests:** loopback, private ranges, metadata address, DNS rebinding simulation, redirect to a private host.

@@ -7,7 +7,7 @@
 | Owner | Ademola |
 | Working name | Gauge. Binary `stellar-gauge`. Scaffold repository `posture-sec/guage`, Apache-2.0; final product naming remains open (section 13) |
 | Language | Go |
-| Sibling project | Airlock (`posture-sec/airlock`, public since 2026-11-02): a Python scanner for Stellar and Soroban repositories. Gauge audits on-chain account configuration. They share conventions, not code, and one owner organization |
+| Sibling projects | Airlock (`posture-sec/airlock`, public since 2026-11-02): a Python scanner for Stellar and Soroban repositories. Stellar account fixtures (`posture-sec/stellar-account-fixtures`, public the same day): six mainnet `GET /accounts/<id>` reads with provenance sidecars and the validator that recomputes them, which is where a rule fixture here can get a shape nobody typed by hand. Gauge audits on-chain account configuration. They share conventions, not code, and one owner organization |
 | Companion docs | `ARCHITECTURE.md`, `ARCHITECTURE_ESSENTIALS.md`, `ROADMAP.md`, `project_structure.md`, `AGENTS.md`, `CLAUDE.md` |
 
 Conventions: **[Verified]** was checked against a source during research. **[Unverified]** is believed but not checked, or untested. Every Unverified item is repeated in section 14 so none silently becomes a requirement.
