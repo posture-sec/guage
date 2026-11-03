@@ -70,11 +70,11 @@
       <div class="content">
         <p class="eyebrow">Status</p>
         <h1>Functional alpha. Testnet verified. Unaudited.</h1>
-        <p class="lede">Gauge reads real Horizon data and produces real findings. It is also early: seven of sixteen rules are live, there is no tagged release, and every observation below comes from testnet. This page records what was run, when, and what it does not prove.</p>
+        <p class="lede">Gauge reads real Horizon data and produces real findings. It is also early: seven of sixteen rules are live, there is no tagged release, and every account read below is a testnet account. This page records what was run, when, and what it does not prove.</p>
         <div class="chip-row">
           <span class="chip chip--live">Functional alpha</span>
           <span class="chip chip--warn">Unaudited</span>
-          <span class="chip">Testnet only</span>
+          <span class="chip">Testnet accounts</span>
         </div>
 
         <section class="section">
@@ -90,7 +90,7 @@
                 <tr><td>check and audit</td><td><span class="chip chip--live">Shipped</span></td><td>Text and JSON output, a stable exit code, and the limits footer on every report.</td></tr>
                 <tr><td>rules</td><td><span class="chip chip--warn">7 of 16</span></td><td>The account, flag and identity families work. Signer and threshold rules are specified but not registered.</td></tr>
                 <tr><td>role severities</td><td><span class="chip chip--warn">Not shipped</span></td><td>Every live rule uses its baseline severity. Task 3.4.</td></tr>
-                <tr><td>SEP-1 identity checks</td><td><span class="chip chip--live">Shipped</span></td><td>The home domain an account publishes is fetched through a dial-time address guard, and an identity Gauge could not verify is a warning rather than a pass. Never run against a live domain.</td></tr>
+                <tr><td>SEP-1 identity checks</td><td><span class="chip chip--live">Shipped</span></td><td>The home domain an account publishes is fetched through a dial-time address guard, and an identity Gauge could not verify is a warning rather than a pass. Read once against a live domain, on 2026-11-03; the address classes it refuses are proven by tests, not by runs.</td></tr>
                 <tr><td>tagged release</td><td><span class="chip chip--warn">None</span></td><td>No version is tagged and no artifact is signed. Build from source.</td></tr>
                 <tr><td>this documentation site</td><td><span class="chip chip--live">Live</span></td><td>Static pages deployed from the repository by GitHub Actions. Task 5.9.</td></tr>
               </tbody>
@@ -127,7 +127,7 @@
 
         <section class="section">
           <h2>Testnet evidence</h2>
-          <p>These runs were made against <code>https://horizon-testnet.stellar.org</code> on 2026-10-30 and again on 2026-11-02. Ledger numbers are the endpoint's latest ledger at read time. Testnet resets, so a later run may not find the same accounts.</p>
+          <p>These runs were made against <code>https://horizon-testnet.stellar.org</code> on 2026-10-30, again on 2026-11-02 and again on 2026-11-03, the last against the binary built from the merged 3.5 work. Ledger numbers are the endpoint's latest ledger at read time. Testnet resets, so a later run may not find the same accounts.</p>
           <div class="table-wrap">
             <table>
               <thead>
@@ -159,11 +159,36 @@
                   <td>5517199</td>
                   <td>Exit 1. Same finding; this run is the report excerpt on the overview page.</td>
                 </tr>
+                <tr>
+                  <td>GCI76XDV…SD74A4AV on 2026-11-03, <code>--fail-on warn</code></td>
+                  <td>5538911</td>
+                  <td>Exit 0. Six signers, thresholds 3/3/3, the master key listed inside the signer list at weight 0, no home domain, so no identity fetch was attempted.</td>
+                </tr>
+                <tr>
+                  <td>GC2HHIM6…43LO2II on 2026-11-03 (still unfunded)</td>
+                  <td>5538955</td>
+                  <td>Exit 1. <code>acct-missing</code>, and the run finished rather than aborted.</td>
+                </tr>
+                <tr>
+                  <td>GDSX2WUF…UVBEVG on 2026-11-03, <code>--fail-on warn</code></td>
+                  <td>5538942</td>
+                  <td>Exit 1. <code>flag-undeclared-clawback</code> and <code>id-toml-unreachable</code> with evidence <code>step parse; detail the document is not a configuration file this parser accepts; status 200</code>. This is the first time the build read a live home domain: <code>komunitin.org</code> answered 200 with <code>text/html</code>, the guard dialled the public address it had resolved, the parse refused the document, and the result was a warning instead of a pass or a crash.</td>
+                </tr>
+                <tr>
+                  <td>Testnet passphrase demanded of the public endpoint, 2026-11-03</td>
+                  <td>65286436</td>
+                  <td>Exit 1. <code>acct-network-mismatch</code>; the ledger belongs to the endpoint's root document, because no account was read.</td>
+                </tr>
+                <tr>
+                  <td><code>audit</code> on GCI76XDV…SD74A4AV with a policy that declares <code>clawback = true</code> and <code>home_domain = "example.org"</code>, 2026-11-03</td>
+                  <td>5538914</td>
+                  <td>Exit 1 under <code>--fail-on warn</code> with two warnings, exit 0 at the default <code>--fail-on high</code> on the identical report. The same file also declares one signer the chain does not carry and a weight of 9 against an observed 1: no finding, because the signer family is task 3.1 and that silence is the point of recording it.</td>
+                </tr>
               </tbody>
             </table>
           </div>
           <div class="note">
-            <p><strong>What this does not prove.</strong> Mainnet was not probed, per the project's testnet-only verification decision. A mainnet account can have a different population of flags or signer shapes than the fixtures here. The committed Horizon fixtures are testnet captures and are marked perishable for the same reason.</p>
+            <p><strong>What this does not prove.</strong> One mainnet request has been made, on 2026-11-03, and it was the endpoint's root document, asked in order to show that a run demanding the testnet passphrase from the public endpoint stops before reading any account. No mainnet account has been read, and a mainnet account can carry flags or signer shapes that none of these fixtures show. One live home domain has been read, once, by one account, and it served a document Gauge refuses to parse: the fetcher's success path, its hop cap and every address class its guard blocks are proven by tests against a fake resolver, not by runs. The committed Horizon fixtures are testnet captures and are marked perishable for the same reason.</p>
           </div>
         </section>
 
