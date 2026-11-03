@@ -1,6 +1,6 @@
 # ARCHITECTURE_ESSENTIALS: Gauge (working name)
 
-Status: design target v0.1; implementation is partway through Phase 2. `internal/model` (types, severity names, finding fingerprints, ordering), `internal/strkey` (SEP-23 classification and seed detection), `internal/sanitize` (control stripping, IDN flag, markdown escaping), the `internal/policy` loader (strict TOML, seed rejection, network passphrases), the `internal/report` renderers (text, JSON, limits footer, exit mapping), `internal/source` (Horizon client with caps, retries, strict decode, passphrase comparison), the `internal/run` orchestrator and the `cmd/stellar-gauge` CLI (`check`, `audit`, `version`) are implemented and tested; `internal/rules` carries `acct-missing`, `acct-network-mismatch`, `flag-drift` and `flag-undeclared-clawback`, so a run can exit 1; the threshold math and the signer, threshold and identity rules are still pending. Full detail: `ARCHITECTURE.md` (section numbers in brackets). Scope: `PRD.md`. Work queue: `ROADMAP.md`. File locations: `project_structure.md`.
+Status: design target v0.1; implementation is partway through Phase 3. `internal/model` (types, severity names, finding fingerprints, ordering), `internal/strkey` (SEP-23 classification and seed detection), `internal/sanitize` (control stripping, IDN flag, markdown escaping), the `internal/policy` loader (strict TOML, seed rejection, network passphrases), the `internal/report` renderers (text, JSON, limits footer, exit mapping), `internal/source` (Horizon client with caps, retries, strict decode, passphrase comparison), `internal/sep1` (hostname validation, dial-time SSRF guard, redirect and size limits, TOML parse), the `internal/run` orchestrator and the `cmd/stellar-gauge` CLI (`check`, `audit`, `version`) are implemented and tested; `internal/rules` carries `acct-missing`, `acct-network-mismatch`, `flag-drift`, `flag-undeclared-clawback`, `id-no-home-domain`, `id-toml-unreachable` and `id-toml-account-unlisted`, so a run can exit 1; the threshold math and the signer and threshold rules are still pending. Full detail: `ARCHITECTURE.md` (section numbers in brackets). Scope: `PRD.md`. Work queue: `ROADMAP.md`. File locations: `project_structure.md`.
 
 ## 0. Roadmap rule (read first)
 
@@ -55,7 +55,7 @@ Status: design target v0.1; implementation is partway through Phase 2. `internal
 
 `model <- strkey, threshold, sanitize <- policy, source, sep1 <- rules <- report <- run <- cmd`
 
-- `model` imports nothing internal. `rules` imports no network package. `report` imports only `model` and `sanitize`.
+- `model` imports nothing internal. `rules` does no I/O: its direct imports are `model`, `policy`, `sep1`'s result types, `fmt` and `strings`, and it never imports `source`, a `net/http` type or a client. Check that on imports (`go list -f '{{.Imports}}' ./internal/rules`), not on `-deps`, which shows `net/http` transitively because `sep1`'s types and its client share one package. `report` imports only `model` and `sanitize`.
 
 ## 6. Data models [7]
 
@@ -94,7 +94,7 @@ Status: design target v0.1; implementation is partway through Phase 2. `internal
 - Table plus brute-force cross-check for threshold math.
 - Fake Horizon for 200, 404, 429, 5xx, slow, oversize, malformed, wrong passphrase, redirects.
 - Captured real JSON fixtures for every PRD Appendix B scenario.
-- SSRF, sanitizer and fuzz tests. Golden outputs. Roadmap gate script test.
+- SSRF, sanitizer and fuzz tests. The guard's blocked-class, DNS-rebinding and redirect cases and the sanitizer suites are green as of task 3.5; a SEP-1 parse fuzz target still needs its own roadmap task. Golden outputs. Roadmap gate script test.
 
 ## 12. Decisions (ADR one-liners) [13]
 

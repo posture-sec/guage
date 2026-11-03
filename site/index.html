@@ -59,7 +59,7 @@
         <a href="status.html">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-02<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-03<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -176,7 +176,7 @@
             </div>
             <div class="ledger-row">
               <dt>Home domain</dt>
-              <dd><strong>The identity the account points at.</strong> Printed as a fact today; the guarded SEP-1 identity checks are specified but not shipped.</dd>
+              <dd><strong>The identity the account points at.</strong> Printed as a fact and fetched under a dial-time address guard: the published <code>stellar.toml</code> is parsed, and an identity Gauge could not verify is a warning rather than a pass.</dd>
             </div>
           </dl>
         </section>
@@ -185,9 +185,9 @@
           <div class="section-head">
             <div>
               <p class="eyebrow">Shipped today</p>
-              <h2>Four rules live, twelve specified</h2>
+              <h2>Seven rules live, nine specified</h2>
             </div>
-            <p>The account and flag families work now. Role-based severities and the signer, threshold and identity rules are still open.</p>
+            <p>The account, flag and identity families work now. Role-based severities and the signer and threshold rules are still open.</p>
           </div>
           <div class="cards">
             <article class="card">
@@ -209,6 +209,21 @@
               <span class="chip chip--live">Live</span>
               <h3><code>flag-undeclared-clawback</code></h3>
               <p>Clawback is enabled and the policy does not declare it. WARN baseline, HIGH for an issuer once role profiles land.</p>
+            </article>
+            <article class="card">
+              <span class="chip chip--live">Live</span>
+              <h3><code>id-no-home-domain</code></h3>
+              <p>The policy declares a home domain and the account publishes none. WARN. The role table that would widen this trigger is task 3.4.</p>
+            </article>
+            <article class="card">
+              <span class="chip chip--live">Live</span>
+              <h3><code>id-toml-unreachable</code></h3>
+              <p>The published <code>stellar.toml</code> could not be fetched or parsed under the guard, or was observed and never fetched. WARN. The evidence names the step and quotes no body.</p>
+            </article>
+            <article class="card">
+              <span class="chip chip--live">Live</span>
+              <h3><code>id-toml-account-unlisted</code></h3>
+              <p>A readable <code>stellar.toml</code> does not name this account in <code>ACCOUNTS</code>. WARN. Entries that are not account addresses are counted, never echoed.</p>
             </article>
           </div>
           <p class="table-caption"><a href="rules.html">See the full catalog with severities and rationale</a></p>

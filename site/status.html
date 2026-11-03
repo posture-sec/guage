@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Status and evidence · Gauge docs</title>
-  <meta name="description" content="What Gauge does today: shipped components, the four live rules, fail-closed behavior, testnet evidence from 2026-10-30 and 2026-11-02, and the limits of that evidence.">
+  <meta name="description" content="What Gauge does today: shipped components, the seven live rules, fail-closed behavior, testnet evidence from 2026-10-30 and 2026-11-02, and the limits of that evidence.">
   <meta property="og:type" content="article">
   <meta property="og:title" content="Status and evidence · Gauge docs">
   <meta property="og:description" content="Functional alpha, testnet verified, unaudited. The exact state of every component and the runs behind it.">
@@ -59,7 +59,7 @@
         <a href="status.html" aria-current="page">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-02<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-03<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -70,7 +70,7 @@
       <div class="content">
         <p class="eyebrow">Status</p>
         <h1>Functional alpha. Testnet verified. Unaudited.</h1>
-        <p class="lede">Gauge reads real Horizon data and produces real findings. It is also early: four of sixteen rules are live, there is no tagged release, and every observation below comes from testnet. This page records what was run, when, and what it does not prove.</p>
+        <p class="lede">Gauge reads real Horizon data and produces real findings. It is also early: seven of sixteen rules are live, there is no tagged release, and every observation below comes from testnet. This page records what was run, when, and what it does not prove.</p>
         <div class="chip-row">
           <span class="chip chip--live">Functional alpha</span>
           <span class="chip chip--warn">Unaudited</span>
@@ -88,9 +88,9 @@
                 <tr><td>strict policy loader</td><td><span class="chip chip--live">Shipped</span></td><td>Unknown keys, duplicate accounts, bad values and secret seeds are rejected with exit 2.</td></tr>
                 <tr><td>Horizon source</td><td><span class="chip chip--live">Shipped</span></td><td>Timeouts, a 1 MiB cap, retries, bounded concurrency, no redirects and a passphrase check before any account read.</td></tr>
                 <tr><td>check and audit</td><td><span class="chip chip--live">Shipped</span></td><td>Text and JSON output, a stable exit code, and the limits footer on every report.</td></tr>
-                <tr><td>rules</td><td><span class="chip chip--warn">4 of 16</span></td><td>The account and flag families work. Signer, threshold and identity rules are specified but not registered.</td></tr>
+                <tr><td>rules</td><td><span class="chip chip--warn">7 of 16</span></td><td>The account, flag and identity families work. Signer and threshold rules are specified but not registered.</td></tr>
                 <tr><td>role severities</td><td><span class="chip chip--warn">Not shipped</span></td><td>Every live rule uses its baseline severity. Task 3.4.</td></tr>
-                <tr><td>SEP-1 identity checks</td><td><span class="chip chip--warn">Not shipped</span></td><td>The guarded fetcher and its three rules are task 3.5.</td></tr>
+                <tr><td>SEP-1 identity checks</td><td><span class="chip chip--live">Shipped</span></td><td>The home domain an account publishes is fetched through a dial-time address guard, and an identity Gauge could not verify is a warning rather than a pass. Never run against a live domain.</td></tr>
                 <tr><td>tagged release</td><td><span class="chip chip--warn">None</span></td><td>No version is tagged and no artifact is signed. Build from source.</td></tr>
                 <tr><td>this documentation site</td><td><span class="chip chip--live">Live</span></td><td>Static pages deployed from the repository by GitHub Actions. Task 5.9.</td></tr>
               </tbody>
@@ -117,6 +117,8 @@
                 <tr><td>Secret seed in the policy or arguments</td><td>2</td><td>No report, and the seed is never echoed.</td></tr>
                 <tr><td>Missing policy file</td><td>2</td><td>No report.</td></tr>
                 <tr><td>Rule panic</td><td>3</td><td>Report with <code>src-rule-panic</code>; the account's result is incomplete.</td></tr>
+                <tr><td>Identity fetcher will not build</td><td>3</td><td>No report. The stage never started.</td></tr>
+                <tr><td>Home domain resolves to a blocked address</td><td>0, or 1 under <code>--fail-on warn</code></td><td>Report with <code>id-toml-unreachable</code>. Nothing was dialed, and the document is not quoted.</td></tr>
               </tbody>
             </table>
           </div>
@@ -169,9 +171,9 @@
           <h2>Roadmap position</h2>
           <div class="rail">
             <div class="rail-item">
-              <span class="rail-code">54%</span>
+              <span class="rail-code">59%</span>
               <span class="rail-label">Readiness</span>
-              <p class="rail-copy">38 of 70 tasks across Phases 0 to 6 are done.</p>
+              <p class="rail-copy">46 of 77 tasks across Phases 0 to 6 are done.</p>
             </div>
             <div class="rail-item">
               <span class="rail-code">1/10</span>
@@ -179,9 +181,9 @@
               <p class="rail-copy">G3, fail-closed tests, is green. The rest are open.</p>
             </div>
             <div class="rail-item">
-              <span class="rail-code">4/16</span>
+              <span class="rail-code">7/16</span>
               <span class="rail-label">Rules</span>
-              <p class="rail-copy">Account and flag rules only. Role severities are open.</p>
+              <p class="rail-copy">Account, flag and identity rules. Role severities are open.</p>
             </div>
             <div class="rail-item">
               <span class="rail-code">0</span>
@@ -189,7 +191,7 @@
               <p class="rail-copy">No tag, no signed artifact, no attestation yet.</p>
             </div>
           </div>
-          <p>Phase 3 is 2 of 7. The signer and threshold rules are blocked by task 0.7, which needs a transaction submission that Gauge forbids itself to make. The identity rules wait on the guarded SEP-1 fetcher. <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Read the full roadmap</a>.</p>
+          <p>Phase 3 is 3 of 7. The signer and threshold rules are blocked by task 0.7, which needs a transaction submission that Gauge forbids itself to make. The guarded SEP-1 fetcher and its three identity rules landed on 2026-11-03. <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Read the full roadmap</a>.</p>
         </section>
 
         <section class="section">

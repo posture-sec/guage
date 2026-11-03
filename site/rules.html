@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Rule catalog · Gauge docs</title>
-  <meta name="description" content="All sixteen Gauge rules with their conditions and severities, including the four account and flag rules that are live today.">
+  <meta name="description" content="All sixteen Gauge rules with their conditions and severities, including the seven account, flag and identity rules that are live today.">
   <meta property="og:type" content="article">
   <meta property="og:title" content="Rule catalog · Gauge docs">
-  <meta property="og:description" content="Sixteen checks, four shipped: every rule has a stable ID, a condition and a severity.">
+  <meta property="og:description" content="Sixteen checks, seven shipped: every rule has a stable ID, a condition and a severity.">
   <meta property="og:url" content="https://posture-sec.github.io/guage/rules.html">
   <meta property="og:image" content="https://posture-sec.github.io/guage/assets/og.png">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -59,7 +59,7 @@
         <a href="status.html">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-02<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-03<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -69,11 +69,11 @@
     <main class="main" id="main">
       <div class="content">
         <p class="eyebrow">Rule catalog</p>
-        <h1>Sixteen checks. Four shipped.</h1>
+        <h1>Sixteen checks. Seven shipped.</h1>
         <p class="lede">Every rule has a stable kebab-case ID, a written condition and a severity. A finding names the rule, the account, an evidence line and a fingerprint that identifies it. An accepted risk matches on rule and account, not on the fingerprint.</p>
         <div class="chip-row">
-          <span class="chip chip--live">4 live</span>
-          <span class="chip">12 specified</span>
+          <span class="chip chip--live">7 live</span>
+          <span class="chip">9 specified</span>
           <span class="chip">Baseline severities until 3.4</span>
         </div>
 
@@ -179,23 +179,23 @@
                 <tr>
                   <td>Identity</td>
                   <td>id-no-home-domain</td>
-                  <td>No home domain on an account whose role expects one.</td>
+                  <td>The policy declares a home domain and the chain shows none.</td>
                   <td><span class="chip chip--warn">WARN</span></td>
-                  <td><span class="chip">Specified</span></td>
+                  <td><span class="chip chip--live">Live</span></td>
                 </tr>
                 <tr>
                   <td>Identity</td>
                   <td>id-toml-unreachable</td>
-                  <td><code>stellar.toml</code> cannot be fetched or parsed under the SSRF guard.</td>
+                  <td><code>stellar.toml</code> cannot be fetched or parsed under the guard, or an observed home domain was never fetched.</td>
                   <td><span class="chip chip--warn">WARN</span></td>
-                  <td><span class="chip">Specified</span></td>
+                  <td><span class="chip chip--live">Live</span></td>
                 </tr>
                 <tr>
                   <td>Identity</td>
                   <td>id-toml-account-unlisted</td>
                   <td>The account is not listed in its home domain's <code>stellar.toml</code>.</td>
                   <td><span class="chip chip--warn">WARN</span></td>
-                  <td><span class="chip">Specified</span></td>
+                  <td><span class="chip chip--live">Live</span></td>
                 </tr>
               </tbody>
             </table>
@@ -204,7 +204,7 @@
         </section>
 
         <section class="section">
-          <h2>The four live rules</h2>
+          <h2>The seven live rules</h2>
           <p>These are registered in <code>internal/rules</code>, covered by positive and negative fixture cases, and exercised end to end by the CLI tests.</p>
 
           <article class="rule">
@@ -274,13 +274,64 @@
               <dd>WARN. Exit 1 only under <code>--fail-on warn</code>.</dd>
             </dl>
           </article>
+
+          <article class="rule">
+            <div class="rule-head">
+              <h3>id-no-home-domain</h3>
+              <span class="chip chip--warn">WARN</span>
+              <span class="chip chip--live">Live</span>
+            </div>
+            <p>The policy declares a <code>home_domain</code> and the account publishes none on chain. The trigger is the declaration, not the role: the role table that would decide which accounts are expected to publish one is task 3.4, and rules may not hardcode a role set. A <code>check</code> run declares nothing, so it cannot raise this rule.</p>
+            <dl>
+              <dt>Evidence</dt>
+              <dd><code>home_domain declared "example.org", observed none</code></dd>
+              <dt>Acceptable</dt>
+              <dd>Yes, with a reason and an optional expiry.</dd>
+              <dt>Exit effect</dt>
+              <dd>WARN. Exit 1 only under <code>--fail-on warn</code>.</dd>
+            </dl>
+          </article>
+
+          <article class="rule">
+            <div class="rule-head">
+              <h3>id-toml-unreachable</h3>
+              <span class="chip chip--warn">WARN</span>
+              <span class="chip chip--live">Live</span>
+            </div>
+            <p>The account publishes a home domain and its <code>stellar.toml</code> could not be fetched or parsed under the guard. It fires the same way when a domain was observed and never fetched at all: an identity Gauge could not verify is a warning, never a pass. The evidence names the step that failed, so a domain that resolves to a blocked address is distinguishable from one that serves an oversized or unreadable document. Nothing from the document is quoted; the detail phrase is one this repository wrote. A fetcher that cannot be built at all is a run that did not complete: exit 3, no report.</p>
+            <dl>
+              <dt>Evidence</dt>
+              <dd><code>step guard; detail the host name resolves to a private address, which Gauge will not dial; status 0</code></dd>
+              <dt>Acceptable</dt>
+              <dd>Yes, with a reason and an optional expiry.</dd>
+              <dt>Exit effect</dt>
+              <dd>WARN. Exit 1 only under <code>--fail-on warn</code>.</dd>
+            </dl>
+          </article>
+
+          <article class="rule">
+            <div class="rule-head">
+              <h3>id-toml-account-unlisted</h3>
+              <span class="chip chip--warn">WARN</span>
+              <span class="chip chip--live">Live</span>
+            </div>
+            <p>A readable <code>stellar.toml</code> does not name this account in <code>ACCOUNTS</code>. The rule only speaks about a document it could read, so an unreachable domain raises one finding rather than two. Entries that are not account addresses are counted and never echoed, which keeps a malformed or hostile list out of the report. The document's <code>NETWORK_PASSPHRASE</code> is carried in the result but compared by no rule today.</p>
+            <dl>
+              <dt>Evidence</dt>
+              <dd><code>home domain example.org lists 2 accounts; this account is not among them</code></dd>
+              <dt>Acceptable</dt>
+              <dd>Yes, with a reason and an optional expiry.</dd>
+              <dt>Exit effect</dt>
+              <dd>WARN. Exit 1 only under <code>--fail-on warn</code>.</dd>
+            </dl>
+          </article>
         </section>
 
         <section class="section">
           <h2>What is not shipped</h2>
-          <p>The twelve specified rules are a contract for the next phases, not behavior you can rely on today. The signer and threshold rules wait on threshold semantics that task 0.7 could not verify without submitting a transaction, which Gauge forbids itself to do. The identity rules wait on the guarded SEP-1 fetcher. Role-based severities are task 3.4.</p>
+          <p>The nine specified rules are a contract for the next phases, not behavior you can rely on today. The signer and threshold rules wait on threshold semantics that task 0.7 could not verify without submitting a transaction, which Gauge forbids itself to do. Role-based severities are task 3.4.</p>
           <div class="note">
-            <p><strong>Read the status before trusting a pass.</strong> A run evaluates the four rules above. A clean result means those four agreed with your policy; it says nothing about signers, thresholds, home domain or any rule marked Specified.</p>
+            <p><strong>Read the status before trusting a pass.</strong> A run evaluates the seven rules above. A clean result means those seven agreed with your policy; it says nothing about signers, thresholds or any rule marked Specified.</p>
           </div>
           <p><a href="status.html">Current implementation status</a> · <a href="policy.html">How to declare expectations</a></p>
         </section>

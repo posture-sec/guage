@@ -26,7 +26,7 @@ guage/
   gauge.example.toml                      # commented, intentionally unconfigured policy draft
 
   cmd/stellar-gauge/
-    main.go                               # dispatch, exit-code mapping and report rendering (2.9)
+    main.go                               # dispatch, exit-code mapping, report rendering and the deps seam (2.9, 3.5)
     {check,audit,version}.go              # P0 commands: flags, account validation, policy load (2.9)
     cli_test.go                           # in-process CLI tests: check, audit, JSON output, failure modes
     g3_test.go                            # fail-closed gate G3 cases (2.10)
@@ -54,19 +54,19 @@ guage/
       {horizon,http,errors}.go             # Horizon client: caps, retries, strict decode (2.7)
       horizon_test.go                     # fake-server success and failure-mode tests (2.7)
     sep1/
-      {fetch,guard,parse}.go               # guarded identity acquisition; no networking yet (3.5)
-      {fetch_test,guard_test}.go           # reserved SSRF and parser tests
+      {fetch,guard,parse}.go               # guarded identity acquisition: hostname check, dial-time IP guard, caps (3.5)
+      {fetch_test,guard_test,parse_test}.go # SSRF, rebinding, redirect, size, sanitizer-boundary and parse tests (3.5)
     rules/
-      {rules,account,signers,thresholds,flags,identity,facts}.go # registry and pure rule boundaries (3.2, 3.3 done)
-      rules_test.go                       # positive and negative cases from the testnet fixtures (3.2, 3.3)
+      {rules,account,signers,thresholds,flags,identity,facts}.go # registry and pure rule boundaries (3.2, 3.3, 3.5 done; signer, threshold and fact files pending)
+      {rules_test,identity_test}.go       # positive and negative cases from the testnet fixtures (3.2, 3.3, 3.5)
     report/
       {text,json,exit}.go                  # P0 renderers, limits footer and outcome mapping (2.6)
       markdown.go                         # P1 output (5.3)
       report_test.go                      # golden files, sanitization, determinism and exit tests
     run/
-      {run,check,audit}.go                 # P0 orchestration: passphrase, bounded fetch, accepts (2.8)
+      {run,check,audit}.go                 # P0 orchestration: passphrase, bounded fetch, identity fetch, accepts (2.8, 3.5)
       {compare,snapshot,diff}.go           # P1 orchestration (5.1, 5.2)
-      run_test.go                         # end-to-end orchestration with a fake source (2.8)
+      run_test.go                         # end-to-end orchestration with a fake source and an offline fetcher (2.8, 3.5)
 
   testdata/
     horizon/README.md                     # capture provenance, ledgers, what could not be captured (0.6)
@@ -115,7 +115,7 @@ Drafted but not finished: `README.md` (1.10) and `CONTRIBUTING.md`, `SECURITY.md
 
 Still absent, not silently implemented: a release workflow (4.5) and a scheduled-audit template (5.4). `go.sum` holds Go's own checksums for the one approved module (ADR-004, added in 2.4); no lockfile is hand-drafted. The local `files/` briefing copies are Git-ignored; the root documents are the maintained source of truth.
 
-Checks that run today: `gofmt -l .`, `go build ./...`, `go vet ./...`, `go test ./... -race -count=1`, `staticcheck ./...`, `govulncheck ./...`, `scripts/check_roadmap_touched.sh origin/main`, `scripts/roadmap_progress.sh --check`, `scripts/test_roadmap_gate.sh`, `scripts/generate_issues.sh --check`. OSSF Scorecard runs on pushes to `main` and weekly (`scorecard / analysis`), not on pull requests, because it audits the default branch and publishes results. `stellar-gauge version` prints the version, and `check` and `audit` read real accounts through the Horizon client, evaluate the four registered rules and render a report; a missing account or a network mismatch exits 1 by default, and flag drift or an undeclared clawback exits 1 under `--fail-on warn`. The implemented packages are `model`, `strkey`, `sanitize`, `policy`, `source`, `report`, `rules`, `run` and `cmd/stellar-gauge` (2.1 to 2.10, 3.2, 3.3), and `strkey` and `sanitize` carry fuzz targets. `internal/threshold` and `internal/sep1` are still placeholders, and `internal/rules` has the account and flag rules but no signer, threshold or identity rule yet.
+Checks that run today: `gofmt -l .`, `go build ./...`, `go vet ./...`, `go test ./... -race -count=1`, `staticcheck ./...`, `govulncheck ./...`, `scripts/check_roadmap_touched.sh origin/main`, `scripts/roadmap_progress.sh --check`, `scripts/test_roadmap_gate.sh`, `scripts/generate_issues.sh --check`. OSSF Scorecard runs on pushes to `main` and weekly (`scorecard / analysis`), not on pull requests, because it audits the default branch and publishes results. `stellar-gauge version` prints the version, and `check` and `audit` read real accounts through the Horizon client, fetch the `stellar.toml` of any account that publishes a home domain through the guarded client, evaluate the seven registered rules and render a report; a missing account or a network mismatch exits 1 by default, and flag drift, an undeclared clawback or an unreadable identity exits 1 under `--fail-on warn`. The implemented packages are `model`, `strkey`, `sanitize`, `policy`, `source`, `sep1`, `report`, `rules`, `run` and `cmd/stellar-gauge` (2.1 to 2.10, 3.2, 3.3, 3.5), and `strkey` and `sanitize` carry fuzz targets. `internal/threshold` is still a placeholder, and `internal/rules` has the account, flag and identity rules but no signer or threshold rule yet.
 
 Not built on purpose (do not create without a roadmap decision): a watch daemon, alert integrations, a rules language or plugin loader, a web UI, reputation scoring, contract-account auditing. See `ARCHITECTURE.md` 14.3.
 
@@ -140,7 +140,7 @@ model  <-  strkey, threshold, sanitize  <-  policy, source, sep1  <-  rules  <- 
 ```
 
 - `model` imports nothing from this module.
-- `rules` imports `model`, `threshold`, `policy` types and `sep1` result types. It never imports `source`, `net/http` or any I/O package.
+- `rules` may import `model`, `threshold`, `policy` types and `sep1` result types; today its direct imports are `model`, `policy`, `sep1`, `fmt` and `strings`. It never imports `source`, `net/http` or any I/O package, and no function in it performs one: an identity rule reads the `*sep1.Result` the caller placed in its context. `go list -deps` shows `net/http` under `rules` because `sep1`'s result types and its client share a package, which is why the purity check is on imports.
 - `report` imports only `model` and `sanitize`.
 - Only `source` and `sep1` perform network I/O. Only `cmd`, `run` and `report` write to stdout, stderr or files.
 - No `os/exec` anywhere. No `unsafe`. No `init()` with side effects. No package-level mutable state. No import cycles.

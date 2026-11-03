@@ -29,7 +29,7 @@ Out of scope:
 
 **Unaudited.** No third party has reviewed Gauge. `govulncheck` and `staticcheck` run in CI on every pull request, and the three fuzz targets over the sanitizer and strkey paths are not CI jobs: they are short local smoke runs a contributor makes before a release-facing change (`AGENTS.md` section 5), last run clean on 2026-11-03 for ten seconds each. Neither the CI checks nor the smokes are a review.
 
-**Functional alpha, unaudited.** As of the current commit there is a policy loader, a Horizon client with timeouts, size caps and bounded retries, strict decoding, report renderers, four account and flag rules, an orchestrator and a CLI. The signer, threshold and identity rules are not implemented, so a run reports observed state plus the four rules and cannot evaluate the rest of the catalog. The code has not been independently reviewed, so nothing here should be relied on to detect anything. See `ROADMAP.md` for what is actually implemented.
+**Functional alpha, unaudited.** As of the current commit there is a policy loader, a Horizon client with timeouts, size caps and bounded retries, strict decoding, a guarded `stellar.toml` fetcher whose dial-time address check is the only thing between a chain-derived home domain and a socket, report renderers, seven account, flag and identity rules, an orchestrator and a CLI. The signer and threshold rules are not implemented, so a run reports observed state plus those seven and cannot evaluate the rest of the catalog. The code has not been independently reviewed, so nothing here should be relied on to detect anything. See `ROADMAP.md` for what is actually implemented.
 
 ## What this tool cannot tell you
 

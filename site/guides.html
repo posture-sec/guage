@@ -59,7 +59,7 @@
         <a href="status.html">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-02<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-03<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -87,7 +87,7 @@ go build -o stellar-gauge ./cmd/stellar-gauge
 
         <section class="section">
           <h2>check: one account, no policy file</h2>
-          <p><code>check</code> takes the network, one endpoint and one or more G addresses. It applies the four live rules and prints a report.</p>
+          <p><code>check</code> takes the network, one endpoint and one or more G addresses. It applies the live rules that need no declaration and prints a report. Five of the seven can fire here; <code>flag-drift</code> and <code>id-no-home-domain</code> compare a declared expectation, so only <code>audit</code> can raise them.</p>
           <div class="code" data-copy>
             <div class="code-label"><span>Shell</span></div>
             <pre>./stellar-gauge check \
