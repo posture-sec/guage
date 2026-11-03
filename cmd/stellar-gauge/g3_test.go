@@ -1,9 +1,12 @@
 package main
 
 import (
+	"errors"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/posture-sec/guage/internal/sep1"
 )
 
 // TestGateG3 is the fail-closed gate from ROADMAP.md: every listed failure must
@@ -77,6 +80,37 @@ func TestGateG3(t *testing.T) {
 			name: "seed on the command line",
 			run: func() (int, string, string) {
 				return execCLI(t, "check", "--network", testNetwork, "--endpoint", "https://example.invalid", seed)
+			},
+		},
+		{
+			// An identity target the guard refuses is a finding, and a warning at
+			// --fail-on warn is enough to fail this gate: an account whose
+			// published identity cannot be verified never reads as a pass. The
+			// refusal itself is internal/sep1's test; this one is the exit code.
+			name: "blocked stellar.toml target",
+			run: func() (int, string, string) {
+				srv := startEndpoint(t, endpoint{balance: readFixture(t, fixtureClawback)})
+				blocked := &offlineIdentity{results: map[string]sep1.Result{
+					"komunitin.org": {
+						HomeDomain: "komunitin.org",
+						FailedAt:   sep1.StepGuard,
+						Detail:     "the host name resolves to a private address, which Gauge will not dial",
+					},
+				}}
+				return execCLIWith(t, offlineDeps(blocked),
+					"check", "--network", testNetwork, "--endpoint", srv.URL, "--fail-on", "warn", accountMissing)
+			},
+			wantFinding: "id-toml-unreachable",
+		},
+		{
+			// No fetcher means no identity was verified, so the run stops rather
+			// than printing a report that looks clean.
+			name: "identity fetcher will not build",
+			run: func() (int, string, string) {
+				srv := startEndpoint(t, endpoint{})
+				return execCLIWith(t, deps{newIdentity: func() (sep1.Fetcher, error) {
+					return nil, errors.New("the test refuses to build a fetcher")
+				}}, "check", "--network", testNetwork, "--endpoint", srv.URL, accountOne)
 			},
 		},
 	}

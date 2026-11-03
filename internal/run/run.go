@@ -11,6 +11,7 @@ import (
 	"github.com/posture-sec/guage/internal/policy"
 	"github.com/posture-sec/guage/internal/report"
 	"github.com/posture-sec/guage/internal/rules"
+	"github.com/posture-sec/guage/internal/sep1"
 	"github.com/posture-sec/guage/internal/source"
 )
 
@@ -27,6 +28,10 @@ type Evaluator func(rules.Context) []model.Finding
 // SourceFactory builds one source for an endpoint. Tests inject fakes here.
 type SourceFactory func(endpoint string) (source.Source, error)
 
+// IdentityFactory builds the fetcher that reads stellar.toml documents for one
+// run. Tests inject a fake here; nil selects the guarded client, never a skip.
+type IdentityFactory func() (sep1.Fetcher, error)
+
 // Job is everything one run needs. Check and Audit build it from their own
 // inputs, and tests build it directly.
 type Job struct {
@@ -39,13 +44,16 @@ type Job struct {
 
 	Concurrency int
 	NewSource   SourceFactory
+	NewIdentity IdentityFactory
 	Evaluate    Evaluator
 	Now         func() time.Time
 }
 
 // Run verifies the endpoint's network, fetches every account with a bounded
-// worker pool, evaluates rules, applies accepted risks and maps the result to
-// an exit code. It returns an error only when no trustworthy report exists.
+// worker pool, reads the stellar.toml of every account that publishes a home
+// domain through the guarded fetcher, evaluates rules, applies accepted risks
+// and maps the result to an exit code. It returns an error only when no
+// trustworthy report exists.
 func Run(ctx context.Context, job Job) (model.Report, error) {
 	if err := job.validate(); err != nil {
 		return model.Report{}, err
@@ -82,6 +90,10 @@ func Run(ctx context.Context, job Job) (model.Report, error) {
 	if err != nil {
 		return model.Report{}, fmt.Errorf("run: %w", err)
 	}
+	identities, err := identify(ctx, job, observations, mismatch)
+	if err != nil {
+		return model.Report{}, fmt.Errorf("run: %w", err)
+	}
 
 	result := model.Report{
 		ToolVersion: job.ToolVersion,
@@ -96,6 +108,7 @@ func Run(ctx context.Context, job Job) (model.Report, error) {
 		findings, recovered := evaluate(job.Evaluate, rules.Context{
 			Account:  job.Accounts[i],
 			Snapshot: snapshot,
+			Identity: identities[i],
 			Missing:  obs.missing,
 			Mismatch: mismatch,
 			Network:  info.Passphrase,
@@ -141,13 +154,28 @@ func (job Job) validate() error {
 }
 
 func horizonFactory(version string) SourceFactory {
+	agent := userAgent(version)
+	return func(endpoint string) (source.Source, error) {
+		return source.NewHorizon(source.Options{Endpoint: endpoint, UserAgent: agent})
+	}
+}
+
+// defaultIdentity is the production fetcher. Every option stays at the sep1
+// default, which is the guarded one: a run cannot ask for a longer body, more
+// hops or a looser deadline than the package ships with.
+func defaultIdentity(version string) IdentityFactory {
+	agent := userAgent(version)
+	return func() (sep1.Fetcher, error) {
+		return sep1.NewClient(sep1.Options{UserAgent: agent})
+	}
+}
+
+func userAgent(version string) string {
 	agent := "stellar-gauge"
 	if version != "" {
 		agent += "/" + version
 	}
-	return func(endpoint string) (source.Source, error) {
-		return source.NewHorizon(source.Options{Endpoint: endpoint, UserAgent: agent})
-	}
+	return agent
 }
 
 // observation is one account's result: a snapshot, or the fact that the
@@ -227,6 +255,79 @@ func fetchAll(ctx context.Context, src source.Source, endpoint string, accounts 
 		return nil, err
 	}
 	return observed, nil
+}
+
+// identify reads the identity document of every account that publishes a home
+// domain. It runs once the accounts are known, because the observed field is the
+// only thing Gauge asks a document about: a declared domain the chain does not show
+// is the id-no-home-domain rule's business, not a fetch. A nil result means "not
+// asked about", and the rule reading it decides whether that is silence or a
+// warning.
+//
+// An unreachable document is not an error here: id-toml-unreachable turns it into a
+// warning, the way acct-missing turns a 404 into a finding. Only a run that cannot
+// be trusted fails, which today means a fetcher that will not build or a context
+// that ended mid-stage. The bound is the same one the account reads used, so a run
+// never holds more sockets open than --concurrency allows.
+func identify(ctx context.Context, job Job, observations []observation, mismatch bool) ([]*sep1.Result, error) {
+	results := make([]*sep1.Result, len(observations))
+	if mismatch {
+		return results, nil
+	}
+	newIdentity := job.NewIdentity
+	if newIdentity == nil {
+		newIdentity = defaultIdentity(job.ToolVersion)
+	}
+	fetcher, err := newIdentity()
+	if err != nil {
+		return nil, fmt.Errorf("building the identity fetcher: %w", err)
+	}
+
+	limit := job.Concurrency
+	if limit <= 0 {
+		limit = defaultConcurrency
+	}
+	fetchCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	sem := make(chan struct{}, limit)
+	var wg sync.WaitGroup
+	var once sync.Once
+	var firstErr error
+	fail := func(err error) {
+		once.Do(func() {
+			firstErr = err
+			cancel()
+		})
+	}
+
+	for i, obs := range observations {
+		if obs.missing || obs.snapshot.HomeDomain == "" {
+			continue
+		}
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			select {
+			case sem <- struct{}{}:
+			case <-fetchCtx.Done():
+				fail(fetchCtx.Err())
+				return
+			}
+			defer func() { <-sem }()
+			result := fetcher.Fetch(fetchCtx, observations[i].snapshot.HomeDomain)
+			results[i] = &result
+		}(i)
+	}
+	wg.Wait()
+
+	if firstErr != nil {
+		return nil, firstErr
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	return results, nil
 }
 
 func evaluate(evaluator Evaluator, c rules.Context) (findings []model.Finding, recovered bool) {
