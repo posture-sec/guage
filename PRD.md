@@ -110,7 +110,7 @@ Priority: **P0** ships in v0.1.0, **P1** in v0.2.0, **Later** is backlog. Task I
 | FR-01 | `check`: audit one or more accounts with universal rules, no config needed | P0 | Works for any `G...` account on an explicit `--network` |
 | FR-02 | `audit`: audit accounts declared in `gauge.toml` with roles and expectations | P0 | Drift from declared signers, thresholds and flags is reported |
 | FR-03 | Horizon source behind a `Source` interface | P0 | A fake source drives all tests; Horizon is one implementation |
-| FR-04 | Exact threshold math as a pure, exhaustively tested function (reachability, minimum signers) | P0 | Matches fixtures captured from real accounts and testnet experiments (task 0.7) |
+| FR-04 | Exact threshold math as a pure, exhaustively tested function (reachability, minimum signers) | P0 | Matches the semantics task 0.7 verified from the protocol implementation, with table tests and a randomized brute-force cross-check; the observed-account half is task 3.6's fixtures. Amended 2026-11-04, the method replaced rather than the bar: the criterion read "fixtures captured from real accounts and testnet experiments (task 0.7)", and 0.7 closed by reading the code that decides those rules because producing the states means submitting a transaction this project forbids |
 | FR-05 | Signer, flag, account and network rules (6.2) | P0 | Each rule has a positive and a negative fixture |
 | FR-06 | Role profiles: `issuer`, `treasury`, `distribution`, `merchant`, `other` change severities (Appendix A) | P0 | Same account yields different severity per role |
 | FR-07 | Accepted risks: `[[accept]]` entries with `rule`, `account`, `reason`, optional `expires` | P0 | Accepting never hides a non-acceptable rule |

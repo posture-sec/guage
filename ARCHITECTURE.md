@@ -154,6 +154,8 @@ Rules for the math, each traceable to the block above:
 - `MinSigners` takes weights in descending order and accumulates until the threshold is reached. With threshold 0 the answer is 1 if any participating signer exists, otherwise not reachable, because a match is required before any comparison happens (`SignatureChecker.cpp:89-118`, `:168`).
 - Exhaustive table tests plus a randomized comparison against a brute-force subset search for small signer sets. The claim the brute-force check exists to test is the greedy one: largest-first minimizes the count subject to `>=`, and the 20-signature cap is part of that search.
 
+Implemented 2026-11-04 by task 2.3: `internal/threshold/threshold.go` holds these rules and no I/O, `participating` drops entries at weight 0 and every `T...` entry and truncates the sorted list at `maxSignatures = 20`, and `threshold_test.go` pairs the named cases (a weight-0 master alone, threshold 0 with and without a match, a `T...` entry that adds nothing, a full account one weight past an envelope) with the randomized subset comparison. The comparison is the check on the greedy claim, not on the cap: its signer sets stay under 20 on purpose because a subset search over 21 elements is the exponential case the cap exists to avoid.
+
 ### 6.4 `source`
 
 ```go

@@ -75,6 +75,7 @@ Verified from the protocol implementation by task 0.7 on 2026-11-04, at stellar-
 - Ed25519, `hash(x)` and `ed25519_signed_payload` all participate in the sum, and a `T...` pre-auth entry participates only for the one transaction whose hash it holds. Gauge models all four key types: task 2.11 added the signed-payload pair, so the strings `ed25519_public_key`, `sha256_hash`, `preauth_tx` and `ed25519_signed_payload` each map to a model type and the strkey kind its key must classify as, and any other string still stops the read.
 - `Reachable` sums the participating weights in descending order over at most the 20 largest and compares that with the threshold: an envelope caps at 20 signatures while an account can hold 20 signers plus a nonzero master.
 - `MinSigners`: sort weights descending, accumulate. Threshold 0 needs one weighted signer, because the comparison is only reached from inside a signature match. Threshold 0 with a zero-weight master and no other signer authorizes nothing.
+- Implemented 2026-11-04 by task 2.3 in `internal/threshold/threshold.go`. Pre-auth exclusion, the weight-0 rule and the 20 cap each have named table cases, and a randomized subset search checks the greedy ordering.
 - Unused signatures are an error, not a spare: `txBAD_AUTH_EXTRA`.
 - An unreachable or out-of-order tier is a legal stored state, because `SetOptions` validates ranges and nothing else. That is what `sig-threshold-unreachable` and `sig-threshold-order` are for.
 
