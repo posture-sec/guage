@@ -68,7 +68,7 @@ Status: design target v0.1; implementation is partway through Phase 3. `internal
 
 ## 7. Threshold math [6.3]
 
-Verified from the protocol implementation by task 0.7 on 2026-11-04, at stellar-core v29.0.0 commit `a9d72b0cac3a89ebbcf926af449ac73089e0f8f7`. `ARCHITECTURE.md` 6.3 carries every citation with a file and line range; do not restate them here and do not extend semantics past what that list decides.
+Verified from the protocol implementation by task 0.7 on 2026-11-04, at stellar-core v30.0.0 commit `0e49751aa9ddf892302cca02cea7f3f5d97df9f1`, the build `testdata/horizon/root-testnet.json` names in its `core_version` field, cross-read against v29.0.0 `a9d72b0` and identical there in every cited function. `ARCHITECTURE.md` 6.3 carries every citation with a file and line range; do not restate them here and do not extend semantics past what that list decides.
 
 - Weights sum and must be greater than or equal to the threshold. Thresholds 0 to 255, weights 1 to 255, and a stored weight above 255 is clamped to 255 from protocol 10.
 - Only signers with weight above 0 participate. A zero-weight master is excluded from the candidate list by the implementation, and a zero weight on any other signer is a delete rather than a signer, so the master is the only zero Gauge can observe. Pre-auth signers do not count toward standing control.
