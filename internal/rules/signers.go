@@ -6,19 +6,22 @@ import (
 	"strings"
 
 	"github.com/posture-sec/guage/internal/model"
+	"github.com/posture-sec/guage/internal/policy"
 	"github.com/posture-sec/guage/internal/threshold"
 )
 
 // sigNoSigningWeight fires when nothing on the account can authorize anything:
 // every entry is either weight 0 or a pre-authorized transaction hash, and
 // neither is standing control (ARCHITECTURE.md 6.3). An issuer that declares
-// expect_locked means this state, so it is INFO there rather than HIGH.
+// expect_locked means this state, so it is INFO there rather than HIGH. The
+// issuer row lists no floor for this rule, which is what lets the INFO survive
+// task 3.4's adjustment; Appendix A never mentions it for a role.
 func sigNoSigningWeight(c Context) []model.Finding {
 	if c.Missing || c.Mismatch || len(participating(c.Snapshot.Signers)) > 0 {
 		return nil
 	}
 	severity := model.SevHigh
-	if c.Account.Role == model.RoleIssuer && c.Account.ExpectLocked != nil && *c.Account.ExpectLocked {
+	if policy.AllowsExpectLocked(c.Account.Role) && c.Account.ExpectLocked != nil && *c.Account.ExpectLocked {
 		severity = model.SevInfo
 	}
 	return []model.Finding{model.NewFinding(
@@ -32,12 +35,11 @@ func sigNoSigningWeight(c Context) []model.Finding {
 
 // sigSingleKeyHigh fires when one signer alone reaches the high threshold, the
 // tier SetOptions itself belongs to, so a single key can rewrite the account's
-// control. PRD Appendix A sets this severity by role and its `other` row, INFO,
-// is the only row that applies before task 3.4: a plain `check` declares no role,
-// and thresholds all zero mean every account with a single weighted key is in this
-// shape. The finding is therefore INFO here and never suppressed; 3.4 raises it to
-// HIGH for issuer and treasury and to WARN for merchant and distribution, which is
-// the same report at a different weight rather than a new check.
+// control. It emits the baseline INFO, which is Appendix A's `other` row: a plain
+// `check` declares no role, lands there, and thresholds all zero mean every account
+// with a single weighted key is in this shape. Task 3.4 raises it once per run, to
+// HIGH for issuer and treasury and to WARN for distribution and merchant, so the
+// role table is read at one place rather than restated inside each rule.
 func sigSingleKeyHigh(c Context) []model.Finding {
 	if c.Missing || c.Mismatch {
 		return nil

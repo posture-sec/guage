@@ -59,7 +59,7 @@
         <a href="status.html">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-03<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-04<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -221,18 +221,18 @@ jobs:
             </div>
             <div class="ledger-row">
               <dt>Treasury</dt>
-              <dd><strong>Declare every flag as false unless the account issues.</strong> A treasury that has clawback enabled is a fact worth failing a build over, even before role severities land.</dd>
+              <dd><strong>Declare every flag as false unless the account issues.</strong> Clawback enabled on a treasury is a WARN that only stops a gate under <code>--fail-on warn</code>, while its role raises signer and threshold drift to HIGH: declare the signers, and the report will say who can authorize the reserves.</dd>
             </div>
             <div class="ledger-row">
               <dt>Distribution</dt>
-              <dd><strong>Start with flags, then add expectations as rules ship.</strong> Signer and threshold expectations are validated now, but no live rule compares them yet.</dd>
+              <dd><strong>Declare the signers and the tiers you expect, not only the flags.</strong> Since task 3.1 the comparison rules run: an undeclared signer, a declared signer the chain no longer shows and a weight or threshold that moved are all findings, and a distribution role keeps them at WARN rather than raising them.</dd>
             </div>
             <div class="ledger-row">
               <dt>Merchant</dt>
               <dd><strong>Use <code>check</code> for a quick read and a policy once the set of accounts is stable.</strong> A merchant account is usually the simplest to describe, so drift stands out.</dd>
             </div>
           </dl>
-          <p class="table-caption">These are authoring recommendations, not severity profiles. Role-based severity overrides are task 3.4 and are not active.</p>
+          <p class="table-caption">These are authoring recommendations, not severity profiles. The profiles themselves are <code>PRD.md</code> Appendix A, applied since task 3.4: a declared role raises a finding to the severity its row names and never lowers one. The weights are on the <a href="rules.html">rules page</a>.</p>
         </section>
 
         <section class="section">

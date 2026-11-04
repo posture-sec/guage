@@ -8,6 +8,8 @@ endpoints = ["https://horizon-testnet.stellar.org"]
 # Public SEP-23 test vector; replace it with the account you audit.
 id = "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
 name = "treasury"
+# A role weights the report rather than changing what is checked: a treasury reads
+# single-key control and drift as HIGH, and a role can only raise a severity.
 role = "treasury"
 expected_signers = [
   { key = "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ", weight = 1 },
@@ -15,6 +17,10 @@ expected_signers = [
 expected_thresholds = { low = 1, medium = 2, high = 2 }
 expected_flags = { auth_required = false, auth_revocable = false, auth_immutable = false, clawback = false }
 home_domain = "example.com"
+# Only an issuer is expected to publish a home domain, so this declaration is what
+# makes an absent domain a finding here rather than a fact.
+# expect_locked states that a zero-weight, nonsigning account is intended. It is
+# read for `issuer` alone; on a treasury it changes nothing.
 expect_locked = false
 
 # Only the owner adds accept entries, always with a reason. The expiry is optional.

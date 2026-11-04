@@ -59,7 +59,7 @@
         <a href="status.html">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-03<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-04<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -69,12 +69,12 @@
     <main class="main" id="main">
       <div class="content">
         <p class="eyebrow">Rule catalog</p>
-        <h1>Sixteen checks. Seven shipped.</h1>
-        <p class="lede">Every rule has a stable kebab-case ID, a written condition and a severity. A finding names the rule, the account, an evidence line and a fingerprint that identifies it. An accepted risk matches on rule and account, not on the fingerprint.</p>
+        <h1>Sixteen checks. All sixteen live.</h1>
+        <p class="lede">Every rule has a stable kebab-case ID, a written condition and a severity. A finding names the rule, the account, an evidence line and a fingerprint that identifies it. An accepted risk matches on rule and account, not on the fingerprint. A declared role raises a severity and cannot lower one.</p>
         <div class="chip-row">
-          <span class="chip chip--live">7 live</span>
-          <span class="chip">9 specified</span>
-          <span class="chip">Baseline severities until 3.4</span>
+          <span class="chip chip--live">16 live</span>
+          <span class="chip">Severity by role, since 3.4</span>
+          <span class="chip">Rule articles: 7 of 16</span>
         </div>
 
         <section class="section">
@@ -179,7 +179,7 @@
                 <tr>
                   <td>Identity</td>
                   <td>id-no-home-domain</td>
-                  <td>The policy declares a home domain and the chain shows none.</td>
+                  <td>The policy declares a home domain and the chain shows none, or the account's role is <code>issuer</code> and it publishes nothing.</td>
                   <td><span class="chip chip--warn">WARN</span></td>
                   <td><span class="chip chip--live">Live</span></td>
                 </tr>
@@ -200,7 +200,7 @@
               </tbody>
             </table>
           </div>
-          <p class="table-caption">* The catalog gives these a severity by role, and the role map is task 3.4. Until it lands each emits one fixed value: flag drift and an undeclared clawback at WARN, an unexpected signer at HIGH, weight and threshold drift at WARN, and a single key holding the account at INFO, because a fresh account with thresholds 0/0/0 and one weighted key is in that shape and a plain <code>check</code> declares no role. 3.4 raises the single-key case to HIGH for an issuer or treasury and to WARN for a merchant or distribution: the same statement at a different weight, not a new check.</p>
+          <p class="table-caption">* A role raises these. The severity shown is what a plain <code>check</code> prints, because <code>check</code> declares no role and an undeclared account is <code>other</code>: flag drift and an undeclared clawback at WARN, an unexpected signer at HIGH, weight and threshold drift at WARN, and a single key holding the account at INFO, since a fresh account has thresholds 0/0/0 and one weighted key. <code>audit</code> then applies its own weight to each account: single-key control becomes HIGH for an issuer or a treasury and WARN for a distribution account or a merchant, flag drift and an undeclared clawback become HIGH for an issuer, and weight and threshold drift become HIGH for a treasury. A role can only move a finding up, so an issuer cannot talk a missing account or an unreachable tier down, and no role touches a severity a <code>[[accept]]</code> entry could never silence. The readings are in <code>PRD.md</code> Appendix A.</p>
         </section>
 
         <section class="section">
@@ -281,10 +281,10 @@
               <span class="chip chip--warn">WARN</span>
               <span class="chip chip--live">Live</span>
             </div>
-            <p>The policy declares a <code>home_domain</code> and the account publishes none on chain. The trigger is the declaration, not the role: the role table that would decide which accounts are expected to publish one is task 3.4, and rules may not hardcode a role set. A <code>check</code> run declares nothing, so it cannot raise this rule.</p>
+            <p>Two triggers, one finding. The policy declares a <code>home_domain</code> and the account publishes none on chain, or the account's own role is <code>issuer</code>, the one role <code>PRD.md</code> Appendix A describes as publishing a domain, and nothing is declared at all. The evidence line says which of the two fired, so an operator who declared a domain and an operator who only declared a role read different sentences. A <code>check</code> run declares neither, so it cannot raise this rule.</p>
             <dl>
               <dt>Evidence</dt>
-              <dd><code>home_domain declared "example.org", observed none</code></dd>
+              <dd><code>home_domain declared "example.org", observed none</code> or <code>role "issuer" expects a home_domain, observed none</code></dd>
               <dt>Acceptable</dt>
               <dd>Yes, with a reason and an optional expiry.</dd>
               <dt>Exit effect</dt>
@@ -329,7 +329,7 @@
 
         <section class="section">
           <h2>What is not shipped</h2>
-          <p>All sixteen rules in the table are registered and evaluated on every run. What is not shipped is severity by role (task 3.4) and the golden fixture set for every Appendix B scenario (task 3.6), and the rule articles below cover the seven that landed before the signer family.</p>
+          <p>All sixteen rules in the table are registered and evaluated on every run, and a declared role now weights them. What is not shipped is the golden fixture set for every Appendix B scenario (task 3.6), the facts a zero-config run prints (task 3.7) and the rule articles for the nine signer and threshold checks, which arrive with task 4.2.</p>
           <div class="note">
             <p><strong>Read the status before trusting a pass.</strong> A clean result means all sixteen checks agreed with what the chain showed and with what your policy declared. It is not a statement about key custody: on-chain data cannot show who holds a key, and ten of the sixteen rules compare against a declaration, so a policy that says nothing about signers, thresholds or flags gets no answer about drift.</p>
           </div>
