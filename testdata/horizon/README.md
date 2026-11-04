@@ -29,6 +29,7 @@ These Appendix B scenarios cannot be produced without submitting a transaction, 
 - 2, master weight 0 and no other signers.
 - 5, a `hash(x)` signer.
 - 6, a pre-auth transaction signer.
+- An `ed25519_signed_payload` signer, which task 2.11 added to the decoder. Its key is a `P` address carrying a payload, so it is built the same way the two lines above are: a valid strkey assembled in `internal/source/horizon_test.go`, not a captured response.
 - The leftover-signature case behind task 0.7.
 
 Two more are about input handling rather than chain state and belong in tests: a mismatched passphrase (a fake Horizon returns another network's passphrase) and muxed, contract or seed strings as input.
