@@ -329,7 +329,7 @@
 
         <section class="section">
           <h2>What is not shipped</h2>
-          <p>The nine specified rules are a contract for the next phases, not behavior you can rely on today. The signer and threshold rules wait on threshold semantics that task 0.7 could not verify without submitting a transaction, which Gauge forbids itself to do. Role-based severities are task 3.4.</p>
+          <p>The nine specified rules are a contract for the next phases, not behavior you can rely on today. The signer and threshold rules have their semantics settled: task 0.7 closed on 2026-11-04 by reading the code that enforces them, and <code>internal/threshold</code> computes reachability and the minimum signer count from that. What is not shipped is the rules themselves, task 3.1. Role-based severities are task 3.4.</p>
           <div class="note">
             <p><strong>Read the status before trusting a pass.</strong> A run evaluates the seven rules above. A clean result means those seven agreed with your policy; it says nothing about signers, thresholds or any rule marked Specified.</p>
           </div>
