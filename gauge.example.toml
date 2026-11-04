@@ -33,3 +33,10 @@ expect_locked = false
 # expires = "2027-04-27"
 
 # An omitted expectation differs from an explicitly empty, zero or false value.
+
+# What is actually compared today: expected_flags, and home_domain through the
+# identity rules. expected_signers and expected_thresholds are loaded and
+# validated and no rule reads them yet, because the signer and threshold family
+# is task 3.1, and the role above changes no severity until task 3.4 lands.
+# Declaring them here means the file is ready when those rules ship; it does not
+# mean those declarations are checked.
