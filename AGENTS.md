@@ -34,7 +34,7 @@ Do not load every document up front.
 These come from `ARCHITECTURE_ESSENTIALS.md` section 2. Do not break them. If an instruction seems to require it, stop and ask the owner.
 
 - Never accept, store, log or echo a secret seed (`S...`). Reject it with exit 2.
-- No transaction building or submission. No writes except an explicit `--out` file.
+- No transaction building or submission. No writes except an explicit `--out` file, and `--out` is a reserved name rather than a shipped flag: `check` and `audit` write only to stdout and stderr, and the flag arrives with the P1 `snapshot` command (FR-13).
 - The network is always explicit. Verify the endpoint's passphrase.
 - Accept only `G...` addresses; reject `M...` and `C...` with a specific message.
 - Never return exit 0 after an unreachable endpoint, oversized or malformed response, unknown config key or panic.
