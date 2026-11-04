@@ -18,7 +18,7 @@ Status: design target v0.1; implementation is partway through Phase 3. `internal
 ## 2. Hard rules (never break)
 
 - Never accept, store, log or echo a secret seed (`S...`). Reject with exit 2 and a rotate-the-key message. [6.6, ADR-007]
-- No transaction building or submission. No writes except an explicit `--out` file. [1]
+- No transaction building or submission. No writes except an explicit `--out` file; `--out` is reserved for the P1 `snapshot` command and no shipped subcommand takes it. [1]
 - `--network` (or `network` in config) is required. No default. Verify the endpoint's passphrase. [ADR-006]
 - Accept only `G...` addresses. Reject `M...` and `C...` with a specific message. [6.2, 6.6]
 - Never exit 0 after an unreachable endpoint, oversize or malformed response, unknown config key or panic. [8]

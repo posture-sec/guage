@@ -11,7 +11,7 @@ Include the command you ran, the exit code, and the policy file with real accoun
 In scope:
 
 - A Gauge run that accepts, stores, logs or echoes a secret seed.
-- Any transaction building or submission, or any write other than an explicit `--out` file.
+- Any transaction building or submission, or any write other than to the file an explicit `--out` names. That flag is reserved for the P1 `snapshot` command, so every shipped subcommand writes nothing but stdout and stderr.
 - A network request without a timeout, a response size cap, bounded retries and bounded concurrency.
 - `stellar.toml` reached without the dial-time SSRF guard, or a redirect chain that is not re-validated.
 - Chain-derived data reaching terminal or markdown output unsanitized (control, bidi, zero-width characters, terminal escapes).

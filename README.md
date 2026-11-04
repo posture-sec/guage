@@ -29,7 +29,7 @@ go run ./cmd/stellar-gauge version
 go run ./cmd/stellar-gauge check --network testnet --endpoint https://horizon-testnet.stellar.org G...
 ```
 
-A run reads the account, prints what the chain shows and exits `0`, `1`, `2` or `3`. A missing account or an endpoint on the wrong network is a HIGH finding and exits `1` by default, as does any run that could not complete. Declared flag drift, an undeclared clawback and a home domain whose `stellar.toml` cannot be read are warnings and exit `1` under `--fail-on warn`. A run also fetches the `stellar.toml` of any account that publishes a home domain, through a guard that resolves the name and then refuses loopback, private, link-local and other non-public addresses at dial time; an identity Gauge could not verify is a warning, never a pass. The remaining eight rules and role-based severities arrive later in Phase 3. There is no release to install.
+A run reads the account, prints what the chain shows and exits `0`, `1`, `2` or `3`. A missing account or an endpoint on the wrong network is a HIGH finding and exits `1` by default, as does any run that could not complete. Declared flag drift, an undeclared clawback and a home domain whose `stellar.toml` cannot be read are warnings and exit `1` under `--fail-on warn`. A run also fetches the `stellar.toml` of any account that publishes a home domain, through a guard that resolves the name and then refuses loopback, private, link-local and other non-public addresses at dial time; an identity Gauge could not verify is a warning, never a pass. The remaining nine rules and role-based severities arrive later in Phase 3. There is no release to install.
 
 ## What it checks
 
@@ -48,6 +48,7 @@ Exit codes: `0` pass, `1` findings at or above `--fail-on`, `2` configuration or
 
 - Key custody. On-chain data cannot show who holds a key, how it is stored, or whether it leaked.
 - Whether an account is a good account. Gauge reports posture against your declared expectations. It never says an account is secure or safe, and "no findings" is not a clean bill of health.
+- Signers and thresholds, today. Eight `sig-` rules and `thr-drift` are specified and none is registered, so a policy that declares expected signers is loaded and validated and compared by nothing until task 3.1. This bullet is about what is unfinished; the four above are about what Gauge will not look at either way.
 - Transactions, balances, offers, claimable balances, liquidity pools and Soroban contract accounts.
 - Live streaming or alerting. It is a state comparison you schedule, not a daemon.
 - The expectations themselves. If an attacker can edit both `gauge.toml` and the workflow that runs Gauge, the check can be made to pass. That residual risk is documented in `ARCHITECTURE_ESSENTIALS.md` section 10 and is a process problem, not a code problem.
