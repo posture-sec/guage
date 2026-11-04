@@ -208,7 +208,7 @@ expires = "2027-04-27"                   # optional
 
 ## 7. Non-functional requirements
 
-- **Read-only:** no writes except an explicit `--out`. No secrets read from environment or files.
+- **Read-only:** no writes except an explicit `--out`, which belongs to `snapshot` and so to no requirement shipped in v0.1. No secrets read from environment or files.
 - **Determinism:** same snapshot and policy yield identical output, ordered severity first, then account, then rule.
 - **Bounded network:** per-request timeout, response size caps, at most a few retries with backoff, bounded concurrency. [Targets, unmeasured]
 - **Single static binary** for Linux, macOS and Windows.

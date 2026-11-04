@@ -48,6 +48,7 @@ Exit codes: `0` pass, `1` findings at or above `--fail-on`, `2` configuration or
 
 - Key custody. On-chain data cannot show who holds a key, how it is stored, or whether it leaked.
 - Whether an account is a good account. Gauge reports posture against your declared expectations. It never says an account is secure or safe, and "no findings" is not a clean bill of health.
+- Signers and thresholds, today. Eight `sig-` rules and `thr-drift` are specified and none is registered, so a policy that declares expected signers is loaded and validated and compared by nothing until task 3.1. This bullet is about what is unfinished; the four above are about what Gauge will not look at either way.
 - Transactions, balances, offers, claimable balances, liquidity pools and Soroban contract accounts.
 - Live streaming or alerting. It is a state comparison you schedule, not a daemon.
 - The expectations themselves. If an attacker can edit both `gauge.toml` and the workflow that runs Gauge, the check can be made to pass. That residual risk is documented in `ARCHITECTURE_ESSENTIALS.md` section 10 and is a process problem, not a code problem.
