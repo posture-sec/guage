@@ -151,12 +151,20 @@ func baseJob(fs source.Source) Job {
 	}
 }
 
+// snapshot builds an ordinary readable account that raises no finding about
+// control on its own: two weight-1 keys covering every tier. Since task 3.1 a
+// single-key account at the default thresholds is itself a finding, and a test
+// about identity or a missing account should not have to say so.
 func snapshot(id string, ledger int64) model.AccountSnapshot {
 	return model.AccountSnapshot{
-		ID:       id,
-		Sequence: "1",
-		Ledger:   ledger,
-		Signers:  []model.Signer{{Key: id, Type: model.SignerEd25519, Weight: 1}},
+		ID:         id,
+		Sequence:   "1",
+		Ledger:     ledger,
+		Thresholds: model.Thresholds{Low: 2, Medium: 2, High: 2},
+		Signers: []model.Signer{
+			{Key: id, Type: model.SignerEd25519, Weight: 1},
+			{Key: accountThree, Type: model.SignerEd25519, Weight: 1},
+		},
 	}
 }
 

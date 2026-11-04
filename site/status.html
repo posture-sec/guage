@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Status and evidence · Gauge docs</title>
-  <meta name="description" content="What Gauge does today: shipped components, the seven live rules, fail-closed behavior, testnet evidence from 2026-10-30 and 2026-11-02, and the limits of that evidence.">
+  <meta name="description" content="What Gauge does today: shipped components, all sixteen rules live, fail-closed behavior, testnet evidence from 2026-10-30 and 2026-11-02, and the limits of that evidence.">
   <meta property="og:type" content="article">
   <meta property="og:title" content="Status and evidence · Gauge docs">
   <meta property="og:description" content="Functional alpha, testnet verified, unaudited. The exact state of every component and the runs behind it.">
@@ -70,7 +70,7 @@
       <div class="content">
         <p class="eyebrow">Status</p>
         <h1>Functional alpha. Testnet verified. Unaudited.</h1>
-        <p class="lede">Gauge reads real Horizon data and produces real findings. It is also early: seven of sixteen rules are live, there is no tagged release, and every observation below comes from testnet. This page records what was run, when, and what it does not prove.</p>
+        <p class="lede">Gauge reads real Horizon data and produces real findings. It is also early: all sixteen rules are registered and evaluating, none has a release tag, and every observation below comes from testnet. This page records what was run, when, and what it does not prove.</p>
         <div class="chip-row">
           <span class="chip chip--live">Functional alpha</span>
           <span class="chip chip--warn">Unaudited</span>
@@ -171,9 +171,9 @@
           <h2>Roadmap position</h2>
           <div class="rail">
             <div class="rail-item">
-              <span class="rail-code">59%</span>
+              <span class="rail-code">64%</span>
               <span class="rail-label">Readiness</span>
-              <p class="rail-copy">46 of 77 tasks across Phases 0 to 6 are done.</p>
+              <p class="rail-copy">50 of 78 tasks across Phases 0 to 6 are done.</p>
             </div>
             <div class="rail-item">
               <span class="rail-code">1/10</span>
@@ -181,9 +181,9 @@
               <p class="rail-copy">G3, fail-closed tests, is green. The rest are open.</p>
             </div>
             <div class="rail-item">
-              <span class="rail-code">7/16</span>
+              <span class="rail-code">16/16</span>
               <span class="rail-label">Rules</span>
-              <p class="rail-copy">Account, flag and identity rules. Role severities are open.</p>
+              <p class="rail-copy">Account, signer, threshold, flag and identity rules. Role severities are task 3.4.</p>
             </div>
             <div class="rail-item">
               <span class="rail-code">0</span>
@@ -191,7 +191,7 @@
               <p class="rail-copy">No tag, no signed artifact, no attestation yet.</p>
             </div>
           </div>
-          <p>Phase 3 is 3 of 7. The signer and threshold rules are no longer blocked: task 0.7 closed on 2026-11-04 by reading the protocol code that decides those semantics, which is what a read-only tool needs to know, and Phase 2 is complete with the threshold math implemented in <code>internal/threshold</code>. What is left is registering the rules themselves, task 3.1. The guarded SEP-1 fetcher and its three identity rules landed on 2026-11-03. <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Read the full roadmap</a>.</p>
+          <p>Phase 3 is 4 of 7. Task 3.1 registered the nine signer and threshold rules on 2026-11-04, on top of the threshold math 2.3 built from the semantics 0.7 closed by reading the protocol code that enforces them, so a run now reports an unreachable tier, an account with no standing signing weight and a signer your policy did not declare. What remains in Phase 3 is the Appendix A role map (3.4), the golden fixtures for every Appendix B scenario (3.6) and the facts report (3.7). The guarded SEP-1 fetcher and its three identity rules landed on 2026-11-03. <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Read the full roadmap</a>.</p>
         </section>
 
         <section class="section">
