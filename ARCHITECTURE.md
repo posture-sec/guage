@@ -372,7 +372,7 @@ Role severity matrix: `PRD.md` Appendix A. Key definitions:
 - **SSRF tests:** loopback, private ranges, metadata address, DNS rebinding simulation, redirect to a private host. Implemented 2026-11-03 (task 3.5): every blocked class is fetched end to end and asserted to dial nothing at all; the rebinding simulation is a resolver that first answers a public address and then the metadata address, asserted refused on the initial hop and on a redirect hop; a dial record asserts the socket was handed a numeric address rather than the host name, which is the property the design rests on. `Proxy: nil` is pinned with an `HTTPS_PROXY` value in the environment. The two offline seams, `resolver` and `dial`, are unexported fields assignable only from in-package tests, so no caller can build a `Client` that skips the guard, and the layer-2 tests still run the real HTTP stack: an `httptest.NewTLSServer` whose certificate is installed in a pool, with the fake resolver reporting a public address for its host name, so loopback is never permitted and only the socket is relocated. What no test here can prove is a live DNS rebinding attacker, and a server that ignores the hop cap.
 - **Sanitizer tests:** ANSI escapes, bidi controls, zero-width characters, markdown and annotation injection.
 - **Roadmap gate test:** the script fails a diff that omits `ROADMAP.md`.
-- No test talks to the real network by default; an opt-in tagged test hits testnet.
+- No test talks to the real network. The `livenet` build tag is the convention AGENTS.md section 4 reserves for an opt-in testnet run and no file in the tree carries it as of 2026-11-03, so the suite is entirely offline as shipped; introducing such a test is its own roadmap task, not an addition made while fixing something else.
 
 ## 13. Architecture decision records
 
@@ -432,7 +432,7 @@ Design-review analysis. The scenarios below are not tests, and none of them has 
 | Config | Duplicate accounts, unknown keys, expired accepts, accepts on non-acceptable rules | Strict loader (2.4, 3.4) |
 | Time | Expiry dates compared in local time | UTC only |
 | Concurrency | Snapshot taken between ledger closes; mixed ledgers across accounts | Ledger recorded per account |
-| Platform | Windows path and newline handling for `--out` and config paths | CI matrix (4.4) |
+| Platform | Windows path and newline handling for config paths, and for `--out` once the P1 `snapshot` command adds the flag | CI matrix (4.4) |
 
 ### 14.3 What is overengineered (cut or deferred)
 
