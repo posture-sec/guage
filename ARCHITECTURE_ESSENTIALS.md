@@ -68,10 +68,15 @@ Status: design target v0.1; implementation is partway through Phase 3. `internal
 
 ## 7. Threshold math [6.3]
 
-- Weights sum and must be greater than or equal to the threshold. Thresholds 0 to 255, weights 1 to 255.
-- Only signers with weight above 0 participate. Pre-auth signers do not count toward standing control.
-- `MinSigners`: sort weights descending, accumulate. Threshold 0 needs one weighted signer.
-- Edge behavior is Unverified until task 0.7. Do not extend semantics beyond the table tests.
+Verified from the protocol implementation by task 0.7 on 2026-11-04, at stellar-core v30.0.0 commit `0e49751aa9ddf892302cca02cea7f3f5d97df9f1`, the build `testdata/horizon/root-testnet.json` names in its `core_version` field, cross-read against v29.0.0 `a9d72b0` and identical there in every cited function. `ARCHITECTURE.md` 6.3 carries every citation with a file and line range; do not restate them here and do not extend semantics past what that list decides.
+
+- Weights sum and must be greater than or equal to the threshold. Thresholds 0 to 255, weights 1 to 255, and a stored weight above 255 is clamped to 255 from protocol 10.
+- Only signers with weight above 0 participate. A zero-weight master is excluded from the candidate list by the implementation, and a zero weight on any other signer is a delete rather than a signer, so the master is the only zero Gauge can observe. Pre-auth signers do not count toward standing control.
+- Ed25519, `hash(x)` and `ed25519_signed_payload` all participate in the sum, and a `T...` pre-auth entry participates only for the one transaction whose hash it holds. Gauge models ed25519, `hash(x)` and pre-auth, and refuses `ed25519_signed_payload` at decode, which is task 2.11.
+- `Reachable` sums the participating weights in descending order over at most the 20 largest and compares that with the threshold: an envelope caps at 20 signatures while an account can hold 20 signers plus a nonzero master.
+- `MinSigners`: sort weights descending, accumulate. Threshold 0 needs one weighted signer, because the comparison is only reached from inside a signature match. Threshold 0 with a zero-weight master and no other signer authorizes nothing.
+- Unused signatures are an error, not a spare: `txBAD_AUTH_EXTRA`.
+- An unreachable or out-of-order tier is a legal stored state, because `SetOptions` validates ranges and nothing else. That is what `sig-threshold-unreachable` and `sig-threshold-order` are for.
 
 ## 8. Rules (v0.1) [9]
 
@@ -110,8 +115,9 @@ Status: design target v0.1; implementation is partway through Phase 3. `internal
 
 ## 14. Known unknowns (do not assume) [15]
 
-- Whether Horizon lists the master key in `signers`, and its exact JSON shape.
-- Threshold edge semantics (threshold 0 with no weighted signer; leftover signatures).
+- Whether Horizon lists the master key in `signers`, and its exact JSON shape. **Answered** 2026-10-30 on testnet and recorded in `ARCHITECTURE.md` 6.4: it does, as an ordinary entry whose key equals `account_id`, at whatever weight `thresholds[0]` holds including 0. Mainnet is unobserved per D-16.
+- Threshold edge semantics (threshold 0 with no weighted signer; leftover signatures). **Answered** 2026-11-04 from the implementation by task 0.7, together with `hash(x)` satisfaction and whether an unreachable tier can exist. Section 7 states the rules and `ARCHITECTURE.md` 6.3 cites the lines.
+- The Horizon wire string for an `ed25519_signed_payload` signer, and whether `hash(x)` and pre-auth entries share the `ed25519_public_key` shape. No capture in this repository or in the corpus carries a signer key that does not start with `G`, and `decodeSigners` refuses an unmodeled type rather than guessing. Task 2.11.
 - SEP-1 field names, size limit, redirect rules. Horizon's long-term status. Public endpoint rate limits.
 - TOML dependency's transitive footprint.
 
