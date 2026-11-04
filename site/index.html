@@ -185,9 +185,9 @@
           <div class="section-head">
             <div>
               <p class="eyebrow">Shipped today</p>
-              <h2>Seven rules live, nine specified</h2>
+              <h2>Sixteen rules, all registered</h2>
             </div>
-            <p>The account, flag and identity families work now. Role-based severities and the signer and threshold rules are still open.</p>
+            <p>Task 3.1 landed the signer and threshold family on 2026-11-04, so the account, signer, threshold, flag and identity families all work now. Role-based severities are task 3.4.</p>
           </div>
           <div class="cards">
             <article class="card">
@@ -212,6 +212,21 @@
             </article>
             <article class="card">
               <span class="chip chip--live">Live</span>
+              <h3><code>sig-threshold-unreachable</code></h3>
+              <p>A threshold tier the account's own signers can never reach, so that tier can never authorize. HIGH, and it cannot be accepted: SetOptions validates ranges, so the ledger stores this state rather than refusing it.</p>
+            </article>
+            <article class="card">
+              <span class="chip chip--live">Live</span>
+              <h3><code>sig-no-signing-weight</code></h3>
+              <p>No signer above weight zero other than a pre-authorized transaction hash, so nothing on the account can authorize an operation again. HIGH, and INFO for an issuer that declares <code>expect_locked</code>.</p>
+            </article>
+            <article class="card">
+              <span class="chip chip--live">Live</span>
+              <h3><code>sig-hashx</code></h3>
+              <p>A <code>hash(x)</code> signer is a shared secret, and spending it puts the preimage in a published envelope. WARN, and HIGH when that entry's own weight reaches the medium tier.</p>
+            </article>
+            <article class="card">
+              <span class="chip chip--live">Live</span>
               <h3><code>id-no-home-domain</code></h3>
               <p>The policy declares a home domain and the account publishes none. WARN. The role table that would widen this trigger is task 3.4.</p>
             </article>
@@ -226,7 +241,7 @@
               <p>A readable <code>stellar.toml</code> does not name this account in <code>ACCOUNTS</code>. WARN. Entries that are not account addresses are counted, never echoed.</p>
             </article>
           </div>
-          <p class="table-caption"><a href="rules.html">See the full catalog with severities and rationale</a></p>
+          <p class="table-caption">Ten of the sixteen, chosen for what they prove about control. The full catalog, including the six rules that only fire against a declaration, is on <a href="rules.html">the rules page</a>.</p>
         </section>
 
         <section class="section">

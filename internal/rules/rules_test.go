@@ -45,11 +45,32 @@ func fixtureFlags(t *testing.T, name string) model.Flags {
 
 func boolean(v bool) *bool { return &v }
 
+// signable gives a snapshot the smallest state that raises no signer finding:
+// two weight-1 keys covering every tier. Task 3.1 made a bare snapshot carry
+// findings of its own, and most fixtures in this package are about something else.
+func signable(snapshot model.AccountSnapshot) model.AccountSnapshot {
+	snapshot.Thresholds = model.Thresholds{Low: 2, Medium: 2, High: 2}
+	snapshot.Signers = []model.Signer{
+		signerEntry(testAccount, model.SignerEd25519, 1),
+		signerEntry(secondAccount, model.SignerEd25519, 1),
+	}
+	return snapshot
+}
+
 func TestAllListsEveryRuleInOrder(t *testing.T) {
 	t.Parallel()
 	want := []string{
 		"acct-missing",
 		"acct-network-mismatch",
+		"sig-no-signing-weight",
+		"sig-threshold-unreachable",
+		"sig-threshold-order",
+		"sig-single-key-high",
+		"sig-hashx",
+		"sig-unexpected-signer",
+		"sig-missing-expected",
+		"sig-weight-drift",
+		"thr-drift",
 		"flag-drift",
 		"flag-undeclared-clawback",
 		"id-no-home-domain",
@@ -272,7 +293,7 @@ func TestEvaluateCountsOnlyWhatFires(t *testing.T) {
 			name: "clawback with no policy is one warning",
 			ctx: Context{
 				Account:  policy.Account{ID: testAccount},
-				Snapshot: model.AccountSnapshot{ID: testAccount, Flags: fixtureFlags(t, "8-clawback-undeclared.json")},
+				Snapshot: signable(model.AccountSnapshot{ID: testAccount, Flags: fixtureFlags(t, "8-clawback-undeclared.json")}),
 			},
 			wantIDs: []string{"flag-undeclared-clawback"},
 		},
@@ -285,7 +306,7 @@ func TestEvaluateCountsOnlyWhatFires(t *testing.T) {
 					AuthImmutable:   boolean(false),
 					ClawbackEnabled: boolean(false),
 				}},
-				Snapshot: model.AccountSnapshot{ID: testAccount, Flags: fixtureFlags(t, "1-default.json")},
+				Snapshot: signable(model.AccountSnapshot{ID: testAccount, Flags: fixtureFlags(t, "1-default.json")}),
 			},
 		},
 		{

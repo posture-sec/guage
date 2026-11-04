@@ -281,7 +281,11 @@ func TestIdentityGapsAreFactsNotFindings(t *testing.T) {
 	t.Parallel()
 	mismatched := listed(testAccount)
 	mismatched.Identity.NetworkPassphrase = text(mainnetPassphrase)
-	ctx := identityContext(declared("other.example"), model.AccountSnapshot{HomeDomain: testDomain}, mismatched)
+	// A neutral account rather than a bare snapshot: since task 3.1 an account
+	// with no signers or with one key that reaches a tier raises signer findings
+	// of its own, and this test is about the two identity gaps raising nothing.
+	neutral := signable(model.AccountSnapshot{HomeDomain: testDomain})
+	ctx := identityContext(declared("other.example"), neutral, mismatched)
 	if got := Evaluate(ctx); len(got) != 0 {
 		t.Fatalf("got %+v, want no findings while the gaps are unresolved", got)
 	}
@@ -305,7 +309,7 @@ func TestABlankObservedDomainIsNoDomain(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			snapshot := model.AccountSnapshot{HomeDomain: tc.value}
+			snapshot := signable(model.AccountSnapshot{HomeDomain: tc.value})
 			if got := Evaluate(identityContext(policy.Account{}, snapshot, nil)); len(got) != 0 {
 				t.Fatalf("findings = %+v, want none for a domain that is only whitespace", got)
 			}

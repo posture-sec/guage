@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Rule catalog · Gauge docs</title>
-  <meta name="description" content="All sixteen Gauge rules with their conditions and severities, including the seven account, flag and identity rules that are live today.">
+  <meta name="description" content="All sixteen Gauge rules with their conditions, severities and status, as registered in the shipped registry.">
   <meta property="og:type" content="article">
   <meta property="og:title" content="Rule catalog · Gauge docs">
-  <meta property="og:description" content="Sixteen checks, seven shipped: every rule has a stable ID, a condition and a severity.">
+  <meta property="og:description" content="Sixteen checks, all sixteen shipped: every rule has a stable ID, a condition and a severity.">
   <meta property="og:url" content="https://posture-sec.github.io/guage/rules.html">
   <meta property="og:image" content="https://posture-sec.github.io/guage/assets/og.png">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -102,65 +102,65 @@
                 <tr>
                   <td>Signers</td>
                   <td>sig-no-signing-weight</td>
-                  <td>No signer has weight above zero, so the account can never sign again.</td>
+                  <td>No signer above weight zero other than a pre-authorized transaction hash, so the account can never sign again. INFO for an issuer that declares <code>expect_locked</code>.</td>
                   <td><span class="chip chip--high">HIGH</span></td>
-                  <td><span class="chip">Specified</span></td>
+                  <td><span class="chip chip--live">Live</span></td>
                 </tr>
                 <tr>
                   <td>Signers</td>
                   <td>sig-threshold-unreachable</td>
-                  <td>Total signer weight is below a threshold, so that tier can never authorize.</td>
+                  <td>Total participating signer weight is below a threshold, so that tier can never authorize. One finding names every unreachable tier, and no <code>[[accept]]</code> entry can silence it.</td>
                   <td><span class="chip chip--high">HIGH</span></td>
-                  <td><span class="chip">Specified</span></td>
+                  <td><span class="chip chip--live">Live</span></td>
                 </tr>
                 <tr>
                   <td>Signers</td>
                   <td>sig-threshold-order</td>
                   <td>Thresholds do not satisfy low &lt;= medium &lt;= high.</td>
                   <td><span class="chip chip--warn">WARN</span></td>
-                  <td><span class="chip">Specified</span></td>
+                  <td><span class="chip chip--live">Live</span></td>
                 </tr>
                 <tr>
                   <td>Signers</td>
                   <td>sig-single-key-high</td>
-                  <td>One signer alone reaches the high threshold.</td>
-                  <td>By role</td>
-                  <td><span class="chip">Specified</span></td>
+                  <td>One signer alone reaches the high threshold. At the default high of 0 any single participating signature satisfies the tier, and the evidence says so.</td>
+                  <td>INFO*</td>
+                  <td><span class="chip chip--live">Live</span></td>
                 </tr>
                 <tr>
                   <td>Signers</td>
                   <td>sig-hashx</td>
-                  <td>A <code>hash(x)</code> signer exists; HIGH if it alone reaches medium.</td>
-                  <td>WARN or HIGH</td>
-                  <td><span class="chip">Specified</span></td>
+                  <td>A <code>hash(x)</code> signer exists; HIGH when its own weight reaches a medium threshold above zero, because using it publishes the secret.</td>
+                  <td><span class="chip chip--warn">WARN</span> or <span class="chip chip--high">HIGH</span></td>
+                  <td><span class="chip chip--live">Live</span></td>
                 </tr>
                 <tr>
                   <td>Signers</td>
                   <td>sig-unexpected-signer</td>
                   <td>A signer is not in <code>expected_signers</code>, only when the list is declared.</td>
-                  <td>By role</td>
-                  <td><span class="chip">Specified</span></td>
+                  <td>HIGH*</td>
+                  <td><span class="chip chip--live">Live</span></td>
                 </tr>
                 <tr>
                   <td>Signers</td>
                   <td>sig-missing-expected</td>
-                  <td>A declared signer is absent from the chain.</td>
+                  <td>A declared signer is absent from the chain, or the chain shows it at weight zero.</td>
                   <td><span class="chip chip--high">HIGH</span></td>
-                  <td><span class="chip">Specified</span></td>
+                  <td><span class="chip chip--live">Live</span></td>
                 </tr>
                 <tr>
                   <td>Signers</td>
                   <td>sig-weight-drift</td>
-                  <td>A declared signer's weight differs from the chain.</td>
-                  <td>By role</td>
-                  <td><span class="chip">Specified</span></td>
+                  <td>A signer both sides name holds a different weight than declared. A key appears in one of the three signer comparison rules only.</td>
+                  <td>WARN*</td>
+                  <td><span class="chip chip--live">Live</span></td>
                 </tr>
                 <tr>
                   <td>Thresholds</td>
                   <td>thr-drift</td>
                   <td>Declared thresholds differ from the chain.</td>
-                  <td>By role</td>
-                  <td><span class="chip">Specified</span></td>
+                  <td>WARN*</td>
+                  <td><span class="chip chip--live">Live</span></td>
                 </tr>
                 <tr>
                   <td>Flags</td>
@@ -200,12 +200,12 @@
               </tbody>
             </table>
           </div>
-          <p class="table-caption">* The two live flag rules use WARN for every role today. The specified catalog makes flag drift HIGH for an issuer and clawback WARN, raised to HIGH for an issuer. Role overrides are task 3.4.</p>
+          <p class="table-caption">* The catalog gives these a severity by role, and the role map is task 3.4. Until it lands each emits one fixed value: flag drift and an undeclared clawback at WARN, an unexpected signer at HIGH, weight and threshold drift at WARN, and a single key holding the account at INFO, because a fresh account with thresholds 0/0/0 and one weighted key is in that shape and a plain <code>check</code> declares no role. 3.4 raises the single-key case to HIGH for an issuer or treasury and to WARN for a merchant or distribution: the same statement at a different weight, not a new check.</p>
         </section>
 
         <section class="section">
-          <h2>The seven live rules</h2>
-          <p>These are registered in <code>internal/rules</code>, covered by positive and negative fixture cases, and exercised end to end by the CLI tests.</p>
+          <h2>Rule articles</h2>
+          <p>These seven are registered in <code>internal/rules</code>, covered by positive and negative fixture cases, and exercised end to end by the CLI tests. The nine signer and threshold rules that landed on 2026-11-04 are in the table above with their conditions and severities; their articles arrive with task 4.2.</p>
 
           <article class="rule">
             <div class="rule-head">
@@ -329,9 +329,9 @@
 
         <section class="section">
           <h2>What is not shipped</h2>
-          <p>The nine specified rules are a contract for the next phases, not behavior you can rely on today. The signer and threshold rules have their semantics settled: task 0.7 closed on 2026-11-04 by reading the code that enforces them, and <code>internal/threshold</code> computes reachability and the minimum signer count from that. What is not shipped is the rules themselves, task 3.1. Role-based severities are task 3.4.</p>
+          <p>All sixteen rules in the table are registered and evaluated on every run. What is not shipped is severity by role (task 3.4) and the golden fixture set for every Appendix B scenario (task 3.6), and the rule articles below cover the seven that landed before the signer family.</p>
           <div class="note">
-            <p><strong>Read the status before trusting a pass.</strong> A run evaluates the seven rules above. A clean result means those seven agreed with your policy; it says nothing about signers, thresholds or any rule marked Specified.</p>
+            <p><strong>Read the status before trusting a pass.</strong> A clean result means all sixteen checks agreed with what the chain showed and with what your policy declared. It is not a statement about key custody: on-chain data cannot show who holds a key, and ten of the sixteen rules compare against a declaration, so a policy that says nothing about signers, thresholds or flags gets no answer about drift.</p>
           </div>
           <p><a href="status.html">Current implementation status</a> · <a href="policy.html">How to declare expectations</a></p>
         </section>

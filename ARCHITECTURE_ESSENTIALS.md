@@ -84,6 +84,10 @@ Verified from the protocol implementation by task 0.7 on 2026-11-04, at stellar-
 `acct-missing`, `acct-network-mismatch`, `sig-no-signing-weight`, `sig-threshold-unreachable`, `sig-threshold-order`, `sig-single-key-high`, `sig-hashx`, `sig-unexpected-signer`, `sig-missing-expected`, `sig-weight-drift`, `thr-drift`, `flag-drift`, `flag-undeclared-clawback`, `id-no-home-domain`, `id-toml-unreachable`, `id-toml-account-unlisted`.
 
 - Role profiles change severity (PRD Appendix A). Not acceptable via `[[accept]]`: `acct-missing`, `acct-network-mismatch`, `sig-threshold-unreachable`.
+- All sixteen are live as of 2026-11-04: task 3.1 landed the nine signer and threshold rules in `internal/rules/signers.go` and `internal/rules/thresholds.go`, so every rule ships at its baseline severity until 3.4 applies the role map.
+- The signer and threshold rules call `internal/threshold` and never restate the arithmetic. If you find a weight sum, a 20 cap or a zero-weight filter written inside a rule, that is the bug.
+- `sig-single-key-high` is INFO today, on purpose: a default account has thresholds 0/0/0 and one weighted key, so the shape is nearly universal and `check` declares no role. Do not raise it to HIGH before 3.4, and do not suppress it.
+- The three comparison rules each put a key in exactly one finding, and they fire only when `expected_signers` is declared. A declared weight of 0 is an intent to remove, not a weight to compare.
 
 ## 9. Exit codes [8]
 

@@ -105,7 +105,7 @@
         <section class="section">
           <h2>The master key is a signer</h2>
           <p>Horizon lists the account's master key inside the <code>signers</code> array, not as a separate field. Its weight is what older Stellar material calls the master weight. A master key with weight 0 cannot sign, even though it still owns the account in every other sense.</p>
-          <p>Stellar also supports <code>hash(x)</code> and pre-authorized transaction signers. Gauge decodes and labels those types, but the signer rules that would judge them are not shipped yet. The semantics they need were settled on 2026-11-04 from the protocol implementation rather than from a transaction this project forbids itself to submit, and <code>internal/threshold</code> now computes reachability and the minimum signer count from them. Task 3.1 registers the rules.</p>
+          <p>Stellar also supports <code>hash(x)</code> and pre-authorized transaction signers. Gauge decodes and labels those types, and since task 3.1 the signer and threshold rules judge them: <code>sig-hashx</code> reports a shared-secret signer, a <code>T...</code> pre-authorized hash is excluded from standing control by <code>sig-no-signing-weight</code> and <code>sig-threshold-unreachable</code>, and an entry at weight zero is read as an intent to remove rather than a weight. The semantics those rules assert were settled on 2026-11-04 from the protocol implementation rather than from a transaction this project forbids itself to submit, and <code>internal/threshold</code> computes reachability and the minimum signer count from them in one place.</p>
         </section>
 
         <section class="section">
