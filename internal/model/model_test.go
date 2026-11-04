@@ -42,6 +42,7 @@ func TestAccountSnapshotJSONRoundTrip(t *testing.T) {
 				{Key: "master-reference", Type: model.SignerEd25519, Weight: 0},
 				{Key: "hash-reference", Type: model.SignerHashX, Weight: 2, Sponsor: "sponsor-reference"},
 				{Key: "preauth-reference", Type: model.SignerPreAuthTx, Weight: 1},
+				{Key: "payload-reference", Type: model.SignerSignedPayload, Weight: 3},
 			},
 			Flags:      model.Flags{AuthRequired: true, AuthRevocable: true, ClawbackEnabled: true},
 			HomeDomain: "untrusted\u001b[31m.example", Sponsor: "sponsor-reference",
