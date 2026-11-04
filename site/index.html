@@ -59,7 +59,7 @@
         <a href="status.html">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-03<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-04<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -187,7 +187,7 @@
               <p class="eyebrow">Shipped today</p>
               <h2>Sixteen rules, all registered</h2>
             </div>
-            <p>Task 3.1 landed the signer and threshold family on 2026-11-04, so the account, signer, threshold, flag and identity families all work now. Role-based severities are task 3.4.</p>
+            <p>Task 3.1 landed the signer and threshold family on 2026-11-04, so the account, signer, threshold, flag and identity families all work now, and task 3.4 gave the same day's report its weights by declared role.</p>
           </div>
           <div class="cards">
             <article class="card">
@@ -203,12 +203,12 @@
             <article class="card">
               <span class="chip chip--live">Live</span>
               <h3><code>flag-drift</code></h3>
-              <p>A declared flag disagrees with the chain. Only declared flags are compared. WARN baseline, HIGH for an issuer once role profiles land.</p>
+              <p>A declared flag disagrees with the chain. Only declared flags are compared. WARN, and HIGH for an issuer.</p>
             </article>
             <article class="card">
               <span class="chip chip--live">Live</span>
               <h3><code>flag-undeclared-clawback</code></h3>
-              <p>Clawback is enabled and the policy does not declare it. WARN baseline, HIGH for an issuer once role profiles land.</p>
+              <p>Clawback is enabled and the policy does not declare it. WARN, and HIGH for an issuer.</p>
             </article>
             <article class="card">
               <span class="chip chip--live">Live</span>
@@ -228,7 +228,7 @@
             <article class="card">
               <span class="chip chip--live">Live</span>
               <h3><code>id-no-home-domain</code></h3>
-              <p>The policy declares a home domain and the account publishes none. WARN. The role table that would widen this trigger is task 3.4.</p>
+              <p>A declared home domain the chain does not show is a WARN, and an <code>issuer</code> that publishes nothing raises it with no declaration behind it.</p>
             </article>
             <article class="card">
               <span class="chip chip--live">Live</span>
@@ -241,7 +241,7 @@
               <p>A readable <code>stellar.toml</code> does not name this account in <code>ACCOUNTS</code>. WARN. Entries that are not account addresses are counted, never echoed.</p>
             </article>
           </div>
-          <p class="table-caption">Ten of the sixteen, chosen for what they prove about control. The full catalog, including the six rules that only fire against a declaration, is on <a href="rules.html">the rules page</a>.</p>
+          <p class="table-caption">Ten of the sixteen, chosen for what they prove about control. The full catalog, including the five rules that only fire against a declaration and the identity rule an <code>issuer</code> role raises without one, is on <a href="rules.html">the rules page</a>.</p>
         </section>
 
         <section class="section">

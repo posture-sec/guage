@@ -59,7 +59,7 @@
         <a href="status.html">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-03<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-04<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -90,6 +90,7 @@ endpoints = ["https://horizon-testnet.stellar.org"]
 <span class="c"># Canonical G address. M and C addresses are rejected.</span>
 id = "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
 name = "treasury"
+<span class="c"># A role weights the report; it does not change what is checked.</span>
 role = "treasury"
 
 expected_signers = [
@@ -98,6 +99,7 @@ expected_signers = [
 expected_thresholds = { low = 1, medium = 2, high = 2 }
 expected_flags = { auth_required = false, auth_revocable = false, auth_immutable = false, clawback = false }
 home_domain = "example.com"
+<span class="c"># expect_locked is read for an issuer alone.</span>
 expect_locked = false
 
 <span class="c"># Only the owner adds accept entries, and always with a reason.</span>
@@ -138,17 +140,17 @@ expect_locked = false
               <tbody>
                 <tr><td>id</td><td>G address</td><td>Required. The canonical StrKey account ID. Multiplexed <code>M</code> and contract <code>C</code> addresses are refused with a specific message.</td></tr>
                 <tr><td>name</td><td>String</td><td>Optional operator label. Gauge does not use it in any comparison.</td></tr>
-                <tr><td>role</td><td>String</td><td><code>issuer</code>, <code>treasury</code>, <code>distribution</code>, <code>merchant</code> or <code>other</code>. Defaults to <code>other</code>. Role severity overrides are not applied yet.</td></tr>
+                <tr><td>role</td><td>String</td><td><code>issuer</code>, <code>treasury</code>, <code>distribution</code>, <code>merchant</code> or <code>other</code>. Defaults to <code>other</code>, which is also what <code>check</code> uses. A role raises the severities its Appendix A row names and never lowers one, and an <code>issuer</code> is expected to publish a home domain whether or not you declared one.</td></tr>
                 <tr><td>expected_signers</td><td>Array</td><td>Objects with a <code>key</code> and an integer <code>weight</code> from 0 to 255. Keys may be <code>G</code>, <code>T</code>, <code>X</code> or <code>P</code> strkeys. A duplicate key is rejected.</td></tr>
                 <tr><td>expected_thresholds</td><td>Table</td><td>Any of <code>low</code>, <code>medium</code> and <code>high</code>, each an integer from 0 to 255. Omitted tiers are not compared.</td></tr>
                 <tr><td>expected_flags</td><td>Table</td><td>Any of <code>auth_required</code>, <code>auth_revocable</code>, <code>auth_immutable</code> and <code>clawback</code>, each a boolean. Omitted flags are not compared.</td></tr>
                 <tr><td>home_domain</td><td>String</td><td>A bare host name. URLs, IP addresses, a trailing dot and characters such as <code>/</code>, <code>@</code>, <code>:</code> and <code>?</code> are rejected. Declaring it is what lets <code>id-no-home-domain</code> fire when the chain shows none.</td></tr>
-                <tr><td>expect_locked</td><td>Boolean</td><td>Declares that a zero-weight, nonsigning issuer is intended. Parsed today; no live rule reads it yet.</td></tr>
+                <tr><td>expect_locked</td><td>Boolean</td><td>Declares that a zero-weight, nonsigning issuer is intended. <code>sig-no-signing-weight</code> reports INFO when an <code>issuer</code> declares it true, and HIGH for every other role, where the word is stored and read by nothing.</td></tr>
               </tbody>
             </table>
           </div>
           <div class="note">
-            <p><strong>Most expectations do not run yet.</strong> Seven rules are live: they read the network, the account's existence, its flags and its published <code>stellar.toml</code>. A declared <code>home_domain</code> is compared today, by <code>id-no-home-domain</code>, and an account that publishes one is fetched and checked. <code>expected_signers</code>, <code>expected_thresholds</code> and <code>expect_locked</code> are validated and stored, but no shipped rule compares them. Declaring them now prepares the file for later tasks without changing today's result.</p>
+            <p><strong>Every expectation you can write is compared.</strong> All sixteen rules are registered, and the five expectation kinds each reach one: <code>expected_signers</code> against the chain's signers (<code>sig-unexpected-signer</code>, <code>sig-missing-expected</code>, <code>sig-weight-drift</code>), <code>expected_thresholds</code> against <code>thr-drift</code>, <code>expected_flags</code> against <code>flag-drift</code>, <code>home_domain</code> against <code>id-no-home-domain</code>, and <code>expect_locked</code> against <code>sig-no-signing-weight</code> for an issuer. A declared <code>role</code> then weights whatever those rules found. What a policy cannot yet buy is the facts a zero-config run prints (task 3.7) and the golden fixtures that prove each scenario's whole report (task 3.6).</p>
           </div>
         </section>
 
@@ -173,7 +175,7 @@ expect_locked = false
 
         <section class="section">
           <h2>Accepting a known risk</h2>
-          <p>An acceptance marks one finding as known without hiding it. The report keeps the finding, labels it accepted, and leaves it out of the exit-code decision.</p>
+          <p>An acceptance marks one finding as known without hiding it. The report keeps the finding, labels it accepted, and leaves it out of the exit-code decision. Matching is on rule and account, and a role's severity is applied before the match, so giving an account a role never un-accepts a risk you had already recorded.</p>
           <div class="table-wrap">
             <table>
               <thead>

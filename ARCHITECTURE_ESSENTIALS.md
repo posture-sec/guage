@@ -1,6 +1,6 @@
 # ARCHITECTURE_ESSENTIALS: Gauge (working name)
 
-Status: design target v0.1; implementation is partway through Phase 3. `internal/model` (types, severity names, finding fingerprints, ordering), `internal/strkey` (SEP-23 classification and seed detection), `internal/sanitize` (control stripping, IDN flag, markdown escaping), the `internal/policy` loader (strict TOML, seed rejection, network passphrases), the `internal/report` renderers (text, JSON, limits footer, exit mapping), `internal/source` (Horizon client with caps, retries, strict decode, passphrase comparison), `internal/sep1` (hostname validation, dial-time SSRF guard, redirect and size limits, TOML parse), the `internal/run` orchestrator and the `cmd/stellar-gauge` CLI (`check`, `audit`, `version`) are implemented and tested; `internal/rules` carries `acct-missing`, `acct-network-mismatch`, `flag-drift`, `flag-undeclared-clawback`, `id-no-home-domain`, `id-toml-unreachable` and `id-toml-account-unlisted`, so a run can exit 1; the threshold math and the signer and threshold rules are still pending. Full detail: `ARCHITECTURE.md` (section numbers in brackets). Scope: `PRD.md`. Work queue: `ROADMAP.md`. File locations: `project_structure.md`.
+Status: design target v0.1; implementation is partway through Phase 3. `internal/model` (types, severity names, finding fingerprints, ordering), `internal/strkey` (SEP-23 classification and seed detection), `internal/sanitize` (control stripping, IDN flag, markdown escaping), the `internal/policy` loader (strict TOML, seed rejection, network passphrases, the Appendix A role floors), the `internal/report` renderers (text, JSON, limits footer, exit mapping), `internal/source` (Horizon client with caps, retries, strict decode, passphrase comparison), `internal/sep1` (hostname validation, dial-time SSRF guard, redirect and size limits, TOML parse), `internal/threshold` (the protocol's reachability and minimum-signer math), the `internal/run` orchestrator and the `cmd/stellar-gauge` CLI (`check`, `audit`, `version`) are implemented and tested; `internal/rules` carries all sixteen v0.1 rules, so a run can exit 1 on a missing account, a network mismatch, a control configuration that cannot authorize, signer and threshold drift, flag drift, an undeclared clawback or an unverifiable identity claim, and a declared role raises the severities the catalog weights by role. Not yet: the facts report (3.7), Appendix B golden outputs (3.6), and the P1 rules. Full detail: `ARCHITECTURE.md` (section numbers in brackets). Scope: `PRD.md`. Work queue: `ROADMAP.md`. File locations: `project_structure.md`.
 
 ## 0. Roadmap rule (read first)
 
@@ -62,9 +62,9 @@ Status: design target v0.1; implementation is partway through Phase 3. `internal
 - `Severity`: Info < Warn < High. `Role`: issuer, treasury, distribution, merchant, other.
 - `Signer`: Key, Type (Ed25519, HashX, PreAuthTx), Weight, Sponsor. `Thresholds`: Low, Medium, High. `Flags`: AuthRequired, AuthRevocable, AuthImmutable, ClawbackEnabled.
 - `AccountSnapshot`: ID, Network, Endpoint, Ledger, Sequence, Thresholds, Signers, Flags, HomeDomain, Sponsor, Balances.
-- `Finding`: RuleID, Severity, Account, Message, Evidence, Fingerprint (`sha256(rule|account|evidence)`), Accepted.
+- `Finding`: RuleID, Severity, Account, Message, Evidence, Fingerprint (`sha256(rule|account|evidence)`), Accepted. Severity is outside the hash, which is what lets a role re-weight a finding without moving the key an acceptance matches on.
 - `NetworkInfo`: Passphrase, Ledger. `AccountReport`: Snapshot, Findings. `Report`: ToolVersion, Network, Ledger, Accounts, typed ExitCode.
-- Config `gauge.toml`: `version`, `network`, `endpoints`, `[[account]]` (id, name, role, expected_signers, expected_thresholds, expected_flags, home_domain, expect_locked), `[[accept]]` (rule, account, reason, optional expires). Pointer fields preserve omitted expectations; strict decode, seed rejection and per-entry validation are implemented, while role severity adjustments remain task 3.4.
+- Config `gauge.toml`: `version`, `network`, `endpoints`, `[[account]]` (id, name, role, expected_signers, expected_thresholds, expected_flags, home_domain, expect_locked), `[[accept]]` (rule, account, reason, optional expires). Pointer fields preserve omitted expectations; strict decode, seed rejection, per-entry validation and the role severity floors are all implemented.
 
 ## 7. Threshold math [6.3]
 
@@ -83,11 +83,13 @@ Verified from the protocol implementation by task 0.7 on 2026-11-04, at stellar-
 
 `acct-missing`, `acct-network-mismatch`, `sig-no-signing-weight`, `sig-threshold-unreachable`, `sig-threshold-order`, `sig-single-key-high`, `sig-hashx`, `sig-unexpected-signer`, `sig-missing-expected`, `sig-weight-drift`, `thr-drift`, `flag-drift`, `flag-undeclared-clawback`, `id-no-home-domain`, `id-toml-unreachable`, `id-toml-account-unlisted`.
 
-- Role profiles change severity (PRD Appendix A). Not acceptable via `[[accept]]`: `acct-missing`, `acct-network-mismatch`, `sig-threshold-unreachable`.
-- All sixteen are live as of 2026-11-04: task 3.1 landed the nine signer and threshold rules in `internal/rules/signers.go` and `internal/rules/thresholds.go`, so every rule ships at its baseline severity until 3.4 applies the role map.
+- Role profiles raise severity to the Appendix A floor and never lower it; `policy.SeverityFor` is the only reader of that table and `internal/run` applies it once per account, before accepts. Not acceptable via `[[accept]]`: `acct-missing`, `acct-network-mismatch`, `sig-threshold-unreachable`.
+- All sixteen are live as of 2026-11-04: task 3.1 landed the nine signer and threshold rules in `internal/rules/signers.go` and `internal/rules/thresholds.go`, and task 3.4 raised the four the catalog phrases by role at the run rather than inside a rule.
 - The signer and threshold rules call `internal/threshold` and never restate the arithmetic. If you find a weight sum, a 20 cap or a zero-weight filter written inside a rule, that is the bug.
-- `sig-single-key-high` is INFO today, on purpose: a default account has thresholds 0/0/0 and one weighted key, so the shape is nearly universal and `check` declares no role. Do not raise it to HIGH before 3.4, and do not suppress it.
+- `sig-single-key-high` emits INFO, which is Appendix A's `other` row and what `check` keeps getting because it declares no role. A role raises it, at the run. Do not move the table into the rule and do not suppress the finding.
 - The three comparison rules each put a key in exactly one finding, and they fire only when `expected_signers` is declared. A declared weight of 0 is an intent to remove, not a weight to compare.
+- `id-no-home-domain` has two triggers and one finding: a domain a policy declared that the chain does not show, and, for `issuer` alone, no domain at all. `expect_locked` is read for `issuer` alone, and no role row lists `sig-no-signing-weight`, so the lock declaration is not undone by adjustment.
+- An `[[accept]]` expiry is a date read off UTC: the day named is the last day it holds, midnight UTC is the cutover, and a value that is not a date counts as expired rather than as open.
 
 ## 9. Exit codes [8]
 

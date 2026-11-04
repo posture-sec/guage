@@ -47,8 +47,9 @@ guage/
       {sanitize_test,fuzz_test}.go         # injection classes, IDN, fencing; FuzzText and FuzzFenced
     policy/
       {config,expectations,accept}.go      # policy declarations, no decoding or acceptance logic
-      {decode,validate,roles}.go           # strict loading, rejection kinds and network passphrases (2.4, 3.4)
-      {config_test,accept_test}.go         # loader and rejection tests; acceptance tests pending (3.4)
+      {decode,validate,roles}.go           # strict loading, rejection kinds, network passphrases and the Appendix A role floors (2.4, 3.4)
+      config_test.go                       # loader tests, including that the shipped example policy loads (2.4)
+      {accept,roles}_test.go               # acceptance refusals and the role-floor table (3.4)
     source/
       source.go                           # Source interface and the passphrase comparison
       {horizon,http,errors}.go             # Horizon client: caps, retries, strict decode (2.7)
@@ -57,7 +58,7 @@ guage/
       {fetch,guard,parse}.go               # guarded identity acquisition: hostname check, dial-time IP guard, caps (3.5)
       {fetch_test,guard_test,parse_test}.go # SSRF, rebinding, redirect, size, sanitizer-boundary and parse tests (3.5)
     rules/
-      {rules,account,signers,thresholds,flags,identity}.go # registry and pure rule boundaries (3.1, 3.2, 3.3, 3.5 done)
+      {rules,account,signers,thresholds,flags,identity}.go # registry and pure rule boundaries; identity and signers read the two role expectations 3.4 defines (3.1 to 3.5 done)
       facts.go                          # empty until 3.7: fact lines for the zero-config report
       {rules,identity,signers,thresholds}_test.go # positive and negative cases, guard proofs and a captured account (3.1 to 3.5)
     report/
@@ -65,14 +66,15 @@ guage/
       markdown.go                         # P1 output (5.3)
       report_test.go                      # golden files, sanitization, determinism and exit tests
     run/
-      {run,check,audit}.go                 # P0 orchestration: passphrase, bounded fetch, identity fetch, accepts (2.8, 3.5)
+      {run,check,audit}.go                 # P0 orchestration: passphrase, bounded fetch, identity fetch, role severity, accepts (2.8, 3.4, 3.5)
       {compare,snapshot,diff}.go           # P1 orchestration (5.1, 5.2)
-      run_test.go                         # end-to-end orchestration with a fake source and an offline fetcher (2.8, 3.5)
+      run_test.go                         # end-to-end orchestration with a fake source and an offline fetcher, plus the UTC expiry judgement (2.8, 3.4, 3.5)
+      roles_test.go                       # one account at five roles: severity, fingerprint, accepts and the lock declaration (3.4)
 
   testdata/
     horizon/README.md                     # capture provenance, ledgers, what could not be captured (0.6)
     horizon/{root-testnet,1-default,7-extra-signer,8-clawback-undeclared,10-not-found}.json
-    policy/.gitkeep                       # acceptance fixtures pending (3.4)
+    policy/.gitkeep                       # still empty: the Appendix B scenario set is 3.6, and today's acceptance and role cases are inline TOML in `internal/policy`
     golden/{sample.text,sample.json}.golden # regenerated only with `-update` and reviewed (2.6)
 
   docs/

@@ -291,6 +291,103 @@ func TestRunAccepts(t *testing.T) {
 	}
 }
 
+// An acceptance's expiry is a date, and a date means one thing across a team only
+// if everyone reads it off the same clock. A run judges it against the UTC date of
+// its own instant, so nobody's timezone can widen or narrow the window a risk was
+// accepted for. The day named is the last day the acceptance holds and the cutover
+// is midnight UTC. The two fixed zones are what makes this a test rather than an
+// assertion about Format: each row is one clock reading and one UTC reading, and the
+// answer follows the UTC one.
+func TestAcceptExpiryIsJudgedInUTC(t *testing.T) {
+	t.Parallel()
+	expiry := "2026-11-04"
+	// A value Load refuses, carried here because the orchestrator's own guard is
+	// what must not treat an unreadable expiry as no expiry.
+	unreadable := "the 4th of November"
+	east := time.FixedZone("UTC+8", 8*60*60)
+	west := time.FixedZone("UTC-5", -5*60*60)
+	for _, tc := range []struct {
+		name    string
+		now     time.Time
+		expires *string
+		want    bool
+	}{
+		{
+			name:    "the expiry day itself is still covered",
+			now:     time.Date(2026, 11, 4, 0, 0, 1, 0, time.UTC),
+			expires: &expiry,
+			want:    true,
+		},
+		{
+			name:    "the first minute after it is not",
+			now:     time.Date(2026, 11, 5, 0, 0, 0, 0, time.UTC),
+			expires: &expiry,
+			want:    false,
+		},
+		{
+			// Still the 4th on this clock, already the 5th in UTC.
+			name:    "a clock behind UTC cannot widen the window",
+			now:     time.Date(2026, 11, 4, 20, 0, 0, 0, west),
+			expires: &expiry,
+			want:    false,
+		},
+		{
+			// Already the 5th on this clock, still the 4th in UTC.
+			name:    "a clock ahead of UTC cannot narrow it",
+			now:     time.Date(2026, 11, 5, 2, 0, 0, 0, east),
+			expires: &expiry,
+			want:    true,
+		},
+		{
+			name:    "no expiry holds until the entry is withdrawn",
+			expires: nil,
+			want:    true,
+		},
+		{
+			name:    "an expiry that is not a date reads as expired",
+			expires: &unreadable,
+			want:    false,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			fs := &fakeSource{
+				info:      model.NetworkInfo{Passphrase: testnet, Ledger: 1},
+				snapshots: map[string]model.AccountSnapshot{accountOne: snapshot(accountOne, 1), accountTwo: snapshot(accountTwo, 2)},
+			}
+			job := baseJob(fs)
+			job.Now = func() time.Time { return tc.now }
+			job.Accepts = []policy.Acceptance{{
+				Rule:    "flag-drift",
+				Account: accountOne,
+				Reason:  "the flag is what the integrator asked for",
+				Expires: tc.expires,
+			}}
+			job.Evaluate = func(c rules.Context) []model.Finding {
+				if c.Snapshot.ID != accountOne {
+					return nil
+				}
+				return []model.Finding{model.NewFinding(
+					"flag-drift", model.SevWarn, c.Snapshot.ID,
+					"a declared flag is not what the chain shows",
+					"auth_required declared false, observed true",
+				)}
+			}
+			result, err := Run(context.Background(), job)
+			if err != nil {
+				t.Fatalf("Run: %v", err)
+			}
+			if len(result.Accounts[0].Findings) != 1 {
+				t.Fatalf("findings = %+v, want the one drift finding", result.Accounts[0].Findings)
+			}
+			if got := result.Accounts[0].Findings[0].Accepted; got != tc.want {
+				t.Errorf("accepted = %v at %s (UTC %s), want %v",
+					got, tc.now.Format(time.RFC3339), tc.now.UTC().Format("2006-01-02"), tc.want)
+			}
+		})
+	}
+}
+
 func TestRunFailOn(t *testing.T) {
 	t.Parallel()
 	cases := []struct {

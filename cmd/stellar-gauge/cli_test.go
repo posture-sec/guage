@@ -482,8 +482,8 @@ endpoints = ["` + endpointURL + `"]
 
 [[account]]
 id = "` + id + `"
-name = "treasury"
-role = "treasury"
+name = "audited"
+role = "other"
 `
 }
 
@@ -497,6 +497,54 @@ func TestAuditRunsFromAPolicyFile(t *testing.T) {
 	}
 	if !strings.Contains(stdout, "account "+accountOne) {
 		t.Errorf("stdout does not mention the audited account:\n%s", stdout)
+	}
+}
+
+// PRD FR-06's Done-when, in the CLI: one account, one chain shape, two declared
+// roles. The served fixture is Appendix B scenario 1, a default account whose
+// single key reaches a high threshold of 0, which `other` reports at INFO and
+// `treasury` at HIGH. The fingerprint is the same in both runs, because the
+// finding is the same fact and only its weight moved.
+func TestAuditRoleChangesSeverityNotFingerprint(t *testing.T) {
+	t.Parallel()
+	srv := startEndpoint(t, endpoint{})
+	var fingerprints []string
+	for _, tc := range []struct {
+		role     string
+		wantCode int
+		wantSev  string
+	}{
+		{"other", 0, "info"},
+		{"treasury", 1, "high"},
+	} {
+		body := strings.Replace(policyFor(srv.URL), `role = "other"`, `role = "`+tc.role+`"`, 1)
+		code, stdout, stderr := execCLI(t, "audit", "--config", writePolicy(t, body), "--format", "json")
+		if code != tc.wantCode {
+			t.Fatalf("role %s: exit = %d, want %d (stderr %q)", tc.role, code, tc.wantCode, stderr)
+		}
+		var payload struct {
+			Accounts []struct {
+				Findings []struct {
+					RuleID      string `json:"rule_id"`
+					Severity    string `json:"severity"`
+					Fingerprint string `json:"fingerprint"`
+				} `json:"findings"`
+			} `json:"accounts"`
+		}
+		if err := json.Unmarshal([]byte(stdout), &payload); err != nil {
+			t.Fatalf("role %s: stdout is not JSON: %v\n%s", tc.role, err, stdout)
+		}
+		if len(payload.Accounts) != 1 || len(payload.Accounts[0].Findings) != 1 {
+			t.Fatalf("role %s: want exactly one finding, got %+v", tc.role, payload.Accounts)
+		}
+		finding := payload.Accounts[0].Findings[0]
+		if finding.RuleID != "sig-single-key-high" || finding.Severity != tc.wantSev {
+			t.Errorf("role %s: finding = %s/%s, want sig-single-key-high/%s", tc.role, finding.RuleID, finding.Severity, tc.wantSev)
+		}
+		fingerprints = append(fingerprints, finding.Fingerprint)
+	}
+	if fingerprints[0] != fingerprints[1] {
+		t.Errorf("a role moved the fingerprint, so an accepted risk would not stay recognized: %s vs %s", fingerprints[0], fingerprints[1])
 	}
 }
 

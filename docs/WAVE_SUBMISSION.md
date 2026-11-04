@@ -12,10 +12,10 @@ Working notes for applying `posture-sec/guage` to a Stellar Wave cycle. Program 
 
 ## 2. Why this repository is not applying yet
 
-One hard reason and one polish gap.
+Two hard reasons.
 
 1. No cycle is open, so there is nothing to apply into today.
-2. The rule set is thin. As of 2026-11-03 `stellar-gauge check` reads a real account through the Horizon client, fetches its published `stellar.toml` through the dial-time guard and evaluates seven rules, so exit `1` is reachable: a missing account and a wrong network are HIGH findings, and declared flag drift, an undeclared clawback and the identity checks are warnings under `--fail-on warn` (`id-no-home-domain` keys on a declaration, so only `audit` can raise it). Signer and threshold rules plus role-based severities are still open (3.1, 3.4), so a demo shows account, flag and identity findings rather than the full rule catalog. A submission is stronger once a signer rule family lands, and the downside is asymmetric: a rejected repository cannot simply be re-applied, appeals go through the dashboard, are capped at three, and carry waiting periods.
+2. Nothing has been run by anyone but its author. As of 2026-11-04 the catalog is complete for v0.1: `stellar-gauge` evaluates all sixteen rules, task 3.1 landed the nine signer and threshold checks and task 3.4 gave a declared role its weights, so `check` reports an unreachable tier on its own and `audit` reports drift against a declaration. What a submission would still be showing is a rule set no operator has read a finding from, and gate G4 asks for exactly that: real issuer, treasury and merchant accounts, every finding reviewed for whether it is a false positive, which is task 4.1. The two Phase 3 tasks left, the Appendix B golden fixtures (3.6) and the facts report (3.7), stand between this repository and that run, and there is still no tag for a reviewer to point at. The downside is unchanged and asymmetric: a rejected repository cannot simply be re-applied, appeals go through the dashboard, are capped at three, and carry waiting periods.
 
 ## 3. Gate list before clicking Apply
 
