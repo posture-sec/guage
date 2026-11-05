@@ -98,17 +98,19 @@ guage/
     roadmap_progress.sh                   # computes the progress table; --check fails when stale   (1.9)
     test_roadmap_gate.sh                  # eight cases for both scripts, on throwaway git repos    (1.9)
     generate_issues.sh                    # roadmap to GitHub issues; --check, --apply, --update   (1.13, 1.14)
+    test_issue_shape.sh                   # every generated body carries the PI-1 shape            (1.25)
 
   .github/
     CODEOWNERS                            # owner on every path, extra weight on the protected ones (1.3)
     dependabot.yml                        # gomod and actions, grouped weekly                       (1.6)
     pull_request_template.md              # includes the ROADMAP checkbox                           (1.8)
     ISSUE_TEMPLATE/
-      config.yml                          # routes security reports away from issues
+      config.yml                          # routes security reports away from issues, links PI-1
       bug.yml                             # bug form: command, exit code, policy excerpt, version
+      task.yml                            # task form: the nine PI-1 sections prefilled            (1.25)
     workflows/
       ci.yml                              # ci / go (gofmt, vet, build, test -race, staticcheck) and ci / vuln (1.5)
-      roadmap-check.yml                   # roadmap-check / gate: touched, table, backlog rows, self-test (1.9, 1.14)
+      roadmap-check.yml                   # roadmap-check / gate: touched, table, backlog rows, body shape, self-tests (1.9, 1.14, 1.25)
       scorecard.yml                       # scorecard / analysis: OSSF Scorecard, SARIF and badge  (1.7)
       pages.yml                           # pages / deploy: publishes site/ to GitHub Pages        (5.9)
 ```
@@ -120,7 +122,7 @@ Drafted but not finished: `README.md` (1.10) and `CONTRIBUTING.md`, `SECURITY.md
 
 Still absent, not silently implemented: a release workflow (4.5) and a scheduled-audit template (5.4). `go.sum` holds Go's own checksums for the one approved module (ADR-004, added in 2.4); no lockfile is hand-drafted. The local `files/` briefing copies are Git-ignored; the root documents are the maintained source of truth.
 
-Checks that run today: `gofmt -l .`, `go build ./...`, `go vet ./...`, `go test ./... -race -count=1`, `staticcheck ./...`, `govulncheck ./...`, `scripts/check_roadmap_touched.sh origin/main`, `scripts/roadmap_progress.sh --check`, `scripts/test_roadmap_gate.sh`, `scripts/generate_issues.sh --check`. OSSF Scorecard runs on pushes to `main` and weekly (`scorecard / analysis`), not on pull requests, because it audits the default branch and publishes results. `stellar-gauge version` prints the version, and `check` and `audit` read real accounts through the Horizon client, fetch the `stellar.toml` of any account that publishes a home domain through the guarded client, evaluate the sixteen registered rules and render a report; a HIGH finding exits 1 by default, which since 3.1 includes an unreachable threshold tier, a signer the policy does not declare and an account with no standing weight, and the WARN family (flag or threshold drift, an out-of-order tier, a `hash(x)` signer, an unreadable identity) exits 1 under `--fail-on warn`. The implemented packages are `model`, `strkey`, `threshold`, `sanitize`, `policy`, `source`, `sep1`, `report`, `rules`, `run` and `cmd/stellar-gauge` (2.1 to 2.11, 3.1, 3.2, 3.3, 3.5), and `strkey` and `sanitize` carry fuzz targets. `internal/threshold` answers reachability and the minimum signer count, and `internal/rules` holds all sixteen rules; `internal/rules/facts.go` stays empty until 3.7 gives it the report's fact lines.
+Checks that run today: `gofmt -l .`, `go build ./...`, `go vet ./...`, `go test ./... -race -count=1`, `staticcheck ./...`, `govulncheck ./...`, `scripts/check_roadmap_touched.sh origin/main`, `scripts/roadmap_progress.sh --check`, `scripts/test_roadmap_gate.sh`, `scripts/generate_issues.sh --check`, `scripts/test_issue_shape.sh`. OSSF Scorecard runs on pushes to `main` and weekly (`scorecard / analysis`), not on pull requests, because it audits the default branch and publishes results. `stellar-gauge version` prints the version, and `check` and `audit` read real accounts through the Horizon client, fetch the `stellar.toml` of any account that publishes a home domain through the guarded client, evaluate the sixteen registered rules and render a report; a HIGH finding exits 1 by default, which since 3.1 includes an unreachable threshold tier, a signer the policy does not declare and an account with no standing weight, and the WARN family (flag or threshold drift, an out-of-order tier, a `hash(x)` signer, an unreadable identity) exits 1 under `--fail-on warn`. The implemented packages are `model`, `strkey`, `threshold`, `sanitize`, `policy`, `source`, `sep1`, `report`, `rules`, `run` and `cmd/stellar-gauge` (2.1 to 2.11, 3.1, 3.2, 3.3, 3.5), and `strkey` and `sanitize` carry fuzz targets. `internal/threshold` answers reachability and the minimum signer count, and `internal/rules` holds all sixteen rules; `internal/rules/facts.go` stays empty until 3.7 gives it the report's fact lines.
 
 Not built on purpose (do not create without a roadmap decision): a watch daemon, alert integrations, a rules language or plugin loader, a web UI, reputation scoring, contract-account auditing. See `ARCHITECTURE.md` 14.3.
 

@@ -6,3 +6,6 @@ contact_links:
   - name: Usage question
     url: https://github.com/posture-sec/guage/discussions
     about: Ask how Gauge works or what a finding means.
+  - name: Issue format
+    url: https://github.com/posture-sec/.github/blob/main/ISSUE_CONTRACT.md
+    about: The PI-1 contract every issue in this organization is written to.
