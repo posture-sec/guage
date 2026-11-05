@@ -6,12 +6,14 @@ account GAGCZPLXXENDIGTXUJC4MG7N3NVW5TA37PFEBDQK64KREAGD2HM2LD6C
   endpoint: https://horizon-testnet.stellar.org
   as of ledger 5466903, sequence 23472095056887812
   thresholds: low 5, medium 1, high 2
+  minimum signers to authorize: low 2, medium 1, high 1
   flags: auth_required=false auth_revocable=false auth_immutable=false clawback=false
   home domain: (none)
   sponsor: (none)
   signers: 2
     GAGCZPLXXENDIGTXUJC4MG7N3NVW5TA37PFEBDQK64KREAGD2HM2LD6C ed25519 weight 3
     GARN755D6RAGHRXKGREQGMEQLHCO7TXTZMNXDGG6HUW5SQVRCKFSE3RA ed25519 weight 3
+  declared: nothing; this run read no policy file, so only the universal rules ran
   findings: 2 (0 accepted)
     [warn] sig-threshold-order
       the thresholds are out of the recommended order, so a lower tier can demand more than a higher one

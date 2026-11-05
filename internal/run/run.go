@@ -42,6 +42,13 @@ type Job struct {
 	Accepts     []policy.Acceptance
 	FailOn      model.Severity
 
+	// HasPolicy marks a run whose accounts came from a policy file. It decides
+	// whether the report may print a declaration at all: `check` synthesizes one
+	// account entry per address with the default role, and a policy entry with the
+	// role omitted looks identical, so only the run knows whether an operator wrote
+	// that line.
+	HasPolicy bool
+
 	Concurrency int
 	NewSource   SourceFactory
 	NewIdentity IdentityFactory
@@ -105,7 +112,7 @@ func Run(ctx context.Context, job Job) (model.Report, error) {
 	for i, obs := range observations {
 		snapshot := obs.snapshot
 		snapshot.Network = info.Passphrase
-		findings, recovered := evaluate(job.Evaluate, rules.Context{
+		ruleContext := rules.Context{
 			Account:  job.Accounts[i],
 			Snapshot: snapshot,
 			Identity: identities[i],
@@ -113,12 +120,25 @@ func Run(ctx context.Context, job Job) (model.Report, error) {
 			Mismatch: mismatch,
 			Network:  info.Passphrase,
 			Expected: job.Network,
-		})
+		}
+		findings, recovered := evaluate(job.Evaluate, ruleContext)
 		panicked = panicked || recovered
 		applyRoles(job.Accounts[i].Role, findings)
 		applyAccepts(findings, job.Accepts, now())
 		model.SortFindings(findings)
-		report := model.AccountReport{Snapshot: snapshot, Findings: findings, Missing: obs.missing}
+		facts := rules.Facts(ruleContext)
+		if !job.HasPolicy {
+			// Nothing was declared, so nothing is printed as declared. The default
+			// role the check run carries internally is not an operator's statement,
+			// and the report says so on its own line.
+			facts.Declared = nil
+		}
+		report := model.AccountReport{
+			Snapshot: snapshot,
+			Facts:    &facts,
+			Findings: findings,
+			Missing:  obs.missing,
+		}
 		if mismatch {
 			report.Skipped = "the endpoint is on a different network"
 		}

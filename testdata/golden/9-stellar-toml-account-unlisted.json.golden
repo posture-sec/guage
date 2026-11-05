@@ -46,6 +46,32 @@
           }
         ]
       },
+      "facts": {
+        "reachability": {
+          "low": 2,
+          "medium": 2,
+          "high": 2
+        },
+        "declared": null,
+        "identity": {
+          "home_domain": "gauge.example.invalid",
+          "reachable": true,
+          "step": "ok",
+          "status": 200,
+          "hops": 0,
+          "bytes": 128,
+          "cors_present": false,
+          "network_passphrase": null,
+          "network_matches": null,
+          "signing_key": null,
+          "horizon_url": null,
+          "version": null,
+          "accounts": [
+            "GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3"
+          ],
+          "malformed_accounts": 0
+        }
+      },
       "findings": [
         {
           "rule_id": "id-toml-account-unlisted",

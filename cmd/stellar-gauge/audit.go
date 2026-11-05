@@ -15,7 +15,7 @@ import (
 func auditCommand(args []string, stdout, stderr io.Writer, d deps) int {
 	fs := newFlagSet("audit", stderr,
 		"usage: stellar-gauge audit [--config gauge.toml] [--format text|json] [--fail-on high|warn]")
-	configPath := fs.String("config", "gauge.toml", "policy file to load")
+	configPath := fs.String("config", defaultConfig, "policy file to load")
 	format := fs.String("format", "text", "output format: text or json")
 	failOn := fs.String("fail-on", "high", "fail at this severity: high or warn")
 	if err := fs.Parse(args); err != nil {
@@ -41,6 +41,11 @@ func auditCommand(args []string, stdout, stderr io.Writer, d deps) int {
 	cfg, err := policy.LoadFile(*configPath)
 	if err != nil {
 		fmt.Fprintf(stderr, "stellar-gauge: %v\n", err)
+		if errors.Is(err, policy.ErrRead) {
+			fmt.Fprintf(stderr, "stellar-gauge: no accounts were named, so a policy file is required; "+
+				"copy %s to %s and edit it, or audit accounts on the command line with \"check\"\n",
+				exampleConfig, defaultConfig)
+		}
 		return int(model.ExitUsage)
 	}
 	result, err := run.Audit(context.Background(), cfg, run.AuditOptions{

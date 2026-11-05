@@ -26,6 +26,11 @@
         "sponsor": "",
         "balances": []
       },
+      "facts": {
+        "reachability": null,
+        "declared": null,
+        "identity": null
+      },
       "findings": [
         {
           "rule_id": "acct-missing",

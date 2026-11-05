@@ -13,7 +13,7 @@
         "thresholds": {
           "low": 1,
           "medium": 2,
-          "high": 2
+          "high": 1
         },
         "signers": [
           {
@@ -32,6 +32,45 @@
         "home_domain": "exаmple.com",
         "sponsor": "sponsor",
         "balances": []
+      },
+      "facts": {
+        "reachability": {
+          "low": 1,
+          "medium": null,
+          "high": 1
+        },
+        "declared": {
+          "name": "treasury",
+          "role": "treasury",
+          "expected_signers": 1,
+          "expected_thresholds": {
+            "low": 2,
+            "medium": 2,
+            "high": 3
+          },
+          "expected_flags": null,
+          "home_domain": null,
+          "expect_locked": true,
+          "expect_locked_ignored": true
+        },
+        "identity": {
+          "home_domain": "example.com",
+          "reachable": true,
+          "step": "ok",
+          "status": 200,
+          "hops": 1,
+          "bytes": 132,
+          "cors_present": true,
+          "network_passphrase": "Test SDF Network ; September 2015",
+          "network_matches": true,
+          "signing_key": "GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3",
+          "horizon_url": null,
+          "version": "v1.2",
+          "accounts": [
+            "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+          ],
+          "malformed_accounts": 1
+        }
       },
       "findings": [
         {
@@ -98,6 +137,22 @@
         "home_domain": "",
         "sponsor": "",
         "balances": []
+      },
+      "facts": {
+        "reachability": {
+          "low": 2,
+          "medium": 2,
+          "high": 2
+        },
+        "declared": {
+          "role": "other",
+          "expected_signers": null,
+          "expected_thresholds": null,
+          "expected_flags": null,
+          "home_domain": null,
+          "expect_locked": null
+        },
+        "identity": null
       },
       "findings": []
     }

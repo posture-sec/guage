@@ -16,11 +16,13 @@ expected_signers = [
 ]
 expected_thresholds = { low = 1, medium = 2, high = 2 }
 expected_flags = { auth_required = false, auth_revocable = false, auth_immutable = false, clawback = false }
+# A declared domain is a finding when the chain shows none. The role alone is not
+# enough: Appendix A expects a home domain from an issuer, and this account declares
+# a treasury, so only this line makes the missing domain a warning.
 home_domain = "example.com"
-# Only an issuer is expected to publish a home domain, so this declaration is what
-# makes an absent domain a finding here rather than a fact.
 # expect_locked states that a zero-weight, nonsigning account is intended. It is
-# read for `issuer` alone; on a treasury it changes nothing.
+# read for `issuer` alone; on a treasury it changes nothing, and the report prints
+# the declaration as ignored rather than letting it read as a covered risk.
 expect_locked = false
 
 # Only the owner adds accept entries, always with a reason. The expiry is optional.
@@ -32,11 +34,15 @@ expect_locked = false
 # reason = "..."
 # expires = "2027-04-27"
 
-# An omitted expectation differs from an explicitly empty, zero or false value.
+# An omitted expectation differs from an explicitly empty, zero or false value, and
+# `audit` prints a `declared:` block naming which of them this file carried. A drift
+# rule that found nothing to compare says so here instead of looking like a clean
+# account.
 
-# What is actually compared today: expected_flags, and home_domain through the
-# identity rules. expected_signers and expected_thresholds are loaded and
-# validated and no rule reads them yet, because the signer and threshold family
-# is task 3.1, and the role above changes no severity until task 3.4 lands.
-# Declaring them here means the file is ready when those rules ship; it does not
-# mean those declarations are checked.
+# What is compared today, all of it read from the entries above: `expected_signers`
+# by three rules (a key the chain does not show, a key the declaration does not, and
+# a key at a different weight), `expected_thresholds` by the threshold drift rule,
+# `expected_flags` by the two flag rules, and `home_domain` by the identity rule. The
+# role re-weights every finding the run produced. Nothing in this file is loaded and
+# ignored: 3.1 landed the signer and threshold family on 2026-11-04, 3.4 the role
+# table, and 3.7 the report that prints which of these lines a policy carried.

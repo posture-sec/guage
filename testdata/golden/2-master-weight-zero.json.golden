@@ -40,6 +40,15 @@
           }
         ]
       },
+      "facts": {
+        "reachability": {
+          "low": null,
+          "medium": null,
+          "high": null
+        },
+        "declared": null,
+        "identity": null
+      },
       "findings": [
         {
           "rule_id": "sig-no-signing-weight",

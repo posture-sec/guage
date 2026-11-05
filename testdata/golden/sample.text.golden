@@ -5,12 +5,27 @@ ledger: 5466897
 account GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ
   endpoint: https://horizon-testnet.stellar.org
   as of ledger 5466881, sequence 9007199254740993
-  thresholds: low 1, medium 2, high 2
+  thresholds: low 1, medium 2, high 1
+  minimum signers to authorize: low 1, medium (unreachable), high 1
   flags: auth_required=true auth_revocable=false auth_immutable=false clawback=false
   home domain: exаmple.com (IDN)
   sponsor: sponsor
   signers: 1
     GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ ed25519 weight 1
+  declared: role treasury, name "treasury"
+    expected_signers: 1 key declared
+    expected_thresholds: low 2, medium 2, high 3
+    expected_flags: (not declared)
+    home_domain: (not declared)
+    expect_locked: true, which role "treasury" is not allowed to declare; it is read for issuer alone
+  identity document: example.com served a readable file
+    step: ok
+    fetch: status 200, 1 redirect hops, 132 bytes, CORS present
+    network_passphrase: "Test SDF Network ; September 2015" (this network)
+    signing_key: "GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3"
+    horizon_url: (not named)
+    version: "v1.2"
+    accounts: 1 listed, 1 rejected as not an address
   findings: 3 (1 accepted)
     [high] sig-single-key-high
       One signing key controls the high threshold.
@@ -29,12 +44,19 @@ account GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3
   endpoint: https://horizon-testnet.stellar.org
   as of ledger 5466881, sequence (none)
   thresholds: low 2, medium 2, high 2
+  minimum signers to authorize: low 2, medium 2, high 2
   flags: auth_required=false auth_revocable=false auth_immutable=false clawback=false
   home domain: (none)
   sponsor: (none)
   signers: 2
     GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ ed25519 weight 1
     GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3 ed25519 weight 1
+  declared: role other
+    expected_signers: (not declared)
+    expected_thresholds: (not declared)
+    expected_flags: (not declared)
+    home_domain: (not declared)
+    expect_locked: (not declared)
   findings: none
 
 result: 3 findings (1 high, 2 warn, 0 info), 1 accepted

@@ -6,12 +6,22 @@ account GBKDXQ7LCO3X23K4HUKSHCA3KMM3364M4UK3526XYMBWTDD4NJCSRNAI
   endpoint: https://horizon-testnet.stellar.org
   as of ledger 5466906, sequence 23472095056887815
   thresholds: low 2, medium 2, high 2
+  minimum signers to authorize: low 2, medium 2, high 2
   flags: auth_required=false auth_revocable=false auth_immutable=false clawback=false
   home domain: gauge.example.invalid
   sponsor: (none)
   signers: 2
     GBKDXQ7LCO3X23K4HUKSHCA3KMM3364M4UK3526XYMBWTDD4NJCSRNAI ed25519 weight 1
     GD4FV55YUFEJWS5Z3VDFDSFFQVHNX2TCUANW24FKKA4XFSHVISQI35G2 ed25519 weight 1
+  declared: nothing; this run read no policy file, so only the universal rules ran
+  identity document: gauge.example.invalid served a readable file
+    step: ok
+    fetch: status 200, 0 redirect hops, 128 bytes, CORS absent
+    network_passphrase: (not named)
+    signing_key: (not named)
+    horizon_url: (not named)
+    version: (not named)
+    accounts: 1 listed
   findings: 1 (0 accepted)
     [warn] id-toml-account-unlisted
       the account is not listed in its home domain's stellar.toml

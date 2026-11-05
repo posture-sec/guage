@@ -97,6 +97,12 @@ type scenario struct {
 	accounts []scenarioAccount
 	want     []string
 
+	// declared marks a case whose accounts carry a policy file's entries, which is
+	// what lets its report print a declaration block. The cases left false are the
+	// shape a zero-config check reads: an address, the default role, nothing
+	// declared, and every fact still printed.
+	declared bool
+
 	// productionIdentity runs the case with the fetcher a real invocation builds
 	// instead of a stub. Only a domain the client refuses before it opens a
 	// socket may ask for this, which is what the case using it asserts.
@@ -138,8 +144,9 @@ func scenarios() []scenario {
 			// says publishes a home domain, and this account publishes none, so the
 			// WARN rides along: declaring an intended lock does not excuse an issuer
 			// from SEP-1.
-			name:    "2b-locked-issuer",
-			network: testnet, failOn: model.SevHigh,
+			name:     "2b-locked-issuer",
+			declared: true,
+			network:  testnet, failOn: model.SevHigh,
 			accounts: []scenarioAccount{{
 				file: "2-master-zero.json", id: built("zero"),
 				account: policy.Account{
@@ -149,11 +156,30 @@ func scenarios() []scenario {
 			want: []string{"sig-threshold-unreachable:high id-no-home-domain:warn sig-no-signing-weight:info"},
 		},
 		{
+			// B2 again with the wrong declaration attached: the same locked account,
+			// declared as a treasury that says expect_locked. Appendix A allows that
+			// statement for an issuer alone, so the account keeps its HIGH and the report
+			// is the only place an operator can learn the line did nothing. This is the
+			// fact internal/policy's gate promises, and a check run cannot show it because
+			// a check declares nothing.
+			name:     "2c-locked-treasury-declaration-ignored",
+			declared: true,
+			network:  testnet, failOn: model.SevHigh,
+			accounts: []scenarioAccount{{
+				file: "2-master-zero.json", id: built("zero"),
+				account: policy.Account{
+					ID: built("zero"), Role: model.RoleTreasury, ExpectLocked: value(true),
+				},
+			}},
+			want: []string{"sig-no-signing-weight:high sig-threshold-unreachable:high"},
+		},
+		{
 			// B3: high threshold above total signer weight. Weights 3 and 4 sum to
 			// 7, so tier 10 can never be authorized, and the declared 4 disagrees
 			// with the chain's 10, which is the tier-drift half of the family.
-			name:    "3-high-threshold-unreachable",
-			network: testnet, failOn: model.SevHigh,
+			name:     "3-high-threshold-unreachable",
+			declared: true,
+			network:  testnet, failOn: model.SevHigh,
 			accounts: []scenarioAccount{{
 				file: "3-unreachable-high.json", id: built("unreach"),
 				account: policy.Account{
@@ -206,8 +232,9 @@ func scenarios() []scenario {
 			// B7: the real testnet multisig, declared as three signers when the
 			// chain carries six. One declared key is at a different weight, one is
 			// absent entirely, and four chain entries were never declared.
-			name:    "7-extra-and-missing-signers",
-			network: testnet, failOn: model.SevWarn,
+			name:     "7-extra-and-missing-signers",
+			declared: true,
+			network:  testnet, failOn: model.SevWarn,
 			accounts: []scenarioAccount{{
 				file: "7-extra-signer.json", id: accountThree,
 				account: policy.Account{
@@ -229,13 +256,18 @@ func scenarios() []scenario {
 			// lifts both flag rules and the single-key control to HIGH. The identity
 			// WARN is the outcome a real run recorded in docs/RECORDING.md: HTTP 200
 			// with an HTML body, refused at the parse step.
-			name:    "8-clawback-undeclared-and-drift",
-			network: testnet, failOn: model.SevHigh,
+			name:     "8-clawback-undeclared-and-drift",
+			declared: true,
+			network:  testnet, failOn: model.SevHigh,
 			identity: map[string]sep1.Result{"komunitin.org": {
 				HomeDomain: "komunitin.org",
 				FailedAt:   sep1.StepParse,
 				Detail:     "the document is not a configuration file this parser accepts",
 				Status:     http.StatusOK,
+				// A kept body that the parser refused still counts: internal/sep1
+				// leaves Bytes unset only when it kept nothing, so a 200 with zero
+				// bytes would describe a fetch that never happened.
+				Bytes: 1200,
 			}},
 			accounts: []scenarioAccount{{
 				file: "8-clawback-undeclared.json", id: accountTwo,
@@ -251,8 +283,9 @@ func scenarios() []scenario {
 		{
 			// B9, first half: an issuer that publishes no home domain, raised by the
 			// role alone with nothing declared.
-			name:    "9-home-domain-missing-by-role",
-			network: testnet, failOn: model.SevWarn,
+			name:     "9-home-domain-missing-by-role",
+			declared: true,
+			network:  testnet, failOn: model.SevWarn,
 			accounts: []scenarioAccount{{
 				file: "1-default.json", id: accountOne,
 				account: policy.Account{ID: accountOne, Role: model.RoleIssuer},
@@ -262,8 +295,9 @@ func scenarios() []scenario {
 		{
 			// B9, same observation on the other trigger: no role that expects a
 			// domain, and a policy that declared one anyway.
-			name:    "9-home-domain-missing-by-declaration",
-			network: testnet, failOn: model.SevWarn,
+			name:     "9-home-domain-missing-by-declaration",
+			declared: true,
+			network:  testnet, failOn: model.SevWarn,
 			accounts: []scenarioAccount{{
 				file: "1-default.json", id: accountOne,
 				account: policy.Account{ID: accountOne, Role: model.RoleOther, HomeDomain: value(domainName)},
@@ -289,6 +323,7 @@ func scenarios() []scenario {
 			identity: map[string]sep1.Result{domainName: {
 				HomeDomain: domainName,
 				FailedAt:   sep1.StepOK,
+				Status:     http.StatusOK,
 				Bytes:      128,
 				Identity:   sep1.Identity{Accounts: []string{accountOne}},
 			}},
@@ -297,6 +332,35 @@ func scenarios() []scenario {
 				account: policy.Account{ID: built("domain"), Role: model.RoleOther},
 			}},
 			want: []string{"id-toml-account-unlisted:warn"},
+		},
+		{
+			// B9, fourth half: a document that parsed, listed this account and named a
+			// different network than the run audited. No rule ID covers a passphrase a
+			// stellar.toml disagrees about, and inventing one is an owner decision, so the
+			// disagreement is printed as a fact and the findings stay empty: a fact cannot
+			// fail a run, which is what the exit code in the golden records.
+			name:    "9-stellar-toml-network-differs",
+			network: testnet, failOn: model.SevWarn,
+			identity: map[string]sep1.Result{domainName: {
+				HomeDomain:  domainName,
+				FailedAt:    sep1.StepOK,
+				Status:      http.StatusOK,
+				Hops:        1,
+				Bytes:       196,
+				CORSPresent: true,
+				Identity: sep1.Identity{
+					NetworkPassphrase: value(mainnetPass),
+					SigningKey:        value(accountOne),
+					HorizonURL:        value(canonicalTestnet),
+					Version:           value("v0.8.3"),
+					Accounts:          []string{built("domain"), accountOne},
+				},
+			}},
+			accounts: []scenarioAccount{{
+				file: "9-home-domain-present.json", id: built("domain"),
+				account: policy.Account{ID: built("domain"), Role: model.RoleOther},
+			}},
+			want: []string{""},
 		},
 		{
 			// B10, first half: the endpoint serves a 404 problem document for an
@@ -313,8 +377,9 @@ func scenarios() []scenario {
 			// B10, second half: a mainnet run against a testnet endpoint. Nothing is
 			// read from an endpoint on the wrong network, which the account-call
 			// assertion below proves against a fake that would happily answer.
-			name:    "10-network-passphrase-mismatch",
-			network: mainnetPass, failOn: model.SevHigh,
+			name:     "10-network-passphrase-mismatch",
+			declared: true,
+			network:  mainnetPass, failOn: model.SevHigh,
 			accounts: []scenarioAccount{{
 				id: accountOne, account: policy.Account{ID: accountOne, Role: model.RoleOther},
 			}, {
@@ -458,6 +523,7 @@ func runScenario(t *testing.T, sc scenario) {
 		Endpoints:   []string{canonicalTestnet},
 		Accounts:    accounts,
 		FailOn:      sc.failOn,
+		HasPolicy:   sc.declared,
 		NewSource:   stubFactory(fs),
 		Evaluate:    rules.Evaluate,
 	}

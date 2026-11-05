@@ -59,7 +59,7 @@
         <a href="status.html">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-04<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-05<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -87,7 +87,7 @@ go build -o stellar-gauge ./cmd/stellar-gauge
 
         <section class="section">
           <h2>check: one account, no policy file</h2>
-          <p><code>check</code> takes the network, one endpoint and one or more G addresses. It applies the live rules that need no declaration and prints a report. Ten of the sixteen can fire here; <code>flag-drift</code>, <code>id-no-home-domain</code>, <code>sig-unexpected-signer</code>, <code>sig-missing-expected</code>, <code>sig-weight-drift</code> and <code>thr-drift</code> compare a declared expectation, so only <code>audit</code> can raise them.</p>
+          <p><code>check</code> takes the network, one endpoint and one or more G addresses. It applies the live rules that need no declaration and prints a report. Ten of the sixteen can fire here; <code>flag-drift</code>, <code>id-no-home-domain</code>, <code>sig-unexpected-signer</code>, <code>sig-missing-expected</code>, <code>sig-weight-drift</code> and <code>thr-drift</code> compare a declared expectation, so only <code>audit</code> can raise them. Since task 3.7 the report is not thinner for want of a file: every account it read prints its facts, thresholds as stored, the minimum signatures each tier needs, flags, home domain, sponsor, signers, and what the identity fetch returned, followed by a <code>declared:</code> line saying this run read no policy file. Those lines are not findings and cannot fail a run.</p>
           <div class="code" data-copy>
             <div class="code-label"><span>Shell</span></div>
             <pre>./stellar-gauge check \
@@ -114,7 +114,7 @@ go build -o stellar-gauge ./cmd/stellar-gauge
 
         <section class="section">
           <h2>audit: the whole policy</h2>
-          <p><code>audit</code> reads <code>gauge.toml</code> and audits every declared account. It has no positional arguments and no network flag, because both come from the file.</p>
+          <p><code>audit</code> reads <code>gauge.toml</code> and audits every declared account. It has no positional arguments and no network flag, because both come from the file. Its report prints a <code>declared:</code> block per account naming which of the expectation kinds the policy carried, with <code>(not declared)</code> where it wrote nothing, so a drift rule that had nothing to compare reads as an absent answer rather than a clean one. A missing file exits 2 and names <code>gauge.example.toml</code> as the starting point.</p>
           <div class="code" data-copy>
             <div class="code-label"><span>Shell</span></div>
             <pre>./stellar-gauge audit --config gauge.toml --fail-on warn
@@ -141,7 +141,7 @@ go build -o stellar-gauge ./cmd/stellar-gauge
             <div class="rail-item">
               <span class="rail-code">0</span>
               <span class="rail-label">Pass</span>
-              <p class="rail-copy">The run completed and every evaluated rule agreed with the policy.</p>
+              <p class="rail-copy">The run completed and no finding reached <code>--fail-on</code>. The facts are still printed.</p>
             </div>
             <div class="rail-item">
               <span class="rail-code">1</span>
@@ -162,6 +162,7 @@ go build -o stellar-gauge ./cmd/stellar-gauge
           <div class="note">
             <p><strong>A failing job is the product working.</strong> Exit 1 means the chain and the policy disagree in a way you asked to be told about. Exit 3 means Gauge could not form a trustworthy opinion, which is also not a pass. Alerting should distinguish the two: exit 1 is a posture change, exit 3 is an availability or data problem.</p>
           </div>
+          <p class="table-caption">Read the facts before the findings. A finding is Gauge's opinion; the lines above it are what the chain and the policy said, including the tiers an account cannot reach and the expectations your file left out. A run of one clean account still prints all of it.</p>
         </section>
 
         <section class="section">
