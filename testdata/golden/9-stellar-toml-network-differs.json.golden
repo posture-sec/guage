@@ -1,0 +1,81 @@
+{
+  "tool_version": "test",
+  "network": "Test SDF Network ; September 2015",
+  "ledger": 5466897,
+  "accounts": [
+    {
+      "snapshot": {
+        "id": "GBKDXQ7LCO3X23K4HUKSHCA3KMM3364M4UK3526XYMBWTDD4NJCSRNAI",
+        "network": "Test SDF Network ; September 2015",
+        "endpoint": "https://horizon-testnet.stellar.org",
+        "ledger": 5466906,
+        "sequence": "23472095056887815",
+        "thresholds": {
+          "low": 2,
+          "medium": 2,
+          "high": 2
+        },
+        "signers": [
+          {
+            "key": "GBKDXQ7LCO3X23K4HUKSHCA3KMM3364M4UK3526XYMBWTDD4NJCSRNAI",
+            "type": "ed25519",
+            "weight": 1,
+            "sponsor": ""
+          },
+          {
+            "key": "GD4FV55YUFEJWS5Z3VDFDSFFQVHNX2TCUANW24FKKA4XFSHVISQI35G2",
+            "type": "ed25519",
+            "weight": 1,
+            "sponsor": ""
+          }
+        ],
+        "flags": {
+          "auth_required": false,
+          "auth_revocable": false,
+          "auth_immutable": false,
+          "clawback_enabled": false
+        },
+        "home_domain": "gauge.example.invalid",
+        "sponsor": "",
+        "balances": [
+          {
+            "asset_code": "",
+            "asset_issuer": "",
+            "is_authorized": true,
+            "clawback_enabled": false
+          }
+        ]
+      },
+      "facts": {
+        "reachability": {
+          "low": 2,
+          "medium": 2,
+          "high": 2
+        },
+        "declared": null,
+        "identity": {
+          "home_domain": "gauge.example.invalid",
+          "reachable": true,
+          "step": "ok",
+          "status": 200,
+          "hops": 1,
+          "bytes": 196,
+          "cors_present": true,
+          "network_passphrase": "Public Global Stellar Network ; September 2015",
+          "network_matches": false,
+          "signing_key": "GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3",
+          "horizon_url": "https://horizon-testnet.stellar.org",
+          "version": "v0.8.3",
+          "accounts": [
+            "GBKDXQ7LCO3X23K4HUKSHCA3KMM3364M4UK3526XYMBWTDD4NJCSRNAI",
+            "GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3"
+          ],
+          "malformed_accounts": 0
+        }
+      },
+      "findings": []
+    }
+  ],
+  "exit_code": 0,
+  "limits": "Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised."
+}

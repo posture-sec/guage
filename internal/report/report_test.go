@@ -30,18 +30,46 @@ func sampleReport() model.Report {
 		Accounts: []model.AccountReport{
 			{
 				Snapshot: model.AccountSnapshot{
-					ID:         accountOne,
-					Network:    "Test SDF Network ; September 2015",
-					Endpoint:   "https://horizon-testnet.stellar.org",
-					Ledger:     5466881,
-					Sequence:   "9007199254740993",
-					Thresholds: model.Thresholds{Low: 1, Medium: 2, High: 2},
+					ID:       accountOne,
+					Network:  "Test SDF Network ; September 2015",
+					Endpoint: "https://horizon-testnet.stellar.org",
+					Ledger:   5466881,
+					Sequence: "9007199254740993",
+					// The high tier is 1 because the single-key finding below says one key
+					// reaches it, and the reachability facts now printed beside that finding
+					// have to agree with it. A sample whose facts contradict its findings would
+					// train a reviewer to read the two blocks as unrelated.
+					Thresholds: model.Thresholds{Low: 1, Medium: 2, High: 1},
 					Signers: []model.Signer{
 						{Key: accountOne, Type: model.SignerEd25519, Weight: 1},
 					},
 					Flags:      model.Flags{AuthRequired: true},
 					HomeDomain: "ex\u0430mple.com\x1b[31m",
 					Sponsor:    "sponsor\x1b]0;title\x07",
+				},
+				Facts: &model.AccountFacts{
+					// One participating weight of 1: the low and high tiers are reachable with
+					// it, the medium tier of 2 is out of reach for the whole account.
+					Reachability: &model.Reachability{Low: value(1), High: value(1)},
+					Declared: &model.DeclaredFacts{
+						Name: "treasury\u001b[31m", Role: "treasury",
+						ExpectedSigners:     value(1),
+						ExpectedThresholds:  &model.DeclaredThresholds{Low: value(2), Medium: value(2), High: value(3)},
+						ExpectLocked:        value(true),
+						ExpectLockedIgnored: true,
+					},
+					Identity: &model.IdentityFacts{
+						HomeDomain: "example.com", Reachable: true, Step: "ok",
+						Status: 200, Hops: 1, Bytes: 132, CORSPresent: true,
+						NetworkPassphrase: value("Test SDF Network ; September 2015"),
+						NetworkMatches:    value(true),
+						SigningKey:        value(accountTwo),
+						// A version string is remote content, so this sample carries one with a
+						// bell in it and the hostile-string test looks for it in both formats.
+						Version:           value("v1.2\u0007"),
+						Accounts:          []string{accountOne},
+						MalformedAccounts: 1,
+					},
 				},
 				Findings: []model.Finding{
 					model.NewFinding("sig-single-key-high", model.SevHigh, accountOne,
@@ -64,11 +92,21 @@ func sampleReport() model.Report {
 					},
 					Flags: model.Flags{},
 				},
+				// Two weights of 1 against tiers of 2: every tier needs both keys. The
+				// declaration is the shape an audit produces for an account whose operator
+				// wrote only an ID and a role, which is what the drift rules falling silent
+				// is supposed to look like in a report.
+				Facts: &model.AccountFacts{
+					Reachability: &model.Reachability{Low: value(2), Medium: value(2), High: value(2)},
+					Declared:     &model.DeclaredFacts{Role: "other"},
+				},
 			},
 		},
 		ExitCode: model.ExitFindings,
 	}
 }
+
+func value[T any](v T) *T { return &v }
 
 func TestTextGolden(t *testing.T) {
 	t.Parallel()
@@ -283,5 +321,144 @@ func TestEmptyReportRenders(t *testing.T) {
 	}
 	if !strings.Contains(buf.String(), "no accounts") {
 		t.Fatalf("empty report text = %q", buf.String())
+	}
+}
+
+// Task 3.7: the fact block is what a zero-config run prints, and it is what keeps a
+// report readable when the rules had nothing to compare against. These cases hold the
+// three properties the design promises: a fact cannot fail a run, a report with no
+// fact block prints no fact lines, and the two kinds of "nothing declared" say which
+// one the reader is looking at.
+
+func TestFactsCannotFailARun(t *testing.T) {
+	t.Parallel()
+	// Every fact in this account is one an operator would worry about: no tier the
+	// weights can reach, a document naming a different network, and a lock the role
+	// may not declare. There are no findings, so the run passes and the report says
+	// why, which is the division the catalog keeps.
+	report := model.Report{
+		ToolVersion: "0.0.0-test",
+		Network:     "Test SDF Network ; September 2015",
+		Accounts: []model.AccountReport{{
+			Snapshot: model.AccountSnapshot{
+				ID: accountOne, Thresholds: model.Thresholds{Low: 10, Medium: 10, High: 10},
+				Signers: []model.Signer{{Key: accountOne, Type: model.SignerEd25519, Weight: 1}},
+			},
+			Facts: &model.AccountFacts{
+				// A tier present only when its own signers can reach it, so the three
+				// values stay nil and the line says so.
+				Reachability: &model.Reachability{},
+				Declared: &model.DeclaredFacts{
+					Role: "treasury", ExpectLocked: value(true), ExpectLockedIgnored: true,
+				},
+				Identity: &model.IdentityFacts{
+					HomeDomain: "example.com", Reachable: true, Step: "ok", Status: 200,
+					NetworkPassphrase: value("Public Global Stellar Network ; September 2015"),
+					NetworkMatches:    value(false),
+				},
+			},
+		}},
+		ExitCode: model.ExitPass,
+	}
+	if got := Exit(report, model.SevInfo); got != model.ExitPass {
+		t.Fatalf("a report of facts alone exited %d, want 0", got)
+	}
+
+	var text bytes.Buffer
+	if err := Text(&text, report); err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"minimum signers to authorize: low (unreachable), medium (unreachable), high (unreachable)",
+		`network_passphrase: "Public Global Stellar Network ; September 2015" (not this network)`,
+		`expect_locked: true, which role "treasury" is not allowed to declare`,
+		"accounts: 0 listed",
+		"exit code: 0",
+	} {
+		if !strings.Contains(text.String(), want) {
+			t.Errorf("text output has no %q:\n%s", want, text.String())
+		}
+	}
+}
+
+// TestReportWithoutAFactBlockPrintsNoFactLines is the other direction: an absence of
+// facts is not a fact about absence. A report assembled without a block, as no run
+// does, says nothing in the places a run would have answered.
+func TestReportWithoutAFactBlockPrintsNoFactLines(t *testing.T) {
+	t.Parallel()
+	var buf bytes.Buffer
+	report := model.Report{Accounts: []model.AccountReport{{
+		Snapshot: model.AccountSnapshot{ID: accountOne, HomeDomain: "example.com"},
+	}}}
+	if err := Text(&buf, report); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	for _, unwanted := range []string{
+		"declared:", "identity document:", "minimum signers", "expect_locked",
+	} {
+		if strings.Contains(out, unwanted) {
+			t.Errorf("a report with no fact block printed %q:\n%s", unwanted, out)
+		}
+	}
+}
+
+func TestTheTwoKindsofUndeclaredAccountSayWhich(t *testing.T) {
+	t.Parallel()
+	var buf bytes.Buffer
+	report := model.Report{Accounts: []model.AccountReport{
+		{Snapshot: model.AccountSnapshot{ID: accountOne},
+			Facts: &model.AccountFacts{Declared: nil}},
+		{Snapshot: model.AccountSnapshot{ID: accountTwo},
+			Facts: &model.AccountFacts{Declared: &model.DeclaredFacts{Role: "other"}}},
+		{Snapshot: model.AccountSnapshot{ID: accountOne, HomeDomain: "example.com"},
+			Facts: &model.AccountFacts{}},
+	}}
+	if err := Text(&buf, report); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	for _, want := range []string{
+		"declared: nothing; this run read no policy file",
+		"declared: role other",
+		"expected_signers: (not declared)",
+		"identity document: never fetched, so the published home domain is unverified",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("output has no %q:\n%s", want, out)
+		}
+	}
+	if strings.Count(out, "identity document:") != 1 {
+		t.Errorf("an account publishing no domain still spoke about identity:\n%s", out)
+	}
+}
+
+func TestAFailingDocumentPrintsTheStepAndNoParsedValues(t *testing.T) {
+	t.Parallel()
+	var buf bytes.Buffer
+	report := model.Report{Accounts: []model.AccountReport{{
+		Snapshot: model.AccountSnapshot{ID: accountOne, HomeDomain: "example.com"},
+		Facts: &model.AccountFacts{Identity: &model.IdentityFacts{
+			HomeDomain: "example.com", Step: "guard",
+			Detail: "the host name resolves to a loopback address, which Gauge will not dial",
+		}},
+	}}}
+	if err := Text(&buf, report); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	for _, want := range []string{
+		"identity document: example.com did not serve a readable file",
+		"step: guard",
+		"fetch: no response received",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("output has no %q:\n%s", want, out)
+		}
+	}
+	for _, unwanted := range []string{"network_passphrase:", "signing_key:", "accounts:"} {
+		if strings.Contains(out, unwanted) {
+			t.Errorf("a document that never parsed printed %q:\n%s", unwanted, out)
+		}
 	}
 }

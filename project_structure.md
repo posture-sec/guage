@@ -4,7 +4,7 @@ Where everything lives, who may change it and which way imports may point. Read 
 
 > **Roadmap rule (every contribution):** any change to this repository, by a human or an agent, must update `ROADMAP.md` in the same pull request: tick or add tasks, add a changelog entry, refresh the progress table and the `Last updated` line. If you add, move or remove a file, also update this document.
 
-Status: Phase 3 in progress (Phase 2 closed on 2026-11-04 at 11 of 11; the scaffold-only exception D-09 was lifted by the owner on 2026-10-30). Module `github.com/posture-sec/guage`, binary `stellar-gauge`, Go 1.27.3, one approved dependency, existing Apache-2.0 license. Root documents are the maintained source of truth; the untouched `files/` inputs remain local and are not part of the scaffold commit. A file's existence does not mean its feature is implemented.
+Status: Phase 3 complete on 2026-11-05, 7 of 7, with the facts report (3.7) as the last task the phase owed; Phase 2 closed on 2026-11-04 at 11 of 11. The scaffold-only exception D-09 was lifted by the owner on 2026-10-30. Module `github.com/posture-sec/guage`, binary `stellar-gauge`, Go 1.27.3, one approved dependency, existing Apache-2.0 license. Root documents are the maintained source of truth; the untouched `files/` inputs remain local and are not part of the scaffold commit. A file's existence does not mean its feature is implemented.
 
 ## 1. Annotated tree
 
@@ -23,12 +23,13 @@ guage/
   go.mod                                  # module identity, Go 1.27.3 and BurntSushi/toml v1.6.0 (ADR-004)
   go.sum                                  # checksums for the one approved module
   staticcheck.conf                        # enable all checks
-  gauge.example.toml                      # commented, intentionally unconfigured policy draft
+  gauge.example.toml                      # the documented starting point: loads through the strict parser, and `audit` with no policy file names it (3.7)
 
   cmd/stellar-gauge/
     main.go                               # dispatch, exit-code mapping, report rendering and the deps seam (2.9, 3.5)
     {check,audit,version}.go              # P0 commands: flags, account validation, policy load (2.9)
     cli_test.go                           # in-process CLI tests: check, audit, JSON output, failure modes
+    facts_test.go                         # the zero-config surface: fact lines, the example policy and the messages that name what to type (3.7)
     g3_test.go                            # fail-closed gate G3 cases (2.10)
     {snapshot,diff}.go                    # P1 command placeholders (5.2)
 
@@ -36,6 +37,7 @@ guage/
     model/
       {account,balance,signer,network}.go  # observed-state declarations; balance exposure reserved for P1
       {finding,report,role,severity,exit}.go # findings, per-account reports and enums
+      facts.go                            # the fact shapes a report prints ahead of its findings (3.7)
       model_test.go                       # severity names, fingerprint, ordering, JSON and exit-code contracts
     strkey/
       {address,checksum,seed}.go           # SEP-23 classify, CRC16 and seed detection (2.2)
@@ -59,16 +61,16 @@ guage/
       {fetch_test,guard_test,parse_test}.go # SSRF, rebinding, redirect, size, sanitizer-boundary and parse tests (3.5)
     rules/
       {rules,account,signers,thresholds,flags,identity}.go # registry and pure rule boundaries; identity and signers read the two role expectations 3.4 defines (3.1 to 3.5 done)
-      facts.go                          # empty until 3.7: fact lines for the zero-config report
-      {rules,identity,signers,thresholds}_test.go # positive and negative cases, guard proofs and a captured account (3.1 to 3.5)
+      facts.go                            # rules.Facts: the observations of one context, in the same pure shape as a rule and returning no finding (3.7)
+      {rules,identity,signers,thresholds,facts}_test.go # positive and negative cases, guard proofs, a captured account and the two kinds of absence (3.1 to 3.7)
     report/
-      {text,json,exit}.go                  # P0 renderers, limits footer and outcome mapping (2.6)
+      {text,json,exit}.go                  # P0 renderers, the fact block ahead of the findings, limits footer and outcome mapping (2.6, 3.7)
       markdown.go                         # P1 output (5.3)
-      report_test.go                      # golden files, sanitization, determinism and exit tests
+      report_test.go                      # golden files, sanitization, determinism, exit tests and the fact block in both formats
     run/
-      {run,check,audit}.go                 # P0 orchestration: passphrase, bounded fetch, identity fetch, role severity, accepts (2.8, 3.4, 3.5)
+      {run,check,audit}.go                 # P0 orchestration: passphrase, bounded fetch, identity fetch, role severity, accepts, the fact block and `HasPolicy` (2.8, 3.4, 3.5, 3.7)
       {compare,snapshot,diff}.go           # P1 orchestration (5.1, 5.2)
-      run_test.go                         # end-to-end orchestration with a fake source and an offline fetcher, plus the UTC expiry judgement (2.8, 3.4, 3.5)
+      run_test.go                         # end-to-end orchestration with a fake source and an offline fetcher, the UTC expiry judgement and the two builders' fact shapes (2.8, 3.4, 3.5, 3.7)
       roles_test.go                       # one account at five roles: severity, fingerprint, accepts and the lock declaration (3.4)
 
   testdata/
@@ -77,7 +79,7 @@ guage/
     horizon/{2-master-zero,3-unreachable-high,4-thresholds-out-of-order,5-hashx-signer-at-medium,6-preauth-signer-only,9-home-domain-present,12-hostile-home-domain}.json  # built for Appendix B (3.6)
     policy/.gitkeep                       # still empty: a scenario declares its policy as `policy.Account` values in `internal/run/scenarios_test.go`, and acceptance and role cases are inline TOML in `internal/policy`
     golden/{sample.text,sample.json}.golden # regenerated only with `-update` and reviewed (2.6)
-    golden/<scenario>.{text,json}.golden  # one pair per Appendix B case, 32 files, compared by `internal/run/scenarios_test.go` (3.6)
+    golden/<scenario>.{text,json}.golden  # one pair per Appendix B case, 36 files, compared by `internal/run/scenarios_test.go` (3.6, 3.7)
 
   docs/
     banner.svg                            # README banner; wordmark plus status line
@@ -120,7 +122,7 @@ Drafted but not finished: `README.md` (1.10) and `CONTRIBUTING.md`, `SECURITY.md
 
 Still absent, not silently implemented: a release workflow (4.5) and a scheduled-audit template (5.4). `go.sum` holds Go's own checksums for the one approved module (ADR-004, added in 2.4); no lockfile is hand-drafted. The local `files/` briefing copies are Git-ignored; the root documents are the maintained source of truth.
 
-Checks that run today: `gofmt -l .`, `go build ./...`, `go vet ./...`, `go test ./... -race -count=1`, `staticcheck ./...`, `govulncheck ./...`, `scripts/check_roadmap_touched.sh origin/main`, `scripts/roadmap_progress.sh --check`, `scripts/test_roadmap_gate.sh`, `scripts/generate_issues.sh --check`. OSSF Scorecard runs on pushes to `main` and weekly (`scorecard / analysis`), not on pull requests, because it audits the default branch and publishes results. `stellar-gauge version` prints the version, and `check` and `audit` read real accounts through the Horizon client, fetch the `stellar.toml` of any account that publishes a home domain through the guarded client, evaluate the sixteen registered rules and render a report; a HIGH finding exits 1 by default, which since 3.1 includes an unreachable threshold tier, a signer the policy does not declare and an account with no standing weight, and the WARN family (flag or threshold drift, an out-of-order tier, a `hash(x)` signer, an unreadable identity) exits 1 under `--fail-on warn`. The implemented packages are `model`, `strkey`, `threshold`, `sanitize`, `policy`, `source`, `sep1`, `report`, `rules`, `run` and `cmd/stellar-gauge` (2.1 to 2.11, 3.1, 3.2, 3.3, 3.5), and `strkey` and `sanitize` carry fuzz targets. `internal/threshold` answers reachability and the minimum signer count, and `internal/rules` holds all sixteen rules; `internal/rules/facts.go` stays empty until 3.7 gives it the report's fact lines.
+Checks that run today: `gofmt -l .`, `go build ./...`, `go vet ./...`, `go test ./... -race -count=1`, `staticcheck ./...`, `govulncheck ./...`, `scripts/check_roadmap_touched.sh origin/main`, `scripts/roadmap_progress.sh --check`, `scripts/test_roadmap_gate.sh`, `scripts/generate_issues.sh --check`. OSSF Scorecard runs on pushes to `main` and weekly (`scorecard / analysis`), not on pull requests, because it audits the default branch and publishes results. `stellar-gauge version` prints the version, and `check` and `audit` read real accounts through the Horizon client, fetch the `stellar.toml` of any account that publishes a home domain through the guarded client, evaluate the sixteen registered rules and render a report; a HIGH finding exits 1 by default, which since 3.1 includes an unreachable threshold tier, a signer the policy does not declare and an account with no standing weight, and the WARN family (flag or threshold drift, an out-of-order tier, a `hash(x)` signer, an unreadable identity) exits 1 under `--fail-on warn`. The implemented packages are `model`, `strkey`, `threshold`, `sanitize`, `policy`, `source`, `sep1`, `report`, `rules`, `run` and `cmd/stellar-gauge` (2.1 to 2.11, 3.1 to 3.7), and `strkey` and `sanitize` carry fuzz targets. `internal/threshold` answers reachability and the minimum signer count, `internal/rules` holds all sixteen rules, and `internal/rules/facts.go` has carried `rules.Facts` since 3.7 landed on 2026-11-05: the same context a rule reads, turned into the observations a report prints ahead of its findings, with no finding in it and no path to an exit code.
 
 Not built on purpose (do not create without a roadmap decision): a watch daemon, alert integrations, a rules language or plugin loader, a web UI, reputation scoring, contract-account auditing. See `ARCHITECTURE.md` 14.3.
 

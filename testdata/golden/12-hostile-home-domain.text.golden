@@ -6,12 +6,18 @@ account GDF6B4EQSNXLTSN4QROIVYLIKDFGUOZLCAGGWSGFAKPY7US72Y4A2IRJ
   endpoint: https://horizon-testnet.stellar.org
   as of ledger 5466907, sequence 23472095056887816
   thresholds: low 2, medium 2, high 2
+  minimum signers to authorize: low 2, medium 2, high 2
   flags: auth_required=false auth_revocable=false auth_immutable=false clawback=false
   home domain: gauge.example.invalid
   sponsor: (none)
   signers: 2
     GDF6B4EQSNXLTSN4QROIVYLIKDFGUOZLCAGGWSGFAKPY7US72Y4A2IRJ ed25519 weight 1
     GARN755D6RAGHRXKGREQGMEQLHCO7TXTZMNXDGG6HUW5SQVRCKFSE3RA ed25519 weight 1
+  declared: nothing; this run read no policy file, so only the universal rules ran
+  identity document: gauge.example.invalid did not serve a readable file
+    step: hostname
+    detail: the home domain is not a host name Gauge will contact
+    fetch: no response received
   findings: 1 (0 accepted)
     [warn] id-toml-unreachable
       the home domain gauge.example.invalid does not serve a stellar.toml Gauge can read

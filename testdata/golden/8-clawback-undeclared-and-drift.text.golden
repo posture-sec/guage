@@ -6,11 +6,22 @@ account GDSX2WUFUT7KCMTUNG3IUQWIUQSC4XNKQ5NTGEZRKLTMLCSJTCUVBEVG
   endpoint: https://horizon-testnet.stellar.org
   as of ledger 4699329, sequence 20183455778209793
   thresholds: low 0, medium 0, high 0
+  minimum signers to authorize: low 1, medium 1, high 1
   flags: auth_required=true auth_revocable=true auth_immutable=false clawback=true
   home domain: komunitin.org
   sponsor: GCHEQPEHYQTHK4EVTPV7ASSRLJ6XZBZKEGZ3FWYXRLLQZ7L35PO7OUBM
   signers: 1
     GDSX2WUFUT7KCMTUNG3IUQWIUQSC4XNKQ5NTGEZRKLTMLCSJTCUVBEVG ed25519 weight 1
+  declared: role issuer
+    expected_signers: (not declared)
+    expected_thresholds: (not declared)
+    expected_flags: auth_required=false auth_revocable=(not stated) auth_immutable=(not stated) clawback=(not stated)
+    home_domain: (not declared)
+    expect_locked: (not declared)
+  identity document: komunitin.org did not serve a readable file
+    step: parse
+    detail: the document is not a configuration file this parser accepts
+    fetch: status 200, 0 redirect hops, 1200 bytes, CORS absent
   findings: 4 (0 accepted)
     [high] flag-drift
       the declared flags differ from the flags the chain shows

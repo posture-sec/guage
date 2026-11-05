@@ -46,6 +46,15 @@
           }
         ]
       },
+      "facts": {
+        "reachability": {
+          "low": 2,
+          "medium": 1,
+          "high": 1
+        },
+        "declared": null,
+        "identity": null
+      },
       "findings": [
         {
           "rule_id": "sig-threshold-order",

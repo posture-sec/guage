@@ -40,6 +40,43 @@
           }
         ]
       },
+      "facts": {
+        "reachability": {
+          "low": 1,
+          "medium": 1,
+          "high": 1
+        },
+        "declared": {
+          "role": "issuer",
+          "expected_signers": null,
+          "expected_thresholds": null,
+          "expected_flags": {
+            "auth_required": false,
+            "auth_revocable": null,
+            "auth_immutable": null,
+            "clawback": null
+          },
+          "home_domain": null,
+          "expect_locked": null
+        },
+        "identity": {
+          "home_domain": "komunitin.org",
+          "reachable": false,
+          "step": "parse",
+          "detail": "the document is not a configuration file this parser accepts",
+          "status": 200,
+          "hops": 0,
+          "bytes": 1200,
+          "cors_present": false,
+          "network_passphrase": null,
+          "network_matches": null,
+          "signing_key": null,
+          "horizon_url": null,
+          "version": null,
+          "accounts": [],
+          "malformed_accounts": 0
+        }
+      },
       "findings": [
         {
           "rule_id": "flag-drift",

@@ -5,6 +5,7 @@ ledger: 5466897
 account GC2HHIM66CBKJFMYOHECBMKD4NWRGWJ3FEXFDPWPT4TLS7OFR43LO2II
   endpoint: https://horizon-testnet.stellar.org
   not found on this endpoint (never created, or merged)
+  declared: nothing; this run read no policy file, so only the universal rules ran
   findings: 1 (0 accepted)
     [high] acct-missing
       the account was not found on this endpoint, so it may never have been created or it was merged

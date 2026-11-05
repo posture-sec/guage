@@ -46,6 +46,31 @@
           }
         ]
       },
+      "facts": {
+        "reachability": {
+          "low": 2,
+          "medium": 2,
+          "high": 2
+        },
+        "declared": null,
+        "identity": {
+          "home_domain": "gauge.example.invalid",
+          "reachable": false,
+          "step": "guard",
+          "detail": "the host name resolves to a loopback address, which Gauge will not dial",
+          "status": 0,
+          "hops": 0,
+          "bytes": 0,
+          "cors_present": false,
+          "network_passphrase": null,
+          "network_matches": null,
+          "signing_key": null,
+          "horizon_url": null,
+          "version": null,
+          "accounts": [],
+          "malformed_accounts": 0
+        }
+      },
       "findings": [
         {
           "rule_id": "id-toml-unreachable",

@@ -40,6 +40,22 @@
           }
         ]
       },
+      "facts": {
+        "reachability": {
+          "low": null,
+          "medium": null,
+          "high": null
+        },
+        "declared": {
+          "role": "issuer",
+          "expected_signers": null,
+          "expected_thresholds": null,
+          "expected_flags": null,
+          "home_domain": null,
+          "expect_locked": true
+        },
+        "identity": null
+      },
       "findings": [
         {
           "rule_id": "sig-threshold-unreachable",

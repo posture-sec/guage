@@ -59,7 +59,7 @@
         <a href="status.html">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-04<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-05<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -511,7 +511,7 @@
 
         <section class="section">
           <h2>What is not shipped</h2>
-          <p>All sixteen rules in the table are registered and evaluated on every run, and a declared role now weights them. Every Appendix B scenario now has a fixture and a golden pair behind it, landed 2026-11-05: twelve files in <code>testdata/horizon/</code>, five captured from testnet and seven built here and labelled as built, and 32 report files in <code>testdata/golden/</code> that one test run compares in both formats, so a severity, a wording, a fingerprint or an exit code that moves shows up as a diff rather than a silent pass. What is not shipped is the facts a zero-config run prints (task 3.7) and the usage docs 4.2 still holds open; the rule articles for the nine signer and threshold checks landed with the rest on 2026-11-04.</p>
+          <p>All sixteen rules in the table are registered and evaluated on every run, and a declared role now weights them. Every Appendix B scenario now has a fixture and a golden pair behind it, landed 2026-11-05: twelve files in <code>testdata/horizon/</code>, five captured from testnet and seven built here and labelled as built, and 38 report files in <code>testdata/golden/</code> that one test run compares in both formats, so a severity, a wording, a fingerprint or an exit code that moves shows up as a diff rather than a silent pass. The same day brought the facts report (task 3.7): a run now prints what it read before it prints what it thinks, including the minimum signatures each tier needs, which expectations a policy carried and which it left out, and what the home-domain fetch returned. What is left on this page's horizon is the usage docs 4.2 still holds open; the rule articles for the nine signer and threshold checks landed with the rest on 2026-11-04. Still genuinely unwritten: a markdown report (5.3), snapshots and diffs (5.2), trustline exposure (5.5), the SEP-29 recipient check (5.6), multi-endpoint comparison (5.1) and the rest of what <code>PRD.md</code> marks P1 for v0.2.0. No release is tagged and no third party has audited any of it.</p>
           <div class="note">
             <p><strong>Read the status before trusting a pass.</strong> A clean result means all sixteen checks agreed with what the chain showed and with what your policy declared. It is not a statement about key custody: on-chain data cannot show who holds a key, and ten of the sixteen rules compare against a declaration, so a policy that says nothing about signers, thresholds or flags gets no answer about drift.</p>
           </div>

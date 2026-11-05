@@ -59,7 +59,7 @@
         <a href="status.html">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-04<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-05<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -150,7 +150,7 @@ expect_locked = false
             </table>
           </div>
           <div class="note">
-            <p><strong>Every expectation you can write is compared.</strong> All sixteen rules are registered, and the five expectation kinds each reach one: <code>expected_signers</code> against the chain's signers (<code>sig-unexpected-signer</code>, <code>sig-missing-expected</code>, <code>sig-weight-drift</code>), <code>expected_thresholds</code> against <code>thr-drift</code>, <code>expected_flags</code> against <code>flag-drift</code>, <code>home_domain</code> against <code>id-no-home-domain</code>, and <code>expect_locked</code> against <code>sig-no-signing-weight</code> for an issuer. A declared <code>role</code> then weights whatever those rules found. Since 2026-11-05 every one of those comparisons also has a golden report behind it: each expectation kind appears in a fixture run under <code>internal/run/scenarios_test.go</code>, so a declaration that stops reaching its rule shows up as a diff rather than a silent pass. What a policy cannot yet buy is the facts a zero-config run prints (task 3.7).</p>
+            <p><strong>Every expectation you can write is compared.</strong> All sixteen rules are registered, and the five expectation kinds each reach one: <code>expected_signers</code> against the chain's signers (<code>sig-unexpected-signer</code>, <code>sig-missing-expected</code>, <code>sig-weight-drift</code>), <code>expected_thresholds</code> against <code>thr-drift</code>, <code>expected_flags</code> against <code>flag-drift</code>, <code>home_domain</code> against <code>id-no-home-domain</code>, and <code>expect_locked</code> against <code>sig-no-signing-weight</code> for an issuer. A declared <code>role</code> then weights whatever those rules found. Since 2026-11-05 every one of those comparisons also has a golden report behind it: each expectation kind appears in a fixture run under <code>internal/run/scenarios_test.go</code>, so a declaration that stops reaching its rule shows up as a diff rather than a silent pass. What a policy could not buy until 2026-11-05 was the facts a zero-config run prints; task 3.7 closed that, so <code>check</code> now prints what it read for every account even with no file on the tree, and <code>audit</code> prints a <code>declared:</code> block naming which of the lines above the policy carried and which it left out.</p>
           </div>
         </section>
 
