@@ -145,7 +145,7 @@ expect_locked = false
                 <tr><td>expected_thresholds</td><td>Table</td><td>Any of <code>low</code>, <code>medium</code> and <code>high</code>, each an integer from 0 to 255. Omitted tiers are not compared.</td></tr>
                 <tr><td>expected_flags</td><td>Table</td><td>Any of <code>auth_required</code>, <code>auth_revocable</code>, <code>auth_immutable</code> and <code>clawback</code>, each a boolean. Omitted flags are not compared.</td></tr>
                 <tr><td>home_domain</td><td>String</td><td>A bare host name. URLs, IP addresses, a trailing dot and characters such as <code>/</code>, <code>@</code>, <code>:</code> and <code>?</code> are rejected. Declaring it is what lets <code>id-no-home-domain</code> fire when the chain shows none.</td></tr>
-                <tr><td>expect_locked</td><td>Boolean</td><td>Declares that a zero-weight, nonsigning issuer is intended. <code>sig-no-signing-weight</code> reports INFO when an <code>issuer</code> declares it true, and HIGH for every other role, where the word is stored and read by nothing.</td></tr>
+                <tr><td>expect_locked</td><td>Boolean</td><td>Declares that a zero-weight, nonsigning issuer is intended. <code>sig-no-signing-weight</code> reports INFO when an <code>issuer</code> declares it true, and HIGH for every other role. A true declaration on another role is not refused at load, because a typo in a declaration should not cost more than the declaration is worth: the finding stays HIGH and the <code>declared:</code> block prints that the line was ignored.</td></tr>
               </tbody>
             </table>
           </div>
@@ -182,7 +182,7 @@ expect_locked = false
                 <tr><th>Field</th><th>Rule</th></tr>
               </thead>
               <tbody>
-                <tr><td>rule</td><td>A concrete rule ID. Wildcards, a leading or trailing hyphen and the three structural rules below are refused.</td></tr>
+                <tr><td>rule</td><td>A concrete rule ID. Wildcards, a leading or trailing hyphen and the three structural rules below are refused. An ID that is well formed but names no shipped rule loads and matches nothing, which the paragraph after the three chips spells out.</td></tr>
                 <tr><td>account</td><td>The G address the finding belongs to. The match is rule plus account, so one entry covers one finding type for one account.</td></tr>
                 <tr><td>reason</td><td>Required and non-empty. It is stored in the policy, not printed in the report footer.</td></tr>
                 <tr><td>expires</td><td>Optional <code>YYYY-MM-DD</code>. The date is inclusive and evaluated in UTC, so an entry expires at the start of the following day.</td></tr>
@@ -195,6 +195,7 @@ expect_locked = false
             <span class="chip chip--high">acct-network-mismatch</span>
             <span class="chip chip--high">sig-threshold-unreachable</span>
           </div>
+          <p>An ID the loader cannot make sense of is an error: wildcards and brackets, a space, a missing hyphen, a hyphen at either end and anything but lower-case letters and digits make the file exit 2 rather than get ignored. What the loader cannot check is whether the ID names a rule that exists. <code>internal/policy</code> sits below <code>internal/rules</code> in the import direction, so the registry is not reachable from the validator, and an entry for <code>flag-typo-drift</code> loads cleanly and matches nothing. The report is where that shows up: the finding you meant to accept still prints, still unaccepted, and still decides the exit code. Read the rule IDs off <a href="rules.html">the catalog</a> rather than typing them from memory, and treat a finding that should have been labeled accepted as a check on the file before a check on the account.</p>
           <div class="note">
             <p><strong>The owner adds acceptances, not the operator running the check.</strong> An acceptance is a dated statement that a disagreement is understood. If the reason cannot be written down, the finding should be fixed instead.</p>
           </div>
@@ -230,7 +231,7 @@ expect_locked = false
         </section>
 
         <footer class="footer">
-          <p>Functional alpha, unaudited. This page reflects the v0.1 loader and all sixteen registered rules as of 2026-11-04.</p>
+          <p>Functional alpha, unaudited. This page reflects the v0.1 loader and all sixteen registered rules, re-read against <code>internal/policy</code> on 2026-11-05.</p>
           <div class="footer-links">
             <a href="guides.html">Next: guides</a>
             <a href="rules.html">Rule catalog</a>

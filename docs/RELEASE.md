@@ -3,7 +3,7 @@
 Task 4.5 asks for a release workflow with build provenance attestation and a verification command that is documented *and tested*, and it is the substance of gate G6. The owner chose, on 2026-11-03, to have this file instead of `.github/workflows/release.yml`. Two reasons, both recorded so nobody re-litigates them:
 
 - `.github/` is a protected path under AGENTS.md section 12, so a new workflow is an owner decision rather than a contributor's convenience.
-- An attestation workflow can only be proven by a tag, and cutting a release tag to prove the machinery that makes tags is backwards. D-12 already declines a tag until an auditing build exists, and four of Phase 4's release preconditions (4.1, 4.2, 4.4, 4.6) are open.
+- An attestation workflow can only be proven by a tag, and cutting a release tag to prove the machinery that makes tags is backwards. D-12 already declines a tag until an auditing build exists, and of Phase 4's release preconditions 4.1, 4.4 and 4.6 are open alongside this task's own 4.5; 4.2 and 4.3 closed on 2026-11-05.
 
 So 4.5 stays unticked and G6 stays unchecked. What this file buys is that the person cutting `v0.1.0` is following steps that have been run, not steps invented at the tag.
 
@@ -14,8 +14,8 @@ So 4.5 stays unticked and G6 stays unchecked. What this file buys is that the pe
 ## 1. Preconditions, in order
 
 1. 4.4 green: the CI matrix builds and tests on Linux, macOS and Windows. Today only `linux/amd64` is built and tested in CI, so a release naming five platforms would ship three that no CI has ever run. Cross-compiling is not the same as testing; section 3 shows both facts separately.
-2. 4.1 and 4.2 and 4.6 done, because 4.8 depends on 4.1 to 4.6 and G5 (Scorecard 8 or higher) is one of them. G5 is currently 6.8 and the gap is structural at one maintainer, not a repo change.
-3. The rule set is worth shipping. Seven rules are live and the signer and threshold family is absent, so the first honest tag may be after 3.1 rather than before it. This is D-12's judgement, and it belongs to the owner.
+2. 4.1 and 4.6 done, because 4.8 depends on 4.1 to 4.6 and G5 (Scorecard 8 or higher) is one of them. G5 is currently 6.8 and the gap is structural at one maintainer, not a repo change. 4.2 and 4.3, the usage docs and the README, closed on 2026-11-05 and are off this list.
+3. The rule set is worth shipping. It was the reason this file was written: seven rules live and no signer family at all. That stopped being true on 2026-11-04, when task 3.1 registered the nine signer and threshold checks and 3.4 weighted them by role, and Phase 3 closed on 2026-11-05 with the facts report, so all sixteen v0.1 rules run and every Appendix B scenario has a golden behind it. What is still not settled is whether they are right about real accounts, which is 4.1 and gate G4 rather than D-12's judgement about a tag.
 
 ## 2. Build
 
