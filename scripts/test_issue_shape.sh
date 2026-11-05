@@ -7,6 +7,11 @@
 # and says that above 6000 an issue has become a tutorial. This gate enforces
 # the floor and the ceiling, not the aim, so a body over the aim fails here only
 # when it has outgrown the contract rather than when it ran long.
+#
+# It measures bytes, not characters: `wc -c` is the same on every runner and
+# `wc -m` depends on the locale the shell happens to have. The two differ here by
+# nine bytes, one per middot in the nine headings, which is noise against a body
+# of four to five thousand.
 set -uo pipefail
 
 roadmap="ROADMAP.md"
@@ -37,7 +42,7 @@ headings=(
 
 check_body() {
   local id="$1" file="$2" kind line
-  local chars
+  local bytes
 
   line="$(head -1 "${file}")"
   if ! printf '%s' "${line}" | grep -qE '^<!-- posture-issue: guage/'"${id}"' \| contract: PI-1 \| kind: (task|gate|owner|report)( \| wave: (Trivial|Medium|High))? -->$'; then
@@ -71,11 +76,11 @@ check_body() {
   grep -qF 'Source of truth: `ROADMAP.md`' "${file}" \
     || fail "${id}: no staleness line naming the roadmap row"
 
-  chars="$(wc -c <"${file}")"
-  if [ "${chars}" -lt 2500 ]; then
-    fail "${id}: ${chars} characters, under the contract's floor; a short body is usually a placeholder"
-  elif [ "${chars}" -gt 6000 ]; then
-    fail "${id}: ${chars} characters, over the point where an issue becomes a tutorial"
+  bytes="$(wc -c <"${file}")"
+  if [ "${bytes}" -lt 2500 ]; then
+    fail "${id}: ${bytes} bytes, under the contract's floor of 2500; a short body is usually a placeholder"
+  elif [ "${bytes}" -gt 6000 ]; then
+    fail "${id}: ${bytes} bytes, over the 6000 point where an issue becomes a tutorial"
   fi
 
   # The organization writes prose without em dashes; the bytes are spelled out so
@@ -117,7 +122,7 @@ check_body() {
     fi
   fi
 
-  printf 'ok   %s (%s, %s characters)\n' "${id}" "${kind}" "${chars}"
+  printf 'ok   %s (%s, %s bytes)\n' "${id}" "${kind}" "${bytes}"
 }
 
 # The same id space the generator publishes: phases 0 to 6 plus the gates.
