@@ -13,7 +13,7 @@ So 4.5 stays unticked and G6 stays unchecked. What this file buys is that the pe
 
 ## 1. Preconditions, in order
 
-1. 4.4 green: the CI matrix builds and tests on Linux, macOS and Windows. Today only `linux/amd64` is built and tested in CI, so a release naming five platforms would ship three that no CI has ever run. Cross-compiling is not the same as testing; section 3 shows both facts separately.
+1. 4.4 green: the CI matrix builds and tests on Linux, macOS and Windows. A `ci / build-test` matrix over `ubuntu-latest`, `macos-latest` and `windows-latest` is proposed on `ci/4.4-cross-platform-matrix` as of 2026-11-05 and is not merged, so until it runs on `main` this file still describes CI as testing one platform, `linux/amd64`. Cross-compiling is not the same as testing; section 3 shows both facts separately.
 2. 4.1 and 4.6 done, because 4.8 depends on 4.1 to 4.6 and G5 (Scorecard 8 or higher) is one of them. G5 is currently 6.8 and the gap is structural at one maintainer, not a repo change. 4.2 and 4.3, the usage docs and the README, closed on 2026-11-05 and are off this list.
 3. The rule set is worth shipping. It was the reason this file was written: seven rules live and no signer family at all. That stopped being true on 2026-11-04, when task 3.1 registered the nine signer and threshold checks and 3.4 weighted them by role, and Phase 3 closed on 2026-11-05 with the facts report, so all sixteen v0.1 rules run and every Appendix B scenario has a golden behind it. What is still not settled is whether they are right about real accounts, which is 4.1 and gate G4 rather than D-12's judgement about a tag.
 
@@ -159,5 +159,5 @@ What SLSA v1 build provenance proves: the bytes were produced by a specific work
 
 - No artifact was published and no tag was cut, so nothing in sections 4 and 5 has been executed. Section 2's build and section 3's checksum verification are the parts that were run, and their results are quoted above with the date.
 - The provenance workflow is a design with unresolved pins. Its shape is derived from this repository's existing workflows and from the action's documented permissions, not from a run.
-- The three non-Linux platforms are compiled and unexecuted until 4.4 lands.
+- The three non-Linux *artifacts* are compiled and unexecuted. The proposed matrix would execute the suite on `macos-latest`, which is arm64, and on `windows-latest`, which is amd64, so even after it lands on `main` two of the five release targets, `linux/arm64` and `darwin/amd64`, are still build-only: the runners prove the code is platform-neutral, not that the shipped binary for those two targets was ever started.
 - `Packaging` and `Signed-Releases` stay at -1, and G6 stays unchecked, and both are correct readings of a repository that has released nothing. Writing the runbook does not move either number, and this branch claims neither.
