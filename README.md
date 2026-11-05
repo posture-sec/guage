@@ -29,11 +29,11 @@ go run ./cmd/stellar-gauge version
 go run ./cmd/stellar-gauge check --network testnet --endpoint https://horizon-testnet.stellar.org G...
 ```
 
-A run reads the account, prints what the chain shows and exits `0`, `1`, `2` or `3`. A missing account or an endpoint on the wrong network is a HIGH finding and exits `1` by default, as does any run that could not complete. Declared flag drift, an undeclared clawback and a home domain whose `stellar.toml` cannot be read are warnings and exit `1` under `--fail-on warn`. A run also fetches the `stellar.toml` of any account that publishes a home domain, through a guard that resolves the name and then refuses loopback, private, link-local and other non-public addresses at dial time; an identity Gauge could not verify is a warning, never a pass. The remaining eight rules and role-based severities arrive later in Phase 3. There is no release to install.
+A run reads the account, prints what the chain shows and exits `0`, `1`, `2` or `3`. A missing account or an endpoint on the wrong network is a HIGH finding and exits `1` by default, as does any run that could not complete. Declared flag drift, an undeclared clawback and a home domain whose `stellar.toml` cannot be read are warnings and exit `1` under `--fail-on warn`. A run also fetches the `stellar.toml` of any account that publishes a home domain, through a guard that resolves the name and then refuses loopback, private, link-local and other non-public addresses at dial time; an identity Gauge could not verify is a warning, never a pass. An account with no standing signing weight, a threshold tier its signers can never reach and a signer the policy does not declare are HIGH findings too, and an unreachable tier cannot be accepted away. What a finding is worth depends on the role you declared for the account: an issuer or treasury is held to a tighter bar than a distribution account or a merchant, a role can only raise a severity and never lower one, and `check`, which declares no role, reports at the baseline. What is still open in Phase 3 is the facts report (task 3.7) and the golden fixtures for every Appendix B scenario (task 3.6). There is no release to install.
 
 ## What it checks
 
-Sixteen rules in v0.1, each with a stable kebab-case ID. Seven are implemented today: `acct-missing`, `acct-network-mismatch`, `flag-drift`, `flag-undeclared-clawback`, `id-no-home-domain`, `id-toml-unreachable` and `id-toml-account-unlisted`. Severity depends on the account's declared role (issuer and treasury are held to a tighter bar than merchant and distribution) once role profiles land in task 3.4; until then the seven rules use their baseline severity.
+Sixteen rules in v0.1, each with a stable kebab-case ID, and all sixteen are implemented: the account, flag and identity families from tasks 3.2, 3.3 and 3.5, and the nine signer and threshold rules from task 3.1 (`sig-no-signing-weight`, `sig-threshold-unreachable`, `sig-threshold-order`, `sig-single-key-high`, `sig-hashx`, `sig-unexpected-signer`, `sig-missing-expected`, `sig-weight-drift`, `thr-drift`). Severity depends on the account's declared role (PRD Appendix A, applied by task 3.4): single-key control is HIGH for an issuer or treasury and INFO for an account with no role, drift is HIGH for a treasury, and an issuer that publishes no home domain is a finding whether or not a policy asked it to.
 
 | Family | Rules |
 | --- | --- |
@@ -48,6 +48,7 @@ Exit codes: `0` pass, `1` findings at or above `--fail-on`, `2` configuration or
 
 - Key custody. On-chain data cannot show who holds a key, how it is stored, or whether it leaked.
 - Whether an account is a good account. Gauge reports posture against your declared expectations. It never says an account is secure or safe, and "no findings" is not a clean bill of health.
+- Signers and thresholds, today. Eight `sig-` rules and `thr-drift` are specified and none is registered, so a policy that declares expected signers is loaded and validated and compared by nothing until task 3.1. This bullet is about what is unfinished; the four above are about what Gauge will not look at either way.
 - Transactions, balances, offers, claimable balances, liquidity pools and Soroban contract accounts.
 - Live streaming or alerting. It is a state comparison you schedule, not a daemon.
 - The expectations themselves. If an attacker can edit both `gauge.toml` and the workflow that runs Gauge, the check can be made to pass. That residual risk is documented in `ARCHITECTURE_ESSENTIALS.md` section 10 and is a process problem, not a code problem.
@@ -62,12 +63,12 @@ stellar-gauge version
 
 `check` takes accounts on the command line and needs an explicit network and one endpoint. `audit` reads accounts, roles and expectations from the policy file, whose `endpoints` entry supplies the endpoint. Both take `--format text|json` and `--fail-on high|warn`; markdown output is not implemented yet.
 
-`gauge.example.toml` shows the policy shape: one `[[account]]` block per audited account with its role and expected signers, thresholds and flags, plus `[[accept]]` entries for risks you have decided to live with. An omitted expectation is not a zero or a false; it means "not declared", and drift rules only fire where you declared something.
+`gauge.example.toml` shows the policy shape: one `[[account]]` block per audited account with its role and expected signers, thresholds and flags, plus `[[accept]]` entries for risks you have decided to live with. An omitted expectation is not a zero or a false; it means "not declared", and drift rules only fire where you declared something. An `[[accept]]` expiry is the last day the entry holds, read as a date in UTC, and a rule that hides a missing account, a network mismatch or an unreachable threshold cannot be accepted at all.
 
 ## How it works
 
 ```
-policy loader + Source + sep1 -> snapshots -> rules -> accept filter -> report -> exit code
+policy loader + Source + sep1 -> snapshots -> rules -> role severity -> accept filter -> report -> exit code
 ```
 
 | Package | Responsibility |

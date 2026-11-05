@@ -159,6 +159,8 @@ func decodeSigners(wire *[]signerWire) ([]model.Signer, error) {
 			kind, signerType = strkey.HashX, model.SignerHashX
 		case "preauth_tx":
 			kind, signerType = strkey.PreAuthTx, model.SignerPreAuthTx
+		case "ed25519_signed_payload":
+			kind, signerType = strkey.SignedPayload, model.SignerSignedPayload
 		default:
 			return nil, errors.New("a signer type Gauge does not model")
 		}

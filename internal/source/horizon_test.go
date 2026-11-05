@@ -603,6 +603,26 @@ func TestAccountShapeStrictness(t *testing.T) {
 			},
 		},
 		{
+			name: "signed payload signer",
+			edit: func(m map[string]any) {
+				m["signers"] = append(m["signers"].([]any), map[string]any{
+					"key": testSignedPayloadStrkey(), "type": "ed25519_signed_payload", "weight": 3,
+				})
+			},
+			check: func(t *testing.T, s model.AccountSnapshot) {
+				if len(s.Signers) != 2 || s.Signers[1].Type != model.SignerSignedPayload || s.Signers[1].Weight != 3 {
+					t.Fatalf("signers = %+v", s.Signers)
+				}
+			},
+		},
+		{
+			name: "signed payload key under the ed25519 type",
+			edit: func(m map[string]any) {
+				m["signers"].([]any)[0].(map[string]any)["key"] = testSignedPayloadStrkey()
+			},
+			wantErr: ErrDecode,
+		},
+		{
 			name:    "missing balances",
 			edit:    func(m map[string]any) { delete(m, "balances") },
 			wantErr: ErrDecode,
@@ -820,12 +840,28 @@ func creditBalance() map[string]any {
 // testStrkey builds a valid strkey of the given version byte at test time, so
 // no seed-shaped or hash-shaped literal is committed to the repository.
 func testStrkey(version byte, size int) string {
-	raw := make([]byte, 1, size+3)
-	raw[0] = version << 3
-	raw = append(raw, make([]byte, size)...)
-	for i := 1; i < len(raw); i++ {
-		raw[i] = byte(version)
+	body := make([]byte, size)
+	for i := range body {
+		body[i] = byte(version)
 	}
+	return testStrkeyBody(version, body)
+}
+
+// testSignedPayloadStrkey builds a valid P strkey: 32 key bytes, a big-endian
+// payload length and a payload, the shape ARCHITECTURE.md 6.2 requires.
+func testSignedPayloadStrkey() string {
+	body := make([]byte, 32)
+	for i := range body {
+		body[i] = 15
+	}
+	body = append(body, 0, 0, 0, 4)
+	return testStrkeyBody(15, append(body, 1, 2, 3, 4))
+}
+
+func testStrkeyBody(version byte, body []byte) string {
+	raw := make([]byte, 0, 1+len(body)+2)
+	raw = append(raw, version<<3)
+	raw = append(raw, body...)
 	var crc uint16
 	for _, b := range raw {
 		crc ^= uint16(b) << 8

@@ -1,6 +1,6 @@
 # ARCHITECTURE_ESSENTIALS: Gauge (working name)
 
-Status: design target v0.1; implementation is partway through Phase 3. `internal/model` (types, severity names, finding fingerprints, ordering), `internal/strkey` (SEP-23 classification and seed detection), `internal/sanitize` (control stripping, IDN flag, markdown escaping), the `internal/policy` loader (strict TOML, seed rejection, network passphrases), the `internal/report` renderers (text, JSON, limits footer, exit mapping), `internal/source` (Horizon client with caps, retries, strict decode, passphrase comparison), `internal/sep1` (hostname validation, dial-time SSRF guard, redirect and size limits, TOML parse), the `internal/run` orchestrator and the `cmd/stellar-gauge` CLI (`check`, `audit`, `version`) are implemented and tested; `internal/rules` carries `acct-missing`, `acct-network-mismatch`, `flag-drift`, `flag-undeclared-clawback`, `id-no-home-domain`, `id-toml-unreachable` and `id-toml-account-unlisted`, so a run can exit 1; the threshold math and the signer and threshold rules are still pending. Full detail: `ARCHITECTURE.md` (section numbers in brackets). Scope: `PRD.md`. Work queue: `ROADMAP.md`. File locations: `project_structure.md`.
+Status: design target v0.1; implementation is partway through Phase 3. `internal/model` (types, severity names, finding fingerprints, ordering), `internal/strkey` (SEP-23 classification and seed detection), `internal/sanitize` (control stripping, IDN flag, markdown escaping), the `internal/policy` loader (strict TOML, seed rejection, network passphrases, the Appendix A role floors), the `internal/report` renderers (text, JSON, limits footer, exit mapping), `internal/source` (Horizon client with caps, retries, strict decode, passphrase comparison), `internal/sep1` (hostname validation, dial-time SSRF guard, redirect and size limits, TOML parse), `internal/threshold` (the protocol's reachability and minimum-signer math), the `internal/run` orchestrator and the `cmd/stellar-gauge` CLI (`check`, `audit`, `version`) are implemented and tested; `internal/rules` carries all sixteen v0.1 rules, so a run can exit 1 on a missing account, a network mismatch, a control configuration that cannot authorize, signer and threshold drift, flag drift, an undeclared clawback or an unverifiable identity claim, and a declared role raises the severities the catalog weights by role. Not yet: the facts report (3.7), Appendix B golden outputs (3.6), and the P1 rules. Full detail: `ARCHITECTURE.md` (section numbers in brackets). Scope: `PRD.md`. Work queue: `ROADMAP.md`. File locations: `project_structure.md`.
 
 ## 0. Roadmap rule (read first)
 
@@ -18,7 +18,7 @@ Status: design target v0.1; implementation is partway through Phase 3. `internal
 ## 2. Hard rules (never break)
 
 - Never accept, store, log or echo a secret seed (`S...`). Reject with exit 2 and a rotate-the-key message. [6.6, ADR-007]
-- No transaction building or submission. No writes except an explicit `--out` file. [1]
+- No transaction building or submission. No writes except an explicit `--out` file; `--out` is reserved for the P1 `snapshot` command and no shipped subcommand takes it. [1]
 - `--network` (or `network` in config) is required. No default. Verify the endpoint's passphrase. [ADR-006]
 - Accept only `G...` addresses. Reject `M...` and `C...` with a specific message. [6.2, 6.6]
 - Never exit 0 after an unreachable endpoint, oversize or malformed response, unknown config key or panic. [8]
@@ -62,22 +62,34 @@ Status: design target v0.1; implementation is partway through Phase 3. `internal
 - `Severity`: Info < Warn < High. `Role`: issuer, treasury, distribution, merchant, other.
 - `Signer`: Key, Type (Ed25519, HashX, PreAuthTx), Weight, Sponsor. `Thresholds`: Low, Medium, High. `Flags`: AuthRequired, AuthRevocable, AuthImmutable, ClawbackEnabled.
 - `AccountSnapshot`: ID, Network, Endpoint, Ledger, Sequence, Thresholds, Signers, Flags, HomeDomain, Sponsor, Balances.
-- `Finding`: RuleID, Severity, Account, Message, Evidence, Fingerprint (`sha256(rule|account|evidence)`), Accepted.
+- `Finding`: RuleID, Severity, Account, Message, Evidence, Fingerprint (`sha256(rule|account|evidence)`), Accepted. Severity is outside the hash, which is what lets a role re-weight a finding without moving the key an acceptance matches on.
 - `NetworkInfo`: Passphrase, Ledger. `AccountReport`: Snapshot, Findings. `Report`: ToolVersion, Network, Ledger, Accounts, typed ExitCode.
-- Config `gauge.toml`: `version`, `network`, `endpoints`, `[[account]]` (id, name, role, expected_signers, expected_thresholds, expected_flags, home_domain, expect_locked), `[[accept]]` (rule, account, reason, optional expires). Pointer fields preserve omitted expectations; strict decode, seed rejection and per-entry validation are implemented, while role severity adjustments remain task 3.4.
+- Config `gauge.toml`: `version`, `network`, `endpoints`, `[[account]]` (id, name, role, expected_signers, expected_thresholds, expected_flags, home_domain, expect_locked), `[[accept]]` (rule, account, reason, optional expires). Pointer fields preserve omitted expectations; strict decode, seed rejection, per-entry validation and the role severity floors are all implemented.
 
 ## 7. Threshold math [6.3]
 
-- Weights sum and must be greater than or equal to the threshold. Thresholds 0 to 255, weights 1 to 255.
-- Only signers with weight above 0 participate. Pre-auth signers do not count toward standing control.
-- `MinSigners`: sort weights descending, accumulate. Threshold 0 needs one weighted signer.
-- Edge behavior is Unverified until task 0.7. Do not extend semantics beyond the table tests.
+Verified from the protocol implementation by task 0.7 on 2026-11-04, at stellar-core v30.0.0 commit `0e49751aa9ddf892302cca02cea7f3f5d97df9f1`, the build `testdata/horizon/root-testnet.json` names in its `core_version` field, cross-read against v29.0.0 `a9d72b0` and identical there in every cited function. `ARCHITECTURE.md` 6.3 carries every citation with a file and line range; do not restate them here and do not extend semantics past what that list decides.
+
+- Weights sum and must be greater than or equal to the threshold. Thresholds 0 to 255, weights 1 to 255, and a stored weight above 255 is clamped to 255 from protocol 10.
+- Only signers with weight above 0 participate. A zero-weight master is excluded from the candidate list by the implementation, and a zero weight on any other signer is a delete rather than a signer, so the master is the only zero Gauge can observe. Pre-auth signers do not count toward standing control.
+- Ed25519, `hash(x)` and `ed25519_signed_payload` all participate in the sum, and a `T...` pre-auth entry participates only for the one transaction whose hash it holds. Gauge models all four key types: task 2.11 added the signed-payload pair, so the strings `ed25519_public_key`, `sha256_hash`, `preauth_tx` and `ed25519_signed_payload` each map to a model type and the strkey kind its key must classify as, and any other string still stops the read.
+- `Reachable` sums the participating weights in descending order over at most the 20 largest and compares that with the threshold: an envelope caps at 20 signatures while an account can hold 20 signers plus a nonzero master.
+- `MinSigners`: sort weights descending, accumulate. Threshold 0 needs one weighted signer, because the comparison is only reached from inside a signature match. Threshold 0 with a zero-weight master and no other signer authorizes nothing.
+- Implemented 2026-11-04 by task 2.3 in `internal/threshold/threshold.go`. Pre-auth exclusion, the weight-0 rule and the 20 cap each have named table cases, and a randomized subset search checks the greedy ordering.
+- Unused signatures are an error, not a spare: `txBAD_AUTH_EXTRA`.
+- An unreachable or out-of-order tier is a legal stored state, because `SetOptions` validates ranges and nothing else. That is what `sig-threshold-unreachable` and `sig-threshold-order` are for.
 
 ## 8. Rules (v0.1) [9]
 
 `acct-missing`, `acct-network-mismatch`, `sig-no-signing-weight`, `sig-threshold-unreachable`, `sig-threshold-order`, `sig-single-key-high`, `sig-hashx`, `sig-unexpected-signer`, `sig-missing-expected`, `sig-weight-drift`, `thr-drift`, `flag-drift`, `flag-undeclared-clawback`, `id-no-home-domain`, `id-toml-unreachable`, `id-toml-account-unlisted`.
 
-- Role profiles change severity (PRD Appendix A). Not acceptable via `[[accept]]`: `acct-missing`, `acct-network-mismatch`, `sig-threshold-unreachable`.
+- Role profiles raise severity to the Appendix A floor and never lower it; `policy.SeverityFor` is the only reader of that table and `internal/run` applies it once per account, before accepts. Not acceptable via `[[accept]]`: `acct-missing`, `acct-network-mismatch`, `sig-threshold-unreachable`.
+- All sixteen are live as of 2026-11-04: task 3.1 landed the nine signer and threshold rules in `internal/rules/signers.go` and `internal/rules/thresholds.go`, and task 3.4 raised the four the catalog phrases by role at the run rather than inside a rule.
+- The signer and threshold rules call `internal/threshold` and never restate the arithmetic. If you find a weight sum, a 20 cap or a zero-weight filter written inside a rule, that is the bug.
+- `sig-single-key-high` emits INFO, which is Appendix A's `other` row and what `check` keeps getting because it declares no role. A role raises it, at the run. Do not move the table into the rule and do not suppress the finding.
+- The three comparison rules each put a key in exactly one finding, and they fire only when `expected_signers` is declared. A declared weight of 0 is an intent to remove, not a weight to compare.
+- `id-no-home-domain` has two triggers and one finding: a domain a policy declared that the chain does not show, and, for `issuer` alone, no domain at all. `expect_locked` is read for `issuer` alone, and no role row lists `sig-no-signing-weight`, so the lock declaration is not undone by adjustment.
+- An `[[accept]]` expiry is a date read off UTC: the day named is the last day it holds, midnight UTC is the cutover, and a value that is not a date counts as expired rather than as open.
 
 ## 9. Exit codes [8]
 
@@ -110,8 +122,9 @@ Status: design target v0.1; implementation is partway through Phase 3. `internal
 
 ## 14. Known unknowns (do not assume) [15]
 
-- Whether Horizon lists the master key in `signers`, and its exact JSON shape.
-- Threshold edge semantics (threshold 0 with no weighted signer; leftover signatures).
+- Whether Horizon lists the master key in `signers`, and its exact JSON shape. **Answered** 2026-10-30 on testnet and recorded in `ARCHITECTURE.md` 6.4: it does, as an ordinary entry whose key equals `account_id`, at whatever weight `thresholds[0]` holds including 0. Mainnet is unobserved per D-16.
+- Threshold edge semantics (threshold 0 with no weighted signer; leftover signatures). **Answered** 2026-11-04 from the implementation by task 0.7, together with `hash(x)` satisfaction and whether an unreachable tier can exist. Section 7 states the rules and `ARCHITECTURE.md` 6.3 cites the lines.
+- The Horizon wire string for an `ed25519_signed_payload` signer, and whether `hash(x)` and pre-auth entries share the `ed25519_public_key` shape. **Answered** 2026-11-04 by task 2.11, from the code that serves it rather than from a response: the string is `ed25519_signed_payload`, and every signer entry is the same four fields whatever its type, because the struct Horizon serializes has nothing else to set. `ARCHITECTURE.md` 6.4 cites the commit the testnet endpoint names as its own build. What is still unobserved is an entry of any of the three non-ed25519 kinds in a real response, so 3.6 builds those fixtures and must not describe them as captures.
 - SEP-1 field names, size limit, redirect rules. Horizon's long-term status. Public endpoint rate limits.
 - TOML dependency's transitive footprint.
 

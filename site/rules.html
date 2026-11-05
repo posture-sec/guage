@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Rule catalog · Gauge docs</title>
-  <meta name="description" content="All sixteen Gauge rules with their conditions and severities, including the seven account, flag and identity rules that are live today.">
+  <meta name="description" content="All sixteen Gauge rules with their conditions, severities and status, as registered in the shipped registry.">
   <meta property="og:type" content="article">
   <meta property="og:title" content="Rule catalog · Gauge docs">
-  <meta property="og:description" content="Sixteen checks, seven shipped: every rule has a stable ID, a condition and a severity.">
+  <meta property="og:description" content="Sixteen checks, all sixteen shipped: every rule has a stable ID, a condition and a severity.">
   <meta property="og:url" content="https://posture-sec.github.io/guage/rules.html">
   <meta property="og:image" content="https://posture-sec.github.io/guage/assets/og.png">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -59,7 +59,7 @@
         <a href="status.html">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-03<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-04<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -69,12 +69,12 @@
     <main class="main" id="main">
       <div class="content">
         <p class="eyebrow">Rule catalog</p>
-        <h1>Sixteen checks. Seven shipped.</h1>
-        <p class="lede">Every rule has a stable kebab-case ID, a written condition and a severity. A finding names the rule, the account, an evidence line and a fingerprint that identifies it. An accepted risk matches on rule and account, not on the fingerprint. All sixteen are written out on this page: the seven that run today, and the nine that do not, each with the condition a contributor has to satisfy and the task that blocks it.</p>
+        <h1>Sixteen checks. All sixteen live.</h1>
+        <p class="lede">Every rule has a stable kebab-case ID, a written condition and a severity. A finding names the rule, the account, an evidence line and a fingerprint that identifies it. An accepted risk matches on rule and account, not on the fingerprint. A declared role raises a severity and cannot lower one.</p>
         <div class="chip-row">
-          <span class="chip chip--live">7 live</span>
-          <span class="chip">9 specified</span>
-          <span class="chip">Baseline severities until 3.4</span>
+          <span class="chip chip--live">16 live</span>
+          <span class="chip">Severity by role, since 3.4</span>
+          <span class="chip">Rule articles: 16 of 16</span>
         </div>
 
         <section class="section">
@@ -102,65 +102,65 @@
                 <tr>
                   <td>Signers</td>
                   <td>sig-no-signing-weight</td>
-                  <td>No signer has weight above zero, so the account can never sign again.</td>
+                  <td>No signer above weight zero other than a pre-authorized transaction hash, so the account can never sign again. INFO for an issuer that declares <code>expect_locked</code>.</td>
                   <td><span class="chip chip--high">HIGH</span></td>
-                  <td><span class="chip">Specified</span></td>
+                  <td><span class="chip chip--live">Live</span></td>
                 </tr>
                 <tr>
                   <td>Signers</td>
                   <td>sig-threshold-unreachable</td>
-                  <td>Total signer weight is below a threshold, so that tier can never authorize.</td>
+                  <td>Total participating signer weight is below a threshold, so that tier can never authorize. One finding names every unreachable tier, and no <code>[[accept]]</code> entry can silence it.</td>
                   <td><span class="chip chip--high">HIGH</span></td>
-                  <td><span class="chip">Specified</span></td>
+                  <td><span class="chip chip--live">Live</span></td>
                 </tr>
                 <tr>
                   <td>Signers</td>
                   <td>sig-threshold-order</td>
                   <td>Thresholds do not satisfy low &lt;= medium &lt;= high.</td>
                   <td><span class="chip chip--warn">WARN</span></td>
-                  <td><span class="chip">Specified</span></td>
+                  <td><span class="chip chip--live">Live</span></td>
                 </tr>
                 <tr>
                   <td>Signers</td>
                   <td>sig-single-key-high</td>
-                  <td>One signer alone reaches the high threshold.</td>
-                  <td>By role</td>
-                  <td><span class="chip">Specified</span></td>
+                  <td>One signer alone reaches the high threshold. At the default high of 0 any single participating signature satisfies the tier, and the evidence says so.</td>
+                  <td>INFO*</td>
+                  <td><span class="chip chip--live">Live</span></td>
                 </tr>
                 <tr>
                   <td>Signers</td>
                   <td>sig-hashx</td>
-                  <td>A <code>hash(x)</code> signer exists; HIGH if it alone reaches medium.</td>
-                  <td>WARN or HIGH</td>
-                  <td><span class="chip">Specified</span></td>
+                  <td>A <code>hash(x)</code> signer exists; HIGH when its own weight reaches a medium threshold above zero, because using it publishes the secret.</td>
+                  <td><span class="chip chip--warn">WARN</span> or <span class="chip chip--high">HIGH</span></td>
+                  <td><span class="chip chip--live">Live</span></td>
                 </tr>
                 <tr>
                   <td>Signers</td>
                   <td>sig-unexpected-signer</td>
                   <td>A signer is not in <code>expected_signers</code>, only when the list is declared.</td>
-                  <td>By role</td>
-                  <td><span class="chip">Specified</span></td>
+                  <td>HIGH*</td>
+                  <td><span class="chip chip--live">Live</span></td>
                 </tr>
                 <tr>
                   <td>Signers</td>
                   <td>sig-missing-expected</td>
-                  <td>A declared signer is absent from the chain.</td>
+                  <td>A declared signer is absent from the chain, or the chain shows it at weight zero.</td>
                   <td><span class="chip chip--high">HIGH</span></td>
-                  <td><span class="chip">Specified</span></td>
+                  <td><span class="chip chip--live">Live</span></td>
                 </tr>
                 <tr>
                   <td>Signers</td>
                   <td>sig-weight-drift</td>
-                  <td>A declared signer's weight differs from the chain.</td>
-                  <td>By role</td>
-                  <td><span class="chip">Specified</span></td>
+                  <td>A signer both sides name holds a different weight than declared. A key appears in one of the three signer comparison rules only.</td>
+                  <td>WARN*</td>
+                  <td><span class="chip chip--live">Live</span></td>
                 </tr>
                 <tr>
                   <td>Thresholds</td>
                   <td>thr-drift</td>
                   <td>Declared thresholds differ from the chain.</td>
-                  <td>By role</td>
-                  <td><span class="chip">Specified</span></td>
+                  <td>WARN*</td>
+                  <td><span class="chip chip--live">Live</span></td>
                 </tr>
                 <tr>
                   <td>Flags</td>
@@ -179,7 +179,7 @@
                 <tr>
                   <td>Identity</td>
                   <td>id-no-home-domain</td>
-                  <td>The policy declares a home domain and the chain shows none.</td>
+                  <td>The policy declares a home domain and the chain shows none, or the account's role is <code>issuer</code> and it publishes nothing.</td>
                   <td><span class="chip chip--warn">WARN</span></td>
                   <td><span class="chip chip--live">Live</span></td>
                 </tr>
@@ -200,12 +200,12 @@
               </tbody>
             </table>
           </div>
-          <p class="table-caption">* The two live flag rules use WARN for every role today. The specified catalog makes flag drift HIGH for an issuer and clawback WARN, raised to HIGH for an issuer. Role overrides are task 3.4.</p>
+          <p class="table-caption">* A role raises these. The severity shown is what a plain <code>check</code> prints, because <code>check</code> declares no role and an undeclared account is <code>other</code>: flag drift and an undeclared clawback at WARN, an unexpected signer at HIGH, weight and threshold drift at WARN, and a single key holding the account at INFO, since a fresh account has thresholds 0/0/0 and one weighted key. <code>audit</code> then applies its own weight to each account: single-key control becomes HIGH for an issuer or a treasury and WARN for a distribution account or a merchant, flag drift and an undeclared clawback become HIGH for an issuer, and weight and threshold drift become HIGH for a treasury. A role can only move a finding up, so an issuer cannot talk a missing account or an unreachable tier down, and no role touches a severity a <code>[[accept]]</code> entry could never silence. The readings are in <code>PRD.md</code> Appendix A.</p>
         </section>
 
         <section class="section">
-          <h2>The seven live rules</h2>
-          <p>These are registered in <code>internal/rules</code>, covered by positive and negative fixture cases, and exercised end to end by the CLI tests.</p>
+          <h2>Rule articles, the first seven</h2>
+          <p>These seven landed before the signer family, so their articles were written while they were the whole catalog. Every one is registered in <code>internal/rules</code>, covered by positive and negative fixture cases, and exercised end to end by the CLI tests. The nine signer and threshold rules below were registered on 2026-11-04 and weighted by role on the same day.</p>
 
           <article class="rule">
             <div class="rule-head">
@@ -281,10 +281,10 @@
               <span class="chip chip--warn">WARN</span>
               <span class="chip chip--live">Live</span>
             </div>
-            <p>The policy declares a <code>home_domain</code> and the account publishes none on chain. The trigger is the declaration, not the role: the role table that would decide which accounts are expected to publish one is task 3.4, and rules may not hardcode a role set. A <code>check</code> run declares nothing, so it cannot raise this rule.</p>
+            <p>Two triggers, one finding. The policy declares a <code>home_domain</code> and the account publishes none on chain, or the account's own role is <code>issuer</code>, the one role <code>PRD.md</code> Appendix A describes as publishing a domain, and nothing is declared at all. The evidence line says which of the two fired, so an operator who declared a domain and an operator who only declared a role read different sentences. A <code>check</code> run declares neither, so it cannot raise this rule.</p>
             <dl>
               <dt>Evidence</dt>
-              <dd><code>home_domain declared "example.org", observed none</code></dd>
+              <dd><code>home_domain declared "example.org", observed none</code> or <code>role "issuer" expects a home_domain, observed none</code></dd>
               <dt>Acceptable</dt>
               <dd>Yes, with a reason and an optional expiry.</dd>
               <dt>Exit effect</dt>
@@ -327,16 +327,16 @@
           </article>
         </section>
 
-        <section class="section" id="specified">
-          <h2>The nine specified rules</h2>
-          <p>Each of these has a stable ID, a written condition and a severity. None is registered in <code>internal/rules</code>, so a run today evaluates none of them and no exit code depends on one. What follows is the contract tasks 3.1 and 3.4 have to satisfy, written from <code>PRD.md</code> 6.1, <code>PRD.md</code> Appendix A and <code>ARCHITECTURE.md</code> 9 rather than from an implementation, which is why the evidence rows say what a finding must name instead of quoting a line no program has printed.</p>
-          <p>Nine of them lean on one piece of arithmetic that does not exist yet. <code>internal/threshold</code> will hold <code>Reachable</code> and <code>MinSigners</code>, and its rules are settled: weights are summed and must reach or exceed the threshold, thresholds and weights run over the ranges Stellar defines, a signer participates only above weight zero, ed25519 and <code>hash(x)</code> signers count toward standing control while a pre-authorized transaction signer authorizes one named transaction and does not, and <code>MinSigners</code> takes weights largest first and accumulates. Two edge cases, a threshold of zero with no weighted signer and signatures left over after the threshold is met, remain unverified because settling them needs a testnet transaction and this project forbids itself from building one. That is the reason these nine are not shipped, and no amount of review changes it.</p>
+        <section class="section" id="signers">
+          <h2>The nine signer and threshold rules</h2>
+          <p>These were written out on 2026-11-03 as the contract tasks 3.1 and 3.4 had to satisfy, from <code>PRD.md</code> 6.1, <code>PRD.md</code> Appendix A and <code>ARCHITECTURE.md</code> 9 rather than from an implementation, because no code read a signer yet. Both tasks landed on 2026-11-04 and every one of the nine is registered in <code>internal/rules</code> now, so a run evaluates them and an exit code can depend on one. The articles below keep the shape they were written in, with the rows that said "Blocked by" replaced by what a declared role does to the finding.</p>
+          <p>Nine of them lean on one piece of arithmetic. <code>internal/threshold</code> holds <code>Reachable</code> and <code>MinSigners</code> since task 2.3, and its rules are the ones task 0.7 settled by reading the protocol implementation rather than by guessing from documentation: weights are summed and must reach or exceed the threshold, thresholds and weights run over the ranges Stellar defines, a signer participates only above weight zero, ed25519, <code>hash(x)</code> and <code>ed25519_signed_payload</code> signers count toward standing control while a pre-authorized transaction signer authorizes one named transaction and does not, and <code>MinSigners</code> takes weights largest first and accumulates. The two edge cases that page called unverifiable without a transaction, a threshold of zero with no weighted signer and signatures left over after the threshold is met, are settled by the same reading: <code>getNeededThreshold</code> (<code>src/transactions/OperationFrame.cpp:48-64</code>) returns the stored tier with no special case for zero, and <code>checkSignature</code> searches a candidate list, so a tier of zero demands a match and no weight. The citation is in <code>ARCHITECTURE.md</code> 6.3.</p>
 
           <article class="rule">
             <div class="rule-head">
               <h3>sig-no-signing-weight</h3>
               <span class="chip chip--high">HIGH</span>
-              <span class="chip">Specified</span>
+              <span class="chip chip--live">Live</span>
             </div>
             <p>No signer on the account carries weight above zero, so no signer participates in any tier and the account can never sign anything again. It cannot move its own balances, cannot rotate its own keys and cannot lower its own thresholds, because each of those operations needs a signature from the account it changes. Undeclared, that shape is an accident or the end of a compromise. Declared, it is a decision, and the catalog says so: an issuer that declares <code>expect_locked = true</code> is describing an account whose job was to issue and then step aside, and for that account the finding is INFO.</p>
             <dl>
@@ -345,9 +345,9 @@
               <dt>Acceptable</dt>
               <dd>Yes, with a reason and an optional expiry. <code>expect_locked</code> is the declared form of the same fact, so a locked issuer that also accepts this finding has declared it twice.</dd>
               <dt>Exit effect</dt>
-              <dd>HIGH would fail the default <code>--fail-on high</code>. INFO fails no threshold at all, which is the point of the exception.</dd>
-              <dt>Blocked by</dt>
-              <dd>Task 3.1, which registers the signer family, and task 3.4 for the <code>expect_locked</code> downgrade, because no rule may read a role today.</dd>
+              <dd>HIGH fails the default <code>--fail-on high</code>. INFO fails no threshold at all, which is the point of the exception.</dd>
+              <dt>Role weight</dt>
+              <dd>None. No row of <code>PRD.md</code> Appendix A names this rule, which is what lets the INFO survive a declared role instead of being raised back to HIGH. The downgrade itself is read through <code>policy.AllowsExpectLocked</code>, so <code>expect_locked = true</code> is an issuer's statement of intent and any other role's typo.</dd>
             </dl>
           </article>
 
@@ -355,7 +355,7 @@
             <div class="rule-head">
               <h3>sig-threshold-unreachable</h3>
               <span class="chip chip--high">HIGH</span>
-              <span class="chip">Specified</span>
+              <span class="chip chip--live">Live</span>
             </div>
             <p>For each of the three tiers, whether the signers that exist can add up to what that tier demands. When they cannot, the tier is dead: no combination of keys anyone holds will ever authorize an operation in it again, and nothing can be gathered after the fact because the weights that would have made the total are not on the account. The high tier is the one that ends an account, since changing signers and changing thresholds both run at high. An unreachable high tier freezes the account in exactly the shape that made it unreachable.</p>
             <p>An account with no participating signer makes every tier above zero unreachable, so this rule and <code>sig-no-signing-weight</code> fire on the same read and say different things about it: one names the missing weight, the other names the tier that is now permanently dead.</p>
@@ -365,9 +365,9 @@
               <dt>Acceptable</dt>
               <dd>No. This is the only rule in the signer family that cannot be accepted at all; it sits on the non-acceptable list in <code>ARCHITECTURE.md</code> 6.6 beside the two account rules. An acceptance records a risk an operator has decided to live with, and an unreachable tier is not a risk but a statement that a class of operation can never happen.</dd>
               <dt>Exit effect</dt>
-              <dd>HIGH, so it would fail the default <code>--fail-on high</code>, and no acceptance would hide it.</dd>
-              <dt>Blocked by</dt>
-              <dd>Task 3.1, which is also where <code>Reachable</code> gets written, and task 0.7 behind it.</dd>
+              <dd>HIGH, so it fails the default <code>--fail-on high</code>, and no acceptance can hide it.</dd>
+              <dt>Role weight</dt>
+              <dd>None, and none is possible. The rule sits on the non-acceptable list beside the two account rules, and a role only ever raises a severity, so a dead tier reads HIGH for every role and cannot be accepted away by any of them.</dd>
             </dl>
           </article>
 
@@ -375,7 +375,7 @@
             <div class="rule-head">
               <h3>sig-threshold-order</h3>
               <span class="chip chip--warn">WARN</span>
-              <span class="chip">Specified</span>
+              <span class="chip chip--live">Live</span>
             </div>
             <p><code>low &lt;= medium &lt;= high</code>. Horizon accepts any three numbers in any order, so an account can carry a medium tier stricter than its high tier and remain perfectly legal. It stops being readable: the three tiers are how an owner says which operations need how much agreement, and when they run backwards nothing on the account shows which number anyone meant. Stellar documents the order as a recommendation rather than a requirement, which is why this is a warning and not a HIGH. An out-of-order account may be exactly what its owner wanted and has merely failed to explain itself.</p>
             <dl>
@@ -385,8 +385,8 @@
               <dd>Yes, with a reason and an optional expiry.</dd>
               <dt>Exit effect</dt>
               <dd>WARN, so exit 1 only under <code>--fail-on warn</code>.</dd>
-              <dt>Blocked by</dt>
-              <dd>Task 3.1. The thresholds themselves are already parsed into the snapshot, so this is the one rule in the family whose input exists today.</dd>
+              <dt>Role weight</dt>
+              <dd>None. No row of <code>PRD.md</code> Appendix A names it, so an out-of-order account is a WARN for an issuer and for an undeclared one alike.</dd>
             </dl>
           </article>
 
@@ -394,19 +394,19 @@
             <div class="rule-head">
               <h3>sig-single-key-high</h3>
               <span class="chip">By role</span>
-              <span class="chip">Specified</span>
+              <span class="chip chip--live">Live</span>
             </div>
             <p><code>MinSigners(signers, high) == 1</code>: one key alone reaches the high threshold, so a single stolen credential authorizes everything the account can do, including replacing every other signer. The rule reads weights rather than counting entries, which is what makes it worth having at all. A five-signer account in which one entry holds weight 9 and four hold weight 1 is a single-key account that looks conservative in any list of signers. Only participating signers count, so a key at weight zero reaches nothing, and a pre-authorized transaction signer does not count toward standing control either.</p>
-            <p>Severity is the role table: HIGH for issuer and treasury, WARN for merchant and distribution, INFO for <code>other</code>. <code>PRD.md</code> Appendix A writes those rows and task 3.4 turns them into behavior. There is no baseline number for this rule until then, and this page is not going to invent one.</p>
+            <p>Severity is the role table: HIGH for issuer and treasury, WARN for merchant and distribution, INFO for <code>other</code>. <code>PRD.md</code> Appendix A wrote those rows and task 3.4 turned them into behavior on 2026-11-04. The rule itself emits its <code>other</code> row, so a <code>check</code> with no policy file prints INFO and an <code>audit</code> whose policy declares <code>role = "issuer"</code> prints HIGH, which is the same observation at two weights rather than two observations.</p>
             <dl>
               <dt>Evidence</dt>
               <dd>The signer that reaches the tier on its own, its weight, and the tier it reaches.</dd>
               <dt>Acceptable</dt>
               <dd>Yes, with a reason. An operator who has decided that one custodial key is enough for a receiving account can accept the finding instead of re-weighting the account, and the acceptance is what makes that decision visible rather than burying it.</dd>
               <dt>Exit effect</dt>
-              <dd>Decided by 3.4. On the rows as written it is HIGH for an issuer or a treasury, which would fail the default threshold, WARN below that, and INFO for <code>other</code>, which fails nothing.</dd>
-              <dt>Blocked by</dt>
-              <dd>Task 3.1 for the arithmetic and task 3.4 for the role rows, with task 0.7 behind both.</dd>
+              <dd>HIGH for an issuer or a treasury, which fails the default <code>--fail-on high</code>, WARN for a distribution account or a merchant, so exit 1 only under <code>--fail-on warn</code>, and INFO for <code>other</code>, which fails nothing.</dd>
+              <dt>Role weight</dt>
+              <dd>The cell that moves most often: four rows name this rule above the INFO it emits, so a role changes the report for every role except <code>other</code>. <code>check</code> declares no role and lands on that row.</dd>
             </dl>
           </article>
 
@@ -414,7 +414,7 @@
             <div class="rule-head">
               <h3>sig-hashx</h3>
               <span class="chip">WARN or HIGH</span>
-              <span class="chip">Specified</span>
+              <span class="chip chip--live">Live</span>
             </div>
             <p>A <code>hash(x)</code> signer is a signer whose key is the hash of a value instead of an ed25519 public key. To use it its holder reveals the preimage, the ledger hashes what it was given and matches it against the stored key. That is how pre-signed and time-locked arrangements are built, and it is also a signer that anyone who finds the preimage can operate, with no key to guard and nothing to notice being taken. The rule is WARN for one being present and HIGH when that signer's weight alone reaches the medium tier, because at that point a preimage nobody has published yet is a medium-tier key.</p>
             <p>Gauge decodes and labels this type today: <code>internal/source</code> maps Horizon's <code>sha256_hash</code> onto the internal <code>hash_x</code>. No captured account carries one, in <code>testdata/horizon/</code> or in <code>posture-sec/stellar-account-fixtures</code>, because every signer key in either set is a <code>G...</code> address. The fixture behind this rule is therefore hand-built and labelled as such until task 3.6 decides what the Appendix B set actually needs.</p>
@@ -425,8 +425,8 @@
               <dd>Yes, with a reason and an optional expiry.</dd>
               <dt>Exit effect</dt>
               <dd>WARN at presence, HIGH at medium-tier reach, so only the second fails the default <code>--fail-on high</code>.</dd>
-              <dt>Blocked by</dt>
-              <dd>Task 3.1 for the severity split, and a real capture of the shape, which is 3.6's question rather than this rule's.</dd>
+              <dt>Role weight</dt>
+              <dd>None. No row of <code>PRD.md</code> Appendix A names it, so its own split stands: WARN at presence, HIGH when that entry's weight reaches a medium tier above zero. The capture question is the one thing about this rule still open, and it belongs to task 3.6 rather than to the rule.</dd>
             </dl>
           </article>
 
@@ -434,19 +434,19 @@
             <div class="rule-head">
               <h3>sig-unexpected-signer</h3>
               <span class="chip">By role</span>
-              <span class="chip">Specified</span>
+              <span class="chip chip--live">Live</span>
             </div>
             <p>A signer on the account that the declared <code>expected_signers</code> list does not name. The declaration is the whole rule. <code>expected_signers</code> is a pointer in the policy, so an absent key makes no claim and the rule stays silent, while <code>expected_signers = []</code> is a positive claim that this account should carry no signer at all. A key its owner added and had not yet written into the file is exactly what this finding is for, and a key nobody added is the same finding with a worse explanation attached to it.</p>
-            <p>Appendix A raises presence to HIGH for an issuer, where a new signer is the ordinary shape of a compromise, and writes signer and threshold drift as HIGH for a treasury and WARN for merchant and distribution. Whether a treasury's "signer drift" row covers presence as well as weight is a decision task 3.4 makes; it is not a mapping this page gets to guess on its behalf.</p>
+            <p>Appendix A raises presence to HIGH for an issuer, where a new signer is the ordinary shape of a compromise, and writes signer and threshold drift as HIGH for a treasury and WARN for merchant and distribution. Task 3.4 read the treasury row's "signer drift" as covering presence as well as weight, and recorded that reading rather than leaving it to inference; it changes nothing on the report, because this rule already emits HIGH.</p>
             <dl>
               <dt>Evidence</dt>
               <dd>The signer's address, its weight, and the fact that no declared entry names it.</dd>
               <dt>Acceptable</dt>
               <dd>Yes, with a reason and an optional expiry, and the expiry matters here more than anywhere else in the catalog: accepting a signer that appeared is a statement that it will be explained or removed by a date.</dd>
               <dt>Exit effect</dt>
-              <dd>Decided by 3.4. HIGH on an issuer as the table reads, below the default threshold on the roles that come out WARN or INFO.</dd>
-              <dt>Blocked by</dt>
-              <dd>Task 3.1 for the comparison and task 3.4 for the role rows.</dd>
+              <dd>HIGH, so it fails the default <code>--fail-on high</code> on every role. It is the one by-role rule whose baseline already sits at the highest value any row asks for.</dd>
+              <dt>Role weight</dt>
+              <dd>Named by the <code>issuer</code> and <code>treasury</code> rows at HIGH, which is what the rule emits, so those cells record what the appendix says rather than moving the report. A floor cannot lower, so no role can talk an undeclared signer down.</dd>
             </dl>
           </article>
 
@@ -454,7 +454,7 @@
             <div class="rule-head">
               <h3>sig-missing-expected</h3>
               <span class="chip chip--high">HIGH</span>
-              <span class="chip">Specified</span>
+              <span class="chip chip--live">Live</span>
             </div>
             <p>A signer the policy declares is not on the account. Someone removed a key: the rotation of a retired device that was never written back into the file, or the removal of the one signer that was not meant to go. HIGH rather than a warning because an absent signer cannot be restored by its own owner alone: putting a key back is a high-tier operation, so recovery belongs to whoever still holds enough weight, which is the same class of event as an unreachable threshold and a good deal easier to fix. It is also the rule that says whether a policy still describes anything.</p>
             <p>With <code>sig-unexpected-signer</code> it forms the two halves of one claim. Both silent is what "the signers are exactly the ones you declared" means. Silence from only one of them is not.</p>
@@ -464,9 +464,9 @@
               <dt>Acceptable</dt>
               <dd>Yes, with a reason and an optional expiry.</dd>
               <dt>Exit effect</dt>
-              <dd>HIGH, so it would fail the default <code>--fail-on high</code>.</dd>
-              <dt>Blocked by</dt>
-              <dd>Task 3.1. Its severity does not depend on role, which makes it the least blocked of the nine.</dd>
+              <dd>HIGH, so it fails the default <code>--fail-on high</code>.</dd>
+              <dt>Role weight</dt>
+              <dd>None that changes anything. The <code>treasury</code> row names it at HIGH, which is its baseline, and the <code>distribution</code> and <code>merchant</code> rows write "drift is WARN" without reaching a removal: a floor can raise, so an absent signer stays HIGH for them too.</dd>
             </dl>
           </article>
 
@@ -474,7 +474,7 @@
             <div class="rule-head">
               <h3>sig-weight-drift</h3>
               <span class="chip">By role</span>
-              <span class="chip">Specified</span>
+              <span class="chip chip--live">Live</span>
             </div>
             <p>A declared signer is present and its weight is not what the policy says. The set of keys matches, so a check that looks only at presence stays quiet, and the account's distribution of power has changed underneath it anyway. Raising one signer from 1 to 6 can turn a five-key account into one a single key reaches at medium; lowering one from 6 to 1 can make a tier unreachable while every name on the account is exactly where it was left. Weight is what the threshold math reads, so this is the rule that keeps that math honest about intent.</p>
             <dl>
@@ -483,9 +483,9 @@
               <dt>Acceptable</dt>
               <dd>Yes, with a reason and an optional expiry.</dd>
               <dt>Exit effect</dt>
-              <dd>Decided by 3.4. Appendix A gives a treasury HIGH for signer drift, merchant and distribution WARN and <code>other</code> INFO, and does not name weight drift for an issuer at all, so that cell is one of the rows 3.4 has to write rather than read.</dd>
-              <dt>Blocked by</dt>
-              <dd>Task 3.1 and task 3.4.</dd>
+              <dd>WARN at baseline, so exit 1 under <code>--fail-on warn</code>, and HIGH for a treasury, which fails the default.</dd>
+              <dt>Role weight</dt>
+              <dd>HIGH on the <code>treasury</code> row. The <code>distribution</code> and <code>merchant</code> rows name it at WARN, which is what it already emits, and the <code>issuer</code> row does not name weight at all.</dd>
             </dl>
           </article>
 
@@ -493,7 +493,7 @@
             <div class="rule-head">
               <h3>thr-drift</h3>
               <span class="chip">By role</span>
-              <span class="chip">Specified</span>
+              <span class="chip chip--live">Live</span>
             </div>
             <p>Any declared tier differs from the chain, in either direction. Thresholds decide how much agreement an operation needs, so a change here rewrites the meaning of every weight on the account without touching a single signer. Lowering <code>high</code> from 9 to 3 on an account whose three signers hold 3 each leaves an account that any one of them can move alone while its signer list still looks careful. Raising a tier can push it past the total available weight, and that case belongs to <code>sig-threshold-unreachable</code> rather than here, which is why both rules exist and why one edit can produce two findings.</p>
             <dl>
@@ -502,18 +502,18 @@
               <dt>Acceptable</dt>
               <dd>Yes, with a reason and an optional expiry.</dd>
               <dt>Exit effect</dt>
-              <dd>Decided by 3.4. Appendix A names threshold drift HIGH for a treasury and WARN for merchant and distribution, and, as with weight drift, says nothing about an issuer.</dd>
-              <dt>Blocked by</dt>
-              <dd>Task 3.1 for the comparison and task 3.4 for the role rows.</dd>
+              <dd>WARN at baseline, so exit 1 under <code>--fail-on warn</code>, and HIGH for a treasury, which fails the default.</dd>
+              <dt>Role weight</dt>
+              <dd>HIGH on the <code>treasury</code> row, and the same reading as weight drift everywhere else: the <code>distribution</code> and <code>merchant</code> cells write WARN against a rule that already says WARN, and no row names a tier for an issuer.</dd>
             </dl>
           </article>
         </section>
 
         <section class="section">
           <h2>What is not shipped</h2>
-          <p>The nine specified rules are a contract for the next phases, not behavior you can rely on today. They are written out above anyway, each with the condition a contributor has to satisfy, the severity question it raises and the task that blocks it, so that the contract can be worked from without reading Go source. The signer and threshold rules wait on threshold semantics that task 0.7 could not verify without submitting a transaction, which Gauge forbids itself to do. Role-based severities are task 3.4.</p>
+          <p>All sixteen rules in the table are registered and evaluated on every run, and a declared role now weights them. What is not shipped is the golden fixture set for every Appendix B scenario (task 3.6), the facts a zero-config run prints (task 3.7) and the rule articles for the nine signer and threshold checks, which arrive with task 4.2.</p>
           <div class="note">
-            <p><strong>Read the status before trusting a pass.</strong> A run evaluates the seven live rules. A clean result means those seven agreed with your policy; it says nothing about signers, thresholds or any rule marked Specified.</p>
+            <p><strong>Read the status before trusting a pass.</strong> A clean result means all sixteen checks agreed with what the chain showed and with what your policy declared. It is not a statement about key custody: on-chain data cannot show who holds a key, and ten of the sixteen rules compare against a declaration, so a policy that says nothing about signers, thresholds or flags gets no answer about drift.</p>
           </div>
           <p><a href="status.html">Current implementation status</a> · <a href="policy.html">How to declare expectations</a></p>
         </section>

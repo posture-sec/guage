@@ -115,6 +115,7 @@ func Run(ctx context.Context, job Job) (model.Report, error) {
 			Expected: job.Network,
 		})
 		panicked = panicked || recovered
+		applyRoles(job.Accounts[i].Role, findings)
 		applyAccepts(findings, job.Accepts, now())
 		model.SortFindings(findings)
 		report := model.AccountReport{Snapshot: snapshot, Findings: findings, Missing: obs.missing}
@@ -348,6 +349,19 @@ func evaluate(evaluator Evaluator, c rules.Context) (findings []model.Finding, r
 		}
 	}()
 	return evaluator(c), false
+}
+
+// applyRoles raises each finding to the severity the account's declared role
+// demands. It runs after a rule has emitted and before an acceptance is matched, so
+// one observation is a different weight for an issuer than for a merchant while
+// every rule still reports the same finding at the same fingerprint, and a role can
+// never turn an accepted risk into a quiet one. The table is Appendix A, in
+// internal/policy; the two role cells that are not severities are read by the rules
+// that own them.
+func applyRoles(role model.Role, findings []model.Finding) {
+	for i := range findings {
+		findings[i].Severity = policy.SeverityFor(role, findings[i].RuleID, findings[i].Severity)
+	}
 }
 
 func applyAccepts(findings []model.Finding, accepts []policy.Acceptance, now time.Time) {

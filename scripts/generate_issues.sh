@@ -81,6 +81,7 @@ backlog() {
     '2.8	type: feature	area: run	feat(run): orchestrate policy, source and report' \
     '2.9	type: feature	area: cli	feat(cli): wire check, audit and version subcommands' \
     '2.10	type: test	area: run	test: prove every fail-closed path exits non-zero' \
+    '2.11	type: feature	area: source	feat(source): model and decode signed-payload signers' \
     '3.1	type: feature	area: rules	feat(rules): signer and threshold rules with fixtures' \
     '3.2	type: feature	area: rules	feat(rules): flag drift and undeclared clawback rules' \
     '3.3	type: feature	area: rules	feat(rules): missing account and network mismatch rules' \
