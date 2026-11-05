@@ -1,0 +1,27 @@
+Gauge test
+network: Test SDF Network ; September 2015
+ledger: 5466897
+
+account GBNLMMJ6ZMKSID5OZBZD7B3IPE2WHWOKOETFBZ5M4V563YQRX53CUDWR
+  endpoint: https://horizon-testnet.stellar.org
+  as of ledger 5466905, sequence 23472095056887814
+  thresholds: low 1, medium 2, high 3
+  flags: auth_required=false auth_revocable=false auth_immutable=false clawback=false
+  home domain: (none)
+  sponsor: (none)
+  signers: 2
+    GBNLMMJ6ZMKSID5OZBZD7B3IPE2WHWOKOETFBZ5M4V563YQRX53CUDWR ed25519 weight 0
+    TBPQB2XDHRQCIOJSSUOOMOGVO22GQMOXJ46CTXVWOY4NB3BOSDSPQ4OW pre_auth_tx weight 3
+  findings: 2 (0 accepted)
+    [high] sig-no-signing-weight
+      no signer can authorize an operation, so this account cannot sign anything again
+      evidence: GBNLMM...UDWR ed25519 at weight 0; TBPQB2...Q4OW pre_auth_tx at weight 3
+      fingerprint: 9b85d00a5d4bff720d22770845276e55ddc2e3934742a9dbbdfa2a3e09e874ad
+    [high] sig-threshold-unreachable
+      a threshold tier cannot be authorized by the signers this account has
+      evidence: low threshold 1 and medium threshold 2 and high threshold 3 cannot be reached; signers: GBNLMM...UDWR ed25519 at weight 0; TBPQB2...Q4OW pre_auth_tx at weight 3
+      fingerprint: efcd5ce86efca13a18b9c8df9bf57b4661058425e79f5bee8bb6a3c418b5b10d
+
+result: 2 findings (2 high, 0 warn, 0 info), 0 accepted
+exit code: 1
+limits: Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised.

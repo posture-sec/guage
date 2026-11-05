@@ -1,0 +1,34 @@
+Gauge test
+network: Test SDF Network ; September 2015
+ledger: 5466897
+
+account GDSX2WUFUT7KCMTUNG3IUQWIUQSC4XNKQ5NTGEZRKLTMLCSJTCUVBEVG
+  endpoint: https://horizon-testnet.stellar.org
+  as of ledger 4699329, sequence 20183455778209793
+  thresholds: low 0, medium 0, high 0
+  flags: auth_required=true auth_revocable=true auth_immutable=false clawback=true
+  home domain: komunitin.org
+  sponsor: GCHEQPEHYQTHK4EVTPV7ASSRLJ6XZBZKEGZ3FWYXRLLQZ7L35PO7OUBM
+  signers: 1
+    GDSX2WUFUT7KCMTUNG3IUQWIUQSC4XNKQ5NTGEZRKLTMLCSJTCUVBEVG ed25519 weight 1
+  findings: 4 (0 accepted)
+    [high] flag-drift
+      the declared flags differ from the flags the chain shows
+      evidence: auth_required declared false, observed true
+      fingerprint: 952d33cffbe51bbbef95022d9e0ed597de787c9cb414c5e7d869520cf3091f72
+    [high] flag-undeclared-clawback
+      clawback is enabled and the policy does not declare it
+      evidence: clawback observed true, and no clawback expectation is declared
+      fingerprint: c84578b5217e2a97c558c5ec0e821d6f5cab54223e655b74cffb43b2322e7290
+    [high] sig-single-key-high
+      one signer alone reaches the high threshold, so a single key holds the account
+      evidence: GDSX2W...BEVG ed25519 at weight 1 is enough on its own, because the high threshold is 0 and any single participating signature satisfies it
+      fingerprint: f0bbe6842ce92e57a4970928c6991a58aee4e05e646c3d68cb25e9b3c5f9e01c
+    [warn] id-toml-unreachable
+      the home domain komunitin.org does not serve a stellar.toml Gauge can read
+      evidence: step parse; detail the document is not a configuration file this parser accepts; status 200
+      fingerprint: 59aa1a9db576b141d2e2fadf402b88404a3ad441c55135d85182ba133120288a
+
+result: 4 findings (3 high, 1 warn, 0 info), 0 accepted
+exit code: 1
+limits: Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised.

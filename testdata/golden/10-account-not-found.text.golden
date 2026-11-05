@@ -1,0 +1,16 @@
+Gauge test
+network: Test SDF Network ; September 2015
+ledger: 5466897
+
+account GC2HHIM66CBKJFMYOHECBMKD4NWRGWJ3FEXFDPWPT4TLS7OFR43LO2II
+  endpoint: https://horizon-testnet.stellar.org
+  not found on this endpoint (never created, or merged)
+  findings: 1 (0 accepted)
+    [high] acct-missing
+      the account was not found on this endpoint, so it may never have been created or it was merged
+      evidence: endpoint https://horizon-testnet.stellar.org returned not found
+      fingerprint: b03faa6106f2405560196e0cad9e0bb74cab9c08d798877c0d795019bddd43d6
+
+result: 1 findings (1 high, 0 warn, 0 info), 0 accepted
+exit code: 1
+limits: Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised.

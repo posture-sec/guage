@@ -1,0 +1,26 @@
+Gauge test
+network: Test SDF Network ; September 2015
+ledger: 5466897
+
+account GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3
+  endpoint: https://horizon-testnet.stellar.org
+  as of ledger 5465023, sequence 23472095056887808
+  thresholds: low 0, medium 0, high 0
+  flags: auth_required=false auth_revocable=false auth_immutable=false clawback=false
+  home domain: (none)
+  sponsor: (none)
+  signers: 1
+    GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3 ed25519 weight 1
+  findings: 2 (0 accepted)
+    [warn] id-no-home-domain
+      the policy declares a home domain and the account publishes none
+      evidence: home_domain declared "gauge.example.invalid", observed none
+      fingerprint: c01d44f2d462f8687e109edc089cf326f85ac5f28b82ed09a8979aafa936e49a
+    [info] sig-single-key-high
+      one signer alone reaches the high threshold, so a single key holds the account
+      evidence: GBK4NF...E7M3 ed25519 at weight 1 is enough on its own, because the high threshold is 0 and any single participating signature satisfies it
+      fingerprint: 2c68d5729514adbe853f63beab5279a2b6f5740cafc802d0f1447be040dc7d1e
+
+result: 2 findings (0 high, 1 warn, 1 info), 0 accepted
+exit code: 1
+limits: Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised.

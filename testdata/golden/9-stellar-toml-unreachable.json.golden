@@ -1,0 +1,64 @@
+{
+  "tool_version": "test",
+  "network": "Test SDF Network ; September 2015",
+  "ledger": 5466897,
+  "accounts": [
+    {
+      "snapshot": {
+        "id": "GBKDXQ7LCO3X23K4HUKSHCA3KMM3364M4UK3526XYMBWTDD4NJCSRNAI",
+        "network": "Test SDF Network ; September 2015",
+        "endpoint": "https://horizon-testnet.stellar.org",
+        "ledger": 5466906,
+        "sequence": "23472095056887815",
+        "thresholds": {
+          "low": 2,
+          "medium": 2,
+          "high": 2
+        },
+        "signers": [
+          {
+            "key": "GBKDXQ7LCO3X23K4HUKSHCA3KMM3364M4UK3526XYMBWTDD4NJCSRNAI",
+            "type": "ed25519",
+            "weight": 1,
+            "sponsor": ""
+          },
+          {
+            "key": "GD4FV55YUFEJWS5Z3VDFDSFFQVHNX2TCUANW24FKKA4XFSHVISQI35G2",
+            "type": "ed25519",
+            "weight": 1,
+            "sponsor": ""
+          }
+        ],
+        "flags": {
+          "auth_required": false,
+          "auth_revocable": false,
+          "auth_immutable": false,
+          "clawback_enabled": false
+        },
+        "home_domain": "gauge.example.invalid",
+        "sponsor": "",
+        "balances": [
+          {
+            "asset_code": "",
+            "asset_issuer": "",
+            "is_authorized": true,
+            "clawback_enabled": false
+          }
+        ]
+      },
+      "findings": [
+        {
+          "rule_id": "id-toml-unreachable",
+          "severity": "warn",
+          "account": "GBKDXQ7LCO3X23K4HUKSHCA3KMM3364M4UK3526XYMBWTDD4NJCSRNAI",
+          "message": "the home domain gauge.example.invalid does not serve a stellar.toml Gauge can read",
+          "evidence": "step guard; detail the host name resolves to a loopback address, which Gauge will not dial; status 0",
+          "fingerprint": "0511970124e64bd542790bf206551c2ce148094cab954469e2384ff6c5623835",
+          "accepted": false
+        }
+      ]
+    }
+  ],
+  "exit_code": 1,
+  "limits": "Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised."
+}

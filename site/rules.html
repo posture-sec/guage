@@ -417,7 +417,7 @@
               <span class="chip chip--live">Live</span>
             </div>
             <p>A <code>hash(x)</code> signer is a signer whose key is the hash of a value instead of an ed25519 public key. To use it its holder reveals the preimage, the ledger hashes what it was given and matches it against the stored key. That is how pre-signed and time-locked arrangements are built, and it is also a signer that anyone who finds the preimage can operate, with no key to guard and nothing to notice being taken. The rule is WARN for one being present and HIGH when that signer's weight alone reaches the medium tier, because at that point a preimage nobody has published yet is a medium-tier key.</p>
-            <p>Gauge decodes and labels this type today: <code>internal/source</code> maps Horizon's <code>sha256_hash</code> onto the internal <code>hash_x</code>. No captured account carries one, in <code>testdata/horizon/</code> or in <code>posture-sec/stellar-account-fixtures</code>, because every signer key in either set is a <code>G...</code> address. The fixture behind this rule is therefore hand-built and labelled as such until task 3.6 decides what the Appendix B set actually needs.</p>
+            <p>Gauge decodes and labels this type today: <code>internal/source</code> maps Horizon's <code>sha256_hash</code> onto the internal <code>hash_x</code>. No captured account carries one, in <code>testdata/horizon/</code> or in <code>posture-sec/stellar-account-fixtures</code>, because every signer key in either set is a <code>G...</code> address. The fixture behind this rule is <code>testdata/horizon/5-hashx-signer-at-medium.json</code> since 2026-11-05, built here and labelled as built, with a golden pair that pins this rule's HIGH form against a response decoded by <code>internal/source</code>. That is the most this project can do without submitting a transaction: the shape is read from the code that serves it, and no account on either endpoint has ever carried a <code>sha256_hash</code> entry.</p>
             <dl>
               <dt>Evidence</dt>
               <dd>The signer's key, its weight, and the tier that weight reaches on its own.</dd>
@@ -426,7 +426,7 @@
               <dt>Exit effect</dt>
               <dd>WARN at presence, HIGH at medium-tier reach, so only the second fails the default <code>--fail-on high</code>.</dd>
               <dt>Role weight</dt>
-              <dd>None. No row of <code>PRD.md</code> Appendix A names it, so its own split stands: WARN at presence, HIGH when that entry's weight reaches a medium tier above zero. The capture question is the one thing about this rule still open, and it belongs to task 3.6 rather than to the rule.</dd>
+              <dd>None. No row of <code>PRD.md</code> Appendix A names it, so its own split stands: WARN at presence, HIGH when that entry's weight reaches a medium tier above zero. The capture question is the one thing about this rule still open, and 3.6 answered it as far as it can be answered on 2026-11-05: the fixture is built here, not observed, so a real <code>hash(x)</code> account is still the corpus's or 4.1's to find.</dd>
             </dl>
           </article>
 
@@ -511,7 +511,7 @@
 
         <section class="section">
           <h2>What is not shipped</h2>
-          <p>All sixteen rules in the table are registered and evaluated on every run, and a declared role now weights them. What is not shipped is the golden fixture set for every Appendix B scenario (task 3.6), the facts a zero-config run prints (task 3.7) and the rule articles for the nine signer and threshold checks, which arrive with task 4.2.</p>
+          <p>All sixteen rules in the table are registered and evaluated on every run, and a declared role now weights them. Every Appendix B scenario now has a fixture and a golden pair behind it, landed 2026-11-05: twelve files in <code>testdata/horizon/</code>, five captured from testnet and seven built here and labelled as built, and 32 report files in <code>testdata/golden/</code> that one test run compares in both formats, so a severity, a wording, a fingerprint or an exit code that moves shows up as a diff rather than a silent pass. What is not shipped is the facts a zero-config run prints (task 3.7) and the usage docs 4.2 still holds open; the rule articles for the nine signer and threshold checks landed with the rest on 2026-11-04.</p>
           <div class="note">
             <p><strong>Read the status before trusting a pass.</strong> A clean result means all sixteen checks agreed with what the chain showed and with what your policy declared. It is not a statement about key custody: on-chain data cannot show who holds a key, and ten of the sixteen rules compare against a declaration, so a policy that says nothing about signers, thresholds or flags gets no answer about drift.</p>
           </div>

@@ -1,0 +1,73 @@
+{
+  "tool_version": "test",
+  "network": "Test SDF Network ; September 2015",
+  "ledger": 5466897,
+  "accounts": [
+    {
+      "snapshot": {
+        "id": "GALGVY52QMWYIRPFP3EBCQZNQZXW4BPG4WWJAQ4KICLFGZH6VLSL6VMI",
+        "network": "Test SDF Network ; September 2015",
+        "endpoint": "https://horizon-testnet.stellar.org",
+        "ledger": 5466902,
+        "sequence": "23472095056887811",
+        "thresholds": {
+          "low": 1,
+          "medium": 2,
+          "high": 10
+        },
+        "signers": [
+          {
+            "key": "GALGVY52QMWYIRPFP3EBCQZNQZXW4BPG4WWJAQ4KICLFGZH6VLSL6VMI",
+            "type": "ed25519",
+            "weight": 3,
+            "sponsor": ""
+          },
+          {
+            "key": "GD4FV55YUFEJWS5Z3VDFDSFFQVHNX2TCUANW24FKKA4XFSHVISQI35G2",
+            "type": "ed25519",
+            "weight": 4,
+            "sponsor": ""
+          }
+        ],
+        "flags": {
+          "auth_required": false,
+          "auth_revocable": false,
+          "auth_immutable": false,
+          "clawback_enabled": false
+        },
+        "home_domain": "",
+        "sponsor": "",
+        "balances": [
+          {
+            "asset_code": "",
+            "asset_issuer": "",
+            "is_authorized": true,
+            "clawback_enabled": false
+          }
+        ]
+      },
+      "findings": [
+        {
+          "rule_id": "sig-threshold-unreachable",
+          "severity": "high",
+          "account": "GALGVY52QMWYIRPFP3EBCQZNQZXW4BPG4WWJAQ4KICLFGZH6VLSL6VMI",
+          "message": "a threshold tier cannot be authorized by the signers this account has",
+          "evidence": "high threshold 10 cannot be reached; signers: GALGVY...6VMI ed25519 at weight 3; GD4FV5...35G2 ed25519 at weight 4",
+          "fingerprint": "4ede96af8a7ef756acaf72529a2656db2d7eeafb31c7f0dac2085342ece1bd2b",
+          "accepted": false
+        },
+        {
+          "rule_id": "thr-drift",
+          "severity": "warn",
+          "account": "GALGVY52QMWYIRPFP3EBCQZNQZXW4BPG4WWJAQ4KICLFGZH6VLSL6VMI",
+          "message": "the declared thresholds differ from the thresholds the chain shows",
+          "evidence": "high declared 4, chain shows 10",
+          "fingerprint": "3502d1aa1cfd736dccc4959886a2969184b26bb5e1847548b2a3f6f4ed94f30f",
+          "accepted": false
+        }
+      ]
+    }
+  ],
+  "exit_code": 1,
+  "limits": "Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised."
+}

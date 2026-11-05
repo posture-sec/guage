@@ -1,0 +1,45 @@
+{
+  "tool_version": "test",
+  "network": "Test SDF Network ; September 2015",
+  "ledger": 5466897,
+  "accounts": [
+    {
+      "snapshot": {
+        "id": "GC2HHIM66CBKJFMYOHECBMKD4NWRGWJ3FEXFDPWPT4TLS7OFR43LO2II",
+        "network": "Test SDF Network ; September 2015",
+        "endpoint": "https://horizon-testnet.stellar.org",
+        "ledger": 0,
+        "sequence": "",
+        "thresholds": {
+          "low": 0,
+          "medium": 0,
+          "high": 0
+        },
+        "signers": [],
+        "flags": {
+          "auth_required": false,
+          "auth_revocable": false,
+          "auth_immutable": false,
+          "clawback_enabled": false
+        },
+        "home_domain": "",
+        "sponsor": "",
+        "balances": []
+      },
+      "findings": [
+        {
+          "rule_id": "acct-missing",
+          "severity": "high",
+          "account": "GC2HHIM66CBKJFMYOHECBMKD4NWRGWJ3FEXFDPWPT4TLS7OFR43LO2II",
+          "message": "the account was not found on this endpoint, so it may never have been created or it was merged",
+          "evidence": "endpoint https://horizon-testnet.stellar.org returned not found",
+          "fingerprint": "b03faa6106f2405560196e0cad9e0bb74cab9c08d798877c0d795019bddd43d6",
+          "accepted": false
+        }
+      ],
+      "missing": true
+    }
+  ],
+  "exit_code": 1,
+  "limits": "Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised."
+}

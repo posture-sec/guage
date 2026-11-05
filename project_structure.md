@@ -72,10 +72,12 @@ guage/
       roles_test.go                       # one account at five roles: severity, fingerprint, accepts and the lock declaration (3.4)
 
   testdata/
-    horizon/README.md                     # capture provenance, ledgers, what could not be captured (0.6)
-    horizon/{root-testnet,1-default,7-extra-signer,8-clawback-undeclared,10-not-found}.json
-    policy/.gitkeep                       # still empty: the Appendix B scenario set is 3.6, and today's acceptance and role cases are inline TOML in `internal/policy`
+    horizon/README.md                     # provenance of every file: which five are testnet captures, which seven are built, and how (0.6, 3.6)
+    horizon/{root-testnet,1-default,7-extra-signer,8-clawback-undeclared,10-not-found}.json  # captures (0.6)
+    horizon/{2-master-zero,3-unreachable-high,4-thresholds-out-of-order,5-hashx-signer-at-medium,6-preauth-signer-only,9-home-domain-present,12-hostile-home-domain}.json  # built for Appendix B (3.6)
+    policy/.gitkeep                       # still empty: a scenario declares its policy as `policy.Account` values in `internal/run/scenarios_test.go`, and acceptance and role cases are inline TOML in `internal/policy`
     golden/{sample.text,sample.json}.golden # regenerated only with `-update` and reviewed (2.6)
+    golden/<scenario>.{text,json}.golden  # one pair per Appendix B case, 32 files, compared by `internal/run/scenarios_test.go` (3.6)
 
   docs/
     banner.svg                            # README banner; wordmark plus status line
@@ -159,7 +161,7 @@ model  <-  strkey, threshold, sanitize  <-  policy, source, sep1  <-  rules  <- 
 | Add a config field | `internal/policy/config.go` | Strict-decode tests, `gauge.example.toml`, `ARCHITECTURE.md` 7, bump `version` if breaking |
 | Add an output format | `internal/report/<name>.go` | Sanitizer tests, golden files |
 | Change HTTP behavior | `internal/source/` or `internal/sep1/` | Fake-server tests for the new behavior; protected |
-| Add a fixture | `testdata/horizon/<scenario>.json` | Note its origin, own capture or one of `posture-sec/stellar-account-fixtures` with its sidecar digest and ledger, and whether it is perishable (testnet) |
+| Add a fixture | `testdata/horizon/<scenario>.json` | Note its origin in `testdata/horizon/README.md`: own capture, one of `posture-sec/stellar-account-fixtures` with its sidecar digest and ledger, or built here and labelled as built, and whether it is perishable (testnet) |
 | Change a hard rule or decision | `ARCHITECTURE_ESSENTIALS.md`, `ARCHITECTURE.md` section 13 | New ADR row; owner approval |
 | Record a decision | `ROADMAP.md` decision log | |
 
@@ -173,10 +175,10 @@ model  <-  strkey, threshold, sanitize  <-  policy, source, sep1  <-  rules  <- 
 
 ## 6. Fixtures
 
-- Real captured account JSON is preferred. Account data is public, so captures are safe to commit unedited. Record the network, date and ledger in a sidecar notes file.
+- Real captured account JSON is preferred. Account data is public, so captures are safe to commit unedited. Record the network, date and ledger in a sidecar notes file. Where no capture can exist, because the shape needs a transaction submission this project forbids, the fixture is built here, labelled as built in `testdata/horizon/README.md`, and never described as an observation: it proves the decoder and the rules, not that the chain served the shape.
 - `posture-sec/stellar-account-fixtures` (public since 2026-11-02) is where a mainnet account shape comes from: nine `GET /accounts/<id>` reads re-serialised with sorted keys, eight on mainnet and one on testnet since 2026-11-03, each beside a sidecar whose SHA-256, capture time, ledger and Horizon version `validate.py` recomputes. A fixture copied from it keeps that fixture's account id, `last_modified_ledger` and sidecar digest in the notes file so the claim survives the copy. Nothing is vendored in `testdata/` yet. Two shapes are in neither capture set rather than three: `hash(x)` and pre-auth signer entries, where every signer key in either set starts with `G`, and both stay hand-built because bringing one into existence needs a transaction submission this project forbids. The narrower claim that a master key at weight 0 cannot be found was never true: four reads show the master present at weight 0 among other signers (`testdata/horizon/7-extra-signer.json` with six signers, plus the corpus's `coordinator-data-entry`, `sponsored-trustlines` and `testnet-multisig`), so `sig-no-signing-weight` and the weight-0 branch of the threshold math have real bytes behind them. Appendix B scenario 2 is a different account: master weight 0 with no other signer, which nobody can sign for, still uncaptured here and in the corpus, where `master_absent` and `no_signers` are open gaps.
 - Testnet resets can delete accounts; mark testnet fixtures perishable and keep them as static files, never refetched by tests.
-- Hostile-string fixtures (ANSI, bidi, markdown) are built in test code from fragments.
+- Hostile-string fixtures (ANSI, bidi, markdown) are built from fragments rather than raw bytes. Markdown cases do that in test code; `12-hostile-home-domain.json` does it in data, holding the escape and the override as JSON `\u` sequences so no control byte is in the file while the decoded value still carries one, which is the only way a golden can pin what the report prints.
 - Never place a secret seed, even a testnet one, in the repository. Tests that need a seed-shaped string build one from fragments at runtime.
 
 ## 7. Documentation map and sync rules
