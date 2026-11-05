@@ -1,0 +1,81 @@
+{
+  "tool_version": "test",
+  "network": "Test SDF Network ; September 2015",
+  "ledger": 5466897,
+  "accounts": [
+    {
+      "snapshot": {
+        "id": "GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3",
+        "network": "Test SDF Network ; September 2015",
+        "endpoint": "https://horizon-testnet.stellar.org",
+        "ledger": 0,
+        "sequence": "",
+        "thresholds": {
+          "low": 0,
+          "medium": 0,
+          "high": 0
+        },
+        "signers": [],
+        "flags": {
+          "auth_required": false,
+          "auth_revocable": false,
+          "auth_immutable": false,
+          "clawback_enabled": false
+        },
+        "home_domain": "",
+        "sponsor": "",
+        "balances": []
+      },
+      "findings": [
+        {
+          "rule_id": "acct-network-mismatch",
+          "severity": "high",
+          "account": "GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3",
+          "message": "the endpoint is on a different network than the run requested, so the account was not read",
+          "evidence": "expected Public Global Stellar Network ; September 2015, endpoint reports Test SDF Network ; September 2015",
+          "fingerprint": "3896f152d95984180555477d30ad6067e121d93435c6a595598e74ea3a07cecb",
+          "accepted": false
+        }
+      ],
+      "skipped": "the endpoint is on a different network"
+    },
+    {
+      "snapshot": {
+        "id": "GALGVY52QMWYIRPFP3EBCQZNQZXW4BPG4WWJAQ4KICLFGZH6VLSL6VMI",
+        "network": "Test SDF Network ; September 2015",
+        "endpoint": "https://horizon-testnet.stellar.org",
+        "ledger": 0,
+        "sequence": "",
+        "thresholds": {
+          "low": 0,
+          "medium": 0,
+          "high": 0
+        },
+        "signers": [],
+        "flags": {
+          "auth_required": false,
+          "auth_revocable": false,
+          "auth_immutable": false,
+          "clawback_enabled": false
+        },
+        "home_domain": "",
+        "sponsor": "",
+        "balances": []
+      },
+      "findings": [
+        {
+          "rule_id": "acct-network-mismatch",
+          "severity": "high",
+          "account": "GALGVY52QMWYIRPFP3EBCQZNQZXW4BPG4WWJAQ4KICLFGZH6VLSL6VMI",
+          "message": "the endpoint is on a different network than the run requested, so the account was not read",
+          "evidence": "expected Public Global Stellar Network ; September 2015, endpoint reports Test SDF Network ; September 2015",
+          "fingerprint": "fed752da2de2f1d0b0a9292f94c72d00d160bf89c7efd4635c6e0cd3a1c28da8",
+          "accepted": false
+        }
+      ],
+      "skipped": "the endpoint is on a different network"
+    }
+  ],
+  "exit_code": 1,
+  "limits": "Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised."
+}

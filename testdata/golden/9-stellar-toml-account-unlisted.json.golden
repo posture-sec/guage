@@ -1,0 +1,64 @@
+{
+  "tool_version": "test",
+  "network": "Test SDF Network ; September 2015",
+  "ledger": 5466897,
+  "accounts": [
+    {
+      "snapshot": {
+        "id": "GBKDXQ7LCO3X23K4HUKSHCA3KMM3364M4UK3526XYMBWTDD4NJCSRNAI",
+        "network": "Test SDF Network ; September 2015",
+        "endpoint": "https://horizon-testnet.stellar.org",
+        "ledger": 5466906,
+        "sequence": "23472095056887815",
+        "thresholds": {
+          "low": 2,
+          "medium": 2,
+          "high": 2
+        },
+        "signers": [
+          {
+            "key": "GBKDXQ7LCO3X23K4HUKSHCA3KMM3364M4UK3526XYMBWTDD4NJCSRNAI",
+            "type": "ed25519",
+            "weight": 1,
+            "sponsor": ""
+          },
+          {
+            "key": "GD4FV55YUFEJWS5Z3VDFDSFFQVHNX2TCUANW24FKKA4XFSHVISQI35G2",
+            "type": "ed25519",
+            "weight": 1,
+            "sponsor": ""
+          }
+        ],
+        "flags": {
+          "auth_required": false,
+          "auth_revocable": false,
+          "auth_immutable": false,
+          "clawback_enabled": false
+        },
+        "home_domain": "gauge.example.invalid",
+        "sponsor": "",
+        "balances": [
+          {
+            "asset_code": "",
+            "asset_issuer": "",
+            "is_authorized": true,
+            "clawback_enabled": false
+          }
+        ]
+      },
+      "findings": [
+        {
+          "rule_id": "id-toml-account-unlisted",
+          "severity": "warn",
+          "account": "GBKDXQ7LCO3X23K4HUKSHCA3KMM3364M4UK3526XYMBWTDD4NJCSRNAI",
+          "message": "the account is not listed in its home domain's stellar.toml",
+          "evidence": "home domain gauge.example.invalid lists 1 account; this account is not among them",
+          "fingerprint": "7434896ece4f4eb90abb27e99d1cb34ede1b3f58bb462ee6697c6dc62a598474",
+          "accepted": false
+        }
+      ]
+    }
+  ],
+  "exit_code": 1,
+  "limits": "Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised."
+}

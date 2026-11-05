@@ -1,0 +1,73 @@
+{
+  "tool_version": "test",
+  "network": "Test SDF Network ; September 2015",
+  "ledger": 5466897,
+  "accounts": [
+    {
+      "snapshot": {
+        "id": "GAGCZPLXXENDIGTXUJC4MG7N3NVW5TA37PFEBDQK64KREAGD2HM2LD6C",
+        "network": "Test SDF Network ; September 2015",
+        "endpoint": "https://horizon-testnet.stellar.org",
+        "ledger": 5466903,
+        "sequence": "23472095056887812",
+        "thresholds": {
+          "low": 5,
+          "medium": 1,
+          "high": 2
+        },
+        "signers": [
+          {
+            "key": "GAGCZPLXXENDIGTXUJC4MG7N3NVW5TA37PFEBDQK64KREAGD2HM2LD6C",
+            "type": "ed25519",
+            "weight": 3,
+            "sponsor": ""
+          },
+          {
+            "key": "GARN755D6RAGHRXKGREQGMEQLHCO7TXTZMNXDGG6HUW5SQVRCKFSE3RA",
+            "type": "ed25519",
+            "weight": 3,
+            "sponsor": ""
+          }
+        ],
+        "flags": {
+          "auth_required": false,
+          "auth_revocable": false,
+          "auth_immutable": false,
+          "clawback_enabled": false
+        },
+        "home_domain": "",
+        "sponsor": "",
+        "balances": [
+          {
+            "asset_code": "",
+            "asset_issuer": "",
+            "is_authorized": true,
+            "clawback_enabled": false
+          }
+        ]
+      },
+      "findings": [
+        {
+          "rule_id": "sig-threshold-order",
+          "severity": "warn",
+          "account": "GAGCZPLXXENDIGTXUJC4MG7N3NVW5TA37PFEBDQK64KREAGD2HM2LD6C",
+          "message": "the thresholds are out of the recommended order, so a lower tier can demand more than a higher one",
+          "evidence": "low 5, medium 1, high 2",
+          "fingerprint": "f5b940cffdf03517c6708f75e55a115b609c84b861718a0dd69a3c82f115b669",
+          "accepted": false
+        },
+        {
+          "rule_id": "sig-single-key-high",
+          "severity": "info",
+          "account": "GAGCZPLXXENDIGTXUJC4MG7N3NVW5TA37PFEBDQK64KREAGD2HM2LD6C",
+          "message": "one signer alone reaches the high threshold, so a single key holds the account",
+          "evidence": "GAGCZP...LD6C ed25519 at weight 3 reaches 2; GARN75...E3RA ed25519 at weight 3 reaches 2",
+          "fingerprint": "61dc896e8611a51a524e70d35d546ca5640f0fced47794f9922ed0d4591f5122",
+          "accepted": false
+        }
+      ]
+    }
+  ],
+  "exit_code": 1,
+  "limits": "Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised."
+}

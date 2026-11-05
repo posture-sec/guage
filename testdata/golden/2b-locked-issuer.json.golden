@@ -1,0 +1,76 @@
+{
+  "tool_version": "test",
+  "network": "Test SDF Network ; September 2015",
+  "ledger": 5466897,
+  "accounts": [
+    {
+      "snapshot": {
+        "id": "GBIY5RL644R6YRLYDZD5Y6VZXOWR3ZO2MTK4TSVTD4MAORSBKMKKO4RP",
+        "network": "Test SDF Network ; September 2015",
+        "endpoint": "https://horizon-testnet.stellar.org",
+        "ledger": 5466901,
+        "sequence": "23472095056887810",
+        "thresholds": {
+          "low": 0,
+          "medium": 0,
+          "high": 0
+        },
+        "signers": [
+          {
+            "key": "GBIY5RL644R6YRLYDZD5Y6VZXOWR3ZO2MTK4TSVTD4MAORSBKMKKO4RP",
+            "type": "ed25519",
+            "weight": 0,
+            "sponsor": ""
+          }
+        ],
+        "flags": {
+          "auth_required": false,
+          "auth_revocable": false,
+          "auth_immutable": false,
+          "clawback_enabled": false
+        },
+        "home_domain": "",
+        "sponsor": "",
+        "balances": [
+          {
+            "asset_code": "",
+            "asset_issuer": "",
+            "is_authorized": true,
+            "clawback_enabled": false
+          }
+        ]
+      },
+      "findings": [
+        {
+          "rule_id": "sig-threshold-unreachable",
+          "severity": "high",
+          "account": "GBIY5RL644R6YRLYDZD5Y6VZXOWR3ZO2MTK4TSVTD4MAORSBKMKKO4RP",
+          "message": "a threshold tier cannot be authorized by the signers this account has",
+          "evidence": "low threshold 0 and medium threshold 0 and high threshold 0 cannot be reached; signers: GBIY5R...O4RP ed25519 at weight 0",
+          "fingerprint": "7749b6fc7d156b5d2927be6806230e5e4d4a120ef7acf29aac1645e61eeb13a6",
+          "accepted": false
+        },
+        {
+          "rule_id": "id-no-home-domain",
+          "severity": "warn",
+          "account": "GBIY5RL644R6YRLYDZD5Y6VZXOWR3ZO2MTK4TSVTD4MAORSBKMKKO4RP",
+          "message": "the account's role expects a home domain and the account publishes none",
+          "evidence": "role \"issuer\" expects a home_domain, observed none",
+          "fingerprint": "4a96cfb00193036e1f03a36ecfcf29c51b309e4ed70fb132769bc21620e6d3c3",
+          "accepted": false
+        },
+        {
+          "rule_id": "sig-no-signing-weight",
+          "severity": "info",
+          "account": "GBIY5RL644R6YRLYDZD5Y6VZXOWR3ZO2MTK4TSVTD4MAORSBKMKKO4RP",
+          "message": "no signer can authorize an operation, so this account cannot sign anything again",
+          "evidence": "GBIY5R...O4RP ed25519 at weight 0",
+          "fingerprint": "b9ad419aa5bb879c4efd28e68be5814cdd942df426a97265db54851e04976c86",
+          "accepted": false
+        }
+      ]
+    }
+  ],
+  "exit_code": 1,
+  "limits": "Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised."
+}

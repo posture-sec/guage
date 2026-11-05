@@ -1,0 +1,23 @@
+Gauge test
+network: Test SDF Network ; September 2015
+ledger: 5466897
+
+account GBKDXQ7LCO3X23K4HUKSHCA3KMM3364M4UK3526XYMBWTDD4NJCSRNAI
+  endpoint: https://horizon-testnet.stellar.org
+  as of ledger 5466906, sequence 23472095056887815
+  thresholds: low 2, medium 2, high 2
+  flags: auth_required=false auth_revocable=false auth_immutable=false clawback=false
+  home domain: gauge.example.invalid
+  sponsor: (none)
+  signers: 2
+    GBKDXQ7LCO3X23K4HUKSHCA3KMM3364M4UK3526XYMBWTDD4NJCSRNAI ed25519 weight 1
+    GD4FV55YUFEJWS5Z3VDFDSFFQVHNX2TCUANW24FKKA4XFSHVISQI35G2 ed25519 weight 1
+  findings: 1 (0 accepted)
+    [warn] id-toml-account-unlisted
+      the account is not listed in its home domain's stellar.toml
+      evidence: home domain gauge.example.invalid lists 1 account; this account is not among them
+      fingerprint: 7434896ece4f4eb90abb27e99d1cb34ede1b3f58bb462ee6697c6dc62a598474
+
+result: 1 findings (0 high, 1 warn, 0 info), 0 accepted
+exit code: 1
+limits: Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised.

@@ -1,0 +1,73 @@
+{
+  "tool_version": "test",
+  "network": "Test SDF Network ; September 2015",
+  "ledger": 5466897,
+  "accounts": [
+    {
+      "snapshot": {
+        "id": "GBNLMMJ6ZMKSID5OZBZD7B3IPE2WHWOKOETFBZ5M4V563YQRX53CUDWR",
+        "network": "Test SDF Network ; September 2015",
+        "endpoint": "https://horizon-testnet.stellar.org",
+        "ledger": 5466905,
+        "sequence": "23472095056887814",
+        "thresholds": {
+          "low": 1,
+          "medium": 2,
+          "high": 3
+        },
+        "signers": [
+          {
+            "key": "GBNLMMJ6ZMKSID5OZBZD7B3IPE2WHWOKOETFBZ5M4V563YQRX53CUDWR",
+            "type": "ed25519",
+            "weight": 0,
+            "sponsor": ""
+          },
+          {
+            "key": "TBPQB2XDHRQCIOJSSUOOMOGVO22GQMOXJ46CTXVWOY4NB3BOSDSPQ4OW",
+            "type": "pre_auth_tx",
+            "weight": 3,
+            "sponsor": ""
+          }
+        ],
+        "flags": {
+          "auth_required": false,
+          "auth_revocable": false,
+          "auth_immutable": false,
+          "clawback_enabled": false
+        },
+        "home_domain": "",
+        "sponsor": "",
+        "balances": [
+          {
+            "asset_code": "",
+            "asset_issuer": "",
+            "is_authorized": true,
+            "clawback_enabled": false
+          }
+        ]
+      },
+      "findings": [
+        {
+          "rule_id": "sig-no-signing-weight",
+          "severity": "high",
+          "account": "GBNLMMJ6ZMKSID5OZBZD7B3IPE2WHWOKOETFBZ5M4V563YQRX53CUDWR",
+          "message": "no signer can authorize an operation, so this account cannot sign anything again",
+          "evidence": "GBNLMM...UDWR ed25519 at weight 0; TBPQB2...Q4OW pre_auth_tx at weight 3",
+          "fingerprint": "9b85d00a5d4bff720d22770845276e55ddc2e3934742a9dbbdfa2a3e09e874ad",
+          "accepted": false
+        },
+        {
+          "rule_id": "sig-threshold-unreachable",
+          "severity": "high",
+          "account": "GBNLMMJ6ZMKSID5OZBZD7B3IPE2WHWOKOETFBZ5M4V563YQRX53CUDWR",
+          "message": "a threshold tier cannot be authorized by the signers this account has",
+          "evidence": "low threshold 1 and medium threshold 2 and high threshold 3 cannot be reached; signers: GBNLMM...UDWR ed25519 at weight 0; TBPQB2...Q4OW pre_auth_tx at weight 3",
+          "fingerprint": "efcd5ce86efca13a18b9c8df9bf57b4661058425e79f5bee8bb6a3c418b5b10d",
+          "accepted": false
+        }
+      ]
+    }
+  ],
+  "exit_code": 1,
+  "limits": "Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised."
+}

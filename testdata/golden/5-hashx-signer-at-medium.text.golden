@@ -1,0 +1,23 @@
+Gauge test
+network: Test SDF Network ; September 2015
+ledger: 5466897
+
+account GBDSJWRDC7Q4QRQ5L3FTX42CRDXEGT5CJRL4ZREVTO3HKIJCM3A3UKDD
+  endpoint: https://horizon-testnet.stellar.org
+  as of ledger 5466904, sequence 23472095056887813
+  thresholds: low 1, medium 2, high 3
+  flags: auth_required=false auth_revocable=false auth_immutable=false clawback=false
+  home domain: (none)
+  sponsor: (none)
+  signers: 2
+    GBDSJWRDC7Q4QRQ5L3FTX42CRDXEGT5CJRL4ZREVTO3HKIJCM3A3UKDD ed25519 weight 1
+    XCGFANXAQINYPGII7CZNHL2J7DTDBS27NC2W2Y6H66VKCR5SG2LERZOK hash_x weight 2
+  findings: 1 (0 accepted)
+    [high] sig-hashx
+      a hash(x) signer is a shared secret, and using it publishes that secret
+      evidence: XCGFAN...RZOK at weight 2; medium threshold 2, reached by this signer alone: true
+      fingerprint: f4a990809a424a8d3cbe9965318fd043c78613cd88511d333a6209567891dc38
+
+result: 1 findings (1 high, 0 warn, 0 info), 0 accepted
+exit code: 1
+limits: Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised.
