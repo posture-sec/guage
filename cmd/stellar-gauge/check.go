@@ -27,10 +27,11 @@ func checkCommand(args []string, stdout, stderr io.Writer, d deps) int {
 		return int(model.ExitUsage)
 	}
 	if *network == "" {
-		return usageError(stderr, "--network is required; there is no default")
+		return usageError(stderr, "--network is required and has no default: mainnet, testnet or a full passphrase")
 	}
 	if endpoints.Len() != 1 {
-		return usageError(stderr, "exactly one --endpoint is required at v0.1; pass it again once endpoint comparison lands")
+		return usageError(stderr, "exactly one --endpoint is required at v0.1, and it has no default: "+
+			namedEndpoints+"Pass it twice once endpoint comparison lands.")
 	}
 	ids := fs.Args()
 	if len(ids) == 0 {

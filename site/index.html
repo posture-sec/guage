@@ -59,7 +59,7 @@
         <a href="status.html">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-04<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-05<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -87,13 +87,13 @@
           <figure class="report" aria-label="Excerpt of a Gauge report from a testnet run">
             <figcaption class="report-head">
               <span class="report-title">Posture report</span>
-              <span>testnet / ledger 5517199</span>
+              <span>testnet / ledger 5569489 / 2026-11-05</span>
             </figcaption>
             <pre class="report-body"><span class="report-line report-line--dim" style="--i:0">$ stellar-gauge check --network testnet \
     --fail-on warn \
     --endpoint \
     https://horizon-testnet.stellar.org \
-    GDSX2WUF…UVBEVG</span><span class="report-line" style="--i:1">account GDSX2WUF…UVBEVG</span><span class="report-line" style="--i:2">  findings: 1 (0 accepted)</span><span class="report-line report-line--warn" style="--i:3">    [warn] flag-undeclared-clawback</span><span class="report-line" style="--i:4">      clawback is enabled and the policy</span><span class="report-line" style="--i:5">      does not declare it</span><span class="report-line" style="--i:6">      evidence: clawback observed true,</span><span class="report-line" style="--i:7">      and no clawback expectation is</span><span class="report-line" style="--i:8">      declared</span><span class="report-line" style="--i:9">result: 1 findings (0 high, 1 warn,</span><span class="report-line" style="--i:10">  0 info), 0 accepted</span><span class="report-line report-line--high" style="--i:11">exit code: 1<span class="caret" aria-hidden="true"></span></span></pre>
+    GDSX2WUF…UVBEVG</span><span class="report-line" style="--i:1">account GDSX2WUF…UVBEVG</span><span class="report-line" style="--i:2">  thresholds: low 0, medium 0, high 0</span><span class="report-line" style="--i:3">  minimum signers to authorize:</span><span class="report-line" style="--i:3">    low 1, medium 1, high 1</span><span class="report-line" style="--i:4">  home domain: komunitin.org</span><span class="report-line" style="--i:5">  declared: nothing; this run read no</span><span class="report-line" style="--i:5">    policy file, so only the universal</span><span class="report-line" style="--i:5">    rules ran</span><span class="report-line" style="--i:6">  identity document: komunitin.org did</span><span class="report-line" style="--i:6">    not serve a readable file</span><span class="report-line report-line--dim" style="--i:7">    [endpoint, ledger, flags, signers,</span><span class="report-line report-line--dim" style="--i:7">    fetch detail and evidence elided]</span><span class="report-line" style="--i:8">  findings: 3 (0 accepted)</span><span class="report-line report-line--warn" style="--i:9">    [warn] flag-undeclared-clawback</span><span class="report-line report-line--warn" style="--i:10">    [warn] id-toml-unreachable</span><span class="report-line" style="--i:11">    [info] sig-single-key-high</span><span class="report-line" style="--i:12">result: 3 findings (0 high, 2 warn,</span><span class="report-line" style="--i:13">  1 info), 0 accepted</span><span class="report-line report-line--high" style="--i:14">exit code: 1<span class="caret" aria-hidden="true"></span></span></pre>
             <span class="stamp">Exit 1</span>
           </figure>
         </section>
@@ -159,7 +159,7 @@
               <p class="eyebrow">Scope</p>
               <h2>What Gauge reads</h2>
             </div>
-            <p>Public ledger state, through one Horizon endpoint. Nothing else is downloaded, and no response body is ever logged.</p>
+            <p>Public ledger state, through one Horizon endpoint, plus the <code>stellar.toml</code> an account's own home domain publishes, fetched under an address guard. No other host is dialed, no response body is logged, and a report quotes a document only through the identity fields it recognized, sanitized.</p>
           </div>
           <dl class="ledger">
             <div class="ledger-row">
@@ -168,7 +168,7 @@
             </div>
             <div class="ledger-row">
               <dt>Thresholds</dt>
-              <dd><strong>How much weight each operation tier requires.</strong> Low, medium and high thresholds are read as stored, without interpretation.</dd>
+              <dd><strong>How much weight each operation tier requires.</strong> Low, medium and high thresholds are read as stored, and the report also prints what they mean: the minimum number of signatures each tier needs, computed by the same function the rules call.</dd>
             </div>
             <div class="ledger-row">
               <dt>Flags</dt>
@@ -176,7 +176,7 @@
             </div>
             <div class="ledger-row">
               <dt>Home domain</dt>
-              <dd><strong>The identity the account points at.</strong> Printed as a fact and fetched under a dial-time address guard: the published <code>stellar.toml</code> is parsed, and an identity Gauge could not verify is a warning rather than a pass.</dd>
+              <dd><strong>The identity the account points at.</strong> Printed as a fact and fetched under a dial-time address guard: the published <code>stellar.toml</code> is parsed, the identity fields it recognized are printed as facts, and an identity Gauge could not verify is a warning rather than a pass.</dd>
             </div>
           </dl>
         </section>
@@ -187,7 +187,7 @@
               <p class="eyebrow">Shipped today</p>
               <h2>Sixteen rules, all registered</h2>
             </div>
-            <p>Task 3.1 landed the signer and threshold family on 2026-11-04, so the account, signer, threshold, flag and identity families all work now, and task 3.4 gave the same day's report its weights by declared role.</p>
+            <p>Task 3.1 landed the signer and threshold family on 2026-11-04, so the account, signer, threshold, flag and identity families all work now, and task 3.4 gave the same day's report its weights by declared role. Task 3.7 closed Phase 3 on 2026-11-05: the report prints the facts behind every one of those rules before it prints a finding, and a zero-config <code>check</code> needs no policy file to read them.</p>
           </div>
           <div class="cards">
             <article class="card">

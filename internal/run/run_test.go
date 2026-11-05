@@ -121,8 +121,11 @@ func withDomain(s model.AccountSnapshot, domain string) model.AccountSnapshot {
 	return s
 }
 
+// reachable is a document the guarded fetcher served and parsed, so it carries the
+// response a real fetch recorded: StepOK without a status would describe a
+// transaction that never happened.
 func reachable(domain string) sep1.Result {
-	return sep1.Result{HomeDomain: domain, FailedAt: sep1.StepOK, Bytes: 64}
+	return sep1.Result{HomeDomain: domain, FailedAt: sep1.StepOK, Status: 200, Bytes: 64}
 }
 
 func blocked(domain string) sep1.Result {
@@ -1066,5 +1069,99 @@ func TestCheckAndAuditForwardTheIdentityFetcher(t *testing.T) {
 				t.Fatalf("%s identity = %v, want the fetched result", tt.name, seen)
 			}
 		})
+	}
+}
+
+// TestFactsRideEveryAccountOfAZeroConfigRun is task 3.7's Done-when read at the
+// orchestrator: a run with no policy file still carries the facts the ledger and the
+// guarded fetcher produced, and carries no declaration, because the role a check account
+// holds is the default rather than something an operator wrote.
+func TestFactsRideEveryAccountOfAZeroConfigRun(t *testing.T) {
+	t.Parallel()
+	domain := "gauge.example.invalid"
+	fs := &fakeSource{
+		info: model.NetworkInfo{Passphrase: testnet, Ledger: 1},
+		snapshots: map[string]model.AccountSnapshot{
+			accountOne: withDomain(snapshot(accountOne, 1), domain),
+		},
+	}
+	result, err := Check(context.Background(), CheckRequest{
+		ToolVersion: "test",
+		Network:     "testnet",
+		Endpoints:   []string{"https://horizon-testnet.example"},
+		Accounts:    []string{accountOne},
+		FailOn:      model.SevHigh,
+		NewSource:   stubFactory(fs),
+		NewIdentity: identityStub(&fakeIdentity{results: map[string]sep1.Result{domain: reachable(domain)}}),
+	})
+	if err != nil {
+		t.Fatalf("Check: %v", err)
+	}
+	facts := result.Accounts[0].Facts
+	if facts == nil {
+		t.Fatal("a check run reported no facts at all")
+	}
+	if facts.Declared != nil {
+		t.Fatalf("a check run printed a declaration: %+v", *facts.Declared)
+	}
+	if facts.Reachability == nil {
+		t.Fatal("a readable account reported no reachability")
+	}
+	// The helper snapshot carries two weight-1 keys against tiers of 2, so every tier
+	// needs both of them.
+	for name, tier := range map[string]*int{
+		"low": facts.Reachability.Low, "medium": facts.Reachability.Medium, "high": facts.Reachability.High,
+	} {
+		if tier == nil || *tier != 2 {
+			t.Errorf("%s tier = %v, want two signers", name, tier)
+		}
+	}
+	if facts.Identity == nil || facts.Identity.HomeDomain != domain || !facts.Identity.Reachable {
+		t.Fatalf("the fetched document reached the report as %+v", facts.Identity)
+	}
+}
+
+// TestAuditPrintsWhatThePolicyDeclared is the same run shape with a file behind it. The
+// facts are the only place a reader learns that the declaration was read: a policy that
+// agrees with the chain produces no drift finding, and an operator who cannot tell
+// "agrees" from "never compared" has no reason to trust a clean report.
+func TestAuditPrintsWhatThePolicyDeclared(t *testing.T) {
+	t.Parallel()
+	fs := &fakeSource{
+		info:      model.NetworkInfo{Passphrase: testnet, Ledger: 1},
+		snapshots: map[string]model.AccountSnapshot{accountOne: snapshot(accountOne, 1)},
+	}
+	cfg := &policy.Config{
+		Version:   1,
+		Network:   "testnet",
+		Endpoints: []string{"https://horizon-testnet.example"},
+		Accounts: []policy.Account{{
+			ID:              accountOne,
+			Name:            "treasury",
+			Role:            model.RoleTreasury,
+			ExpectedSigners: &[]policy.ExpectedSigner{{Key: accountOne, Weight: 1}},
+		}},
+	}
+	result, err := Audit(context.Background(), cfg, AuditOptions{
+		ToolVersion: "test",
+		FailOn:      model.SevHigh,
+		NewSource:   stubFactory(fs),
+	})
+	if err != nil {
+		t.Fatalf("Audit: %v", err)
+	}
+	declared := result.Accounts[0].Facts.Declared
+	if declared == nil {
+		t.Fatal("a run behind a policy file printed no declaration")
+	}
+	if declared.Role != string(model.RoleTreasury) || declared.Name != "treasury" {
+		t.Errorf("declared role and name = %q, %q", declared.Role, declared.Name)
+	}
+	if declared.ExpectedSigners == nil || *declared.ExpectedSigners != 1 {
+		t.Errorf("expected_signers = %v, want one declared", declared.ExpectedSigners)
+	}
+	if declared.ExpectedThresholds != nil || declared.ExpectedFlags != nil ||
+		declared.HomeDomain != nil || declared.ExpectLocked != nil {
+		t.Errorf("an undeclared expectation printed as declared: %+v", declared)
 	}
 }

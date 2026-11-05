@@ -26,6 +26,18 @@
         "sponsor": "",
         "balances": []
       },
+      "facts": {
+        "reachability": null,
+        "declared": {
+          "role": "other",
+          "expected_signers": null,
+          "expected_thresholds": null,
+          "expected_flags": null,
+          "home_domain": null,
+          "expect_locked": null
+        },
+        "identity": null
+      },
       "findings": [
         {
           "rule_id": "acct-network-mismatch",
@@ -61,6 +73,18 @@
         "home_domain": "",
         "sponsor": "",
         "balances": []
+      },
+      "facts": {
+        "reachability": null,
+        "declared": {
+          "role": "treasury",
+          "expected_signers": null,
+          "expected_thresholds": null,
+          "expected_flags": null,
+          "home_domain": null,
+          "expect_locked": null
+        },
+        "identity": null
       },
       "findings": [
         {

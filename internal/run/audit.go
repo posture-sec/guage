@@ -39,6 +39,7 @@ func Audit(ctx context.Context, cfg *policy.Config, opts AuditOptions) (model.Re
 		Accounts:    cfg.Accounts,
 		Accepts:     cfg.Accepts,
 		FailOn:      opts.FailOn,
+		HasPolicy:   true,
 		Concurrency: opts.Concurrency,
 		NewSource:   opts.NewSource,
 		NewIdentity: opts.NewIdentity,

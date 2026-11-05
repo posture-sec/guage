@@ -1,6 +1,6 @@
 # ARCHITECTURE_ESSENTIALS: Gauge (working name)
 
-Status: design target v0.1; implementation is partway through Phase 3. `internal/model` (types, severity names, finding fingerprints, ordering), `internal/strkey` (SEP-23 classification and seed detection), `internal/sanitize` (control stripping, IDN flag, markdown escaping), the `internal/policy` loader (strict TOML, seed rejection, network passphrases, the Appendix A role floors), the `internal/report` renderers (text, JSON, limits footer, exit mapping), `internal/source` (Horizon client with caps, retries, strict decode, passphrase comparison), `internal/sep1` (hostname validation, dial-time SSRF guard, redirect and size limits, TOML parse), `internal/threshold` (the protocol's reachability and minimum-signer math), the `internal/run` orchestrator and the `cmd/stellar-gauge` CLI (`check`, `audit`, `version`) are implemented and tested; `internal/rules` carries all sixteen v0.1 rules, so a run can exit 1 on a missing account, a network mismatch, a control configuration that cannot authorize, signer and threshold drift, flag drift, an undeclared clawback or an unverifiable identity claim, and a declared role raises the severities the catalog weights by role. Every Appendix B scenario has a fixture and a golden pair behind it since 2026-11-05 (3.6), twelve files in `testdata/horizon/`, five captured from testnet and seven built here and labelled as built. Not yet: the facts report (3.7) and the P1 rules. Full detail: `ARCHITECTURE.md` (section numbers in brackets). Scope: `PRD.md`. Work queue: `ROADMAP.md`. File locations: `project_structure.md`.
+Status: design target v0.1; Phase 3 is complete as of 2026-11-05 and v0.1.0 now waits on Phase 4. `internal/model` (types, severity names, finding fingerprints, ordering, the fact shapes a report prints beside its findings), `internal/strkey` (SEP-23 classification and seed detection), `internal/sanitize` (control stripping, IDN flag, markdown escaping), the `internal/policy` loader (strict TOML, seed rejection, network passphrases, the Appendix A role floors), the `internal/report` renderers (text, JSON, limits footer, exit mapping), `internal/source` (Horizon client with caps, retries, strict decode, passphrase comparison), `internal/sep1` (hostname validation, dial-time SSRF guard, redirect and size limits, TOML parse), `internal/threshold` (the protocol's reachability and minimum-signer math), the `internal/run` orchestrator and the `cmd/stellar-gauge` CLI (`check`, `audit`, `version`) are implemented and tested; `internal/rules` carries all sixteen v0.1 rules plus `Facts`, so a run can exit 1 on a missing account, a network mismatch, a control configuration that cannot authorize, signer and threshold drift, flag drift, an undeclared clawback or an unverifiable identity claim, and a declared role raises the severities the catalog weights by role. Every Appendix B scenario has a fixture and a golden pair behind it since 2026-11-05 (3.6), twelve files in `testdata/horizon/`, five captured from testnet and seven built here and labelled as built, and a zero-config `check` prints the facts it read ahead of any judgement since the same day (3.7), which is the last task Phase 3 owed. Not yet: anything in Phase 4, and the P1 rules. Full detail: `ARCHITECTURE.md` (section numbers in brackets). Scope: `PRD.md`. Work queue: `ROADMAP.md`. File locations: `project_structure.md`.
 
 ## 0. Roadmap rule (read first)
 
@@ -45,17 +45,17 @@ Status: design target v0.1; implementation is partway through Phase 3. `internal
 
 ## 4. Pipeline
 
-`policy loader + Source + sep1 -> snapshots -> rules -> accept filter -> report -> exit code` [3]
+`policy loader + Source + sep1 -> snapshots -> rules + facts -> accept filter -> report -> exit code` [3]
 
 - `source`: `Network()`, `Account()`; Horizon first, RPC later. [6.4]
-- `rules`: pure functions over `AccountSnapshot` plus policy. [6.7]
-- `report`: text, JSON, markdown (P1); ordering severity, account, rule. [6.8]
+- `rules`: pure functions over `AccountSnapshot` plus policy, and one pure `Facts` function over the same context that returns observations rather than findings. [6.7]
+- `report`: text, JSON, markdown (P1); facts printed ahead of findings, then ordering severity, account, rule. Exit reads findings only, so a fact cannot fail a run. [6.8]
 
 ## 5. Packages (import direction) [project_structure.md]
 
 `model <- strkey, threshold, sanitize <- policy, source, sep1 <- rules <- report <- run <- cmd`
 
-- `model` imports nothing internal. `rules` does no I/O: its direct imports are `model`, `policy`, `sep1`'s result types, `fmt` and `strings`, and it never imports `source`, a `net/http` type or a client. Check that on imports (`go list -f '{{.Imports}}' ./internal/rules`), not on `-deps`, which shows `net/http` transitively because `sep1`'s types and its client share one package. `report` imports only `model` and `sanitize`.
+- `model` imports nothing internal. `rules` does no I/O: its direct imports are `model`, `policy`, `sep1`'s result types, `threshold`, `fmt`, `sort` and `strings`, and it never imports `source`, a `net/http` type or a client. Check that on imports (`go list -f '{{.Imports}}' ./internal/rules`), not on `-deps`, which shows `net/http` transitively because `sep1`'s types and its client share one package. `report` imports only `model` and `sanitize`.
 
 ## 6. Data models [7]
 
@@ -63,7 +63,7 @@ Status: design target v0.1; implementation is partway through Phase 3. `internal
 - `Signer`: Key, Type (Ed25519, HashX, PreAuthTx), Weight, Sponsor. `Thresholds`: Low, Medium, High. `Flags`: AuthRequired, AuthRevocable, AuthImmutable, ClawbackEnabled.
 - `AccountSnapshot`: ID, Network, Endpoint, Ledger, Sequence, Thresholds, Signers, Flags, HomeDomain, Sponsor, Balances.
 - `Finding`: RuleID, Severity, Account, Message, Evidence, Fingerprint (`sha256(rule|account|evidence)`), Accepted. Severity is outside the hash, which is what lets a role re-weight a finding without moving the key an acceptance matches on.
-- `NetworkInfo`: Passphrase, Ledger. `AccountReport`: Snapshot, Findings. `Report`: ToolVersion, Network, Ledger, Accounts, typed ExitCode.
+- `NetworkInfo`: Passphrase, Ledger. `AccountReport`: Snapshot, Facts (the run's observations: reachability per tier, what the policy declared, what the identity fetch saw; each a pointer because each has a real "no answer" state), Findings. `Report`: ToolVersion, Network, Ledger, Accounts, typed ExitCode.
 - Config `gauge.toml`: `version`, `network`, `endpoints`, `[[account]]` (id, name, role, expected_signers, expected_thresholds, expected_flags, home_domain, expect_locked), `[[accept]]` (rule, account, reason, optional expires). Pointer fields preserve omitted expectations; strict decode, seed rejection, per-entry validation and the role severity floors are all implemented.
 
 ## 7. Threshold math [6.3]
@@ -94,6 +94,7 @@ Verified from the protocol implementation by task 0.7 on 2026-11-04, at stellar-
 ## 9. Exit codes [8]
 
 - 0 pass, 1 findings at or above `fail_on`, 2 config or usage error, 3 source or internal error.
+- `report.Exit` reads findings and nothing else. A fact line has no severity, so an unreachable tier printed as `(unreachable)`, a document naming another network printed as `(not this network)` and a lock declaration printed as ignored all leave the exit code where the findings put it. [6.8, 3.7]
 
 ## 10. Trust and residual risk [4]
 
@@ -107,6 +108,7 @@ Verified from the protocol implementation by task 0.7 on 2026-11-04, at stellar-
 - Fake Horizon for 200, 404, 429, 5xx, slow, oversize, malformed, wrong passphrase, redirects.
 - Captured real JSON fixtures for every PRD Appendix B scenario.
 - SSRF, sanitizer and fuzz tests. The guard's blocked-class, DNS-rebinding and redirect cases and the sanitizer suites are green as of task 3.5; a SEP-1 parse fuzz target still needs its own roadmap task. Golden outputs. Roadmap gate script test.
+- The report's fact block is tested by what it must not do as much as by what it does: a run whose every tier is unreachable, whose document names another network and whose lock declaration is ignored still exits 0 with no findings, and a document that never parsed prints its deciding step and none of its keys. Both formats, plus the shipped `gauge.example.toml` loaded through the strict parser. [6.7, 6.8]
 
 ## 12. Decisions (ADR one-liners) [13]
 

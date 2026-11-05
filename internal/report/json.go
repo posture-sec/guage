@@ -62,10 +62,55 @@ func prepare(r model.Report) model.Report {
 		model.SortFindings(findings)
 		out.Accounts[i] = model.AccountReport{
 			Snapshot: snapshot,
+			Facts:    prepareFacts(ar.Facts),
 			Findings: findings,
 			Missing:  ar.Missing,
 			Skipped:  sanitize.Text(ar.Skipped),
 		}
 	}
 	return out
+}
+
+// prepareFacts sanitizes the fact block the same way every other printed string
+// is sanitized. Remote content reaches a report through these fields: a
+// stellar.toml value, a home domain the fetcher refused, the name an operator gave
+// an account. The counts and the booleans are this program's own arithmetic and
+// need nothing.
+func prepareFacts(facts *model.AccountFacts) *model.AccountFacts {
+	if facts == nil {
+		return nil
+	}
+	out := model.AccountFacts{Reachability: facts.Reachability}
+	if declared := facts.Declared; declared != nil {
+		copied := *declared
+		copied.Name = sanitize.Text(copied.Name)
+		copied.Role = sanitize.Text(copied.Role)
+		copied.HomeDomain = sanitizePointer(copied.HomeDomain)
+		out.Declared = &copied
+	}
+	if identity := facts.Identity; identity != nil {
+		copied := *identity
+		copied.HomeDomain = sanitize.Text(copied.HomeDomain)
+		copied.Step = sanitize.Text(copied.Step)
+		copied.Detail = sanitize.Text(copied.Detail)
+		copied.NetworkPassphrase = sanitizePointer(copied.NetworkPassphrase)
+		copied.SigningKey = sanitizePointer(copied.SigningKey)
+		copied.HorizonURL = sanitizePointer(copied.HorizonURL)
+		copied.Version = sanitizePointer(copied.Version)
+		accounts := make([]string, len(copied.Accounts))
+		for i, account := range copied.Accounts {
+			accounts[i] = sanitize.Text(account)
+		}
+		copied.Accounts = accounts
+		out.Identity = &copied
+	}
+	return &out
+}
+
+func sanitizePointer(value *string) *string {
+	if value == nil {
+		return nil
+	}
+	cleaned := sanitize.Text(*value)
+	return &cleaned
 }

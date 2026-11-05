@@ -62,6 +62,19 @@ run "stellar-gauge check -h" or "stellar-gauge audit -h" for the options.
 `)
 }
 
+// The two public Horizon endpoints, the policy file audit reads by default and the
+// example to copy, named in the messages a first run hits. Neither endpoint has a
+// default: PRD 6.4 says an endpoint must be chosen because a silent default to
+// mainnet is how an audit reads the wrong ledger, and a policy file that does not
+// exist is not a policy. A usage error that names what to type is the difference
+// between a first run and a search through the README.
+const (
+	namedEndpoints = "https://horizon.stellar.org for mainnet, " +
+		"https://horizon-testnet.stellar.org for testnet. "
+	exampleConfig = "gauge.example.toml"
+	defaultConfig = "gauge.toml"
+)
+
 // parseFailOn maps the CLI value to the severity at which a finding fails the
 // run. The default is high, so a warning alone does not fail a scheduled job.
 func parseFailOn(value string) (model.Severity, bool) {

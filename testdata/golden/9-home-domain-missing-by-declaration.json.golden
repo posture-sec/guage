@@ -40,6 +40,22 @@
           }
         ]
       },
+      "facts": {
+        "reachability": {
+          "low": 1,
+          "medium": 1,
+          "high": 1
+        },
+        "declared": {
+          "role": "other",
+          "expected_signers": null,
+          "expected_thresholds": null,
+          "expected_flags": null,
+          "home_domain": "gauge.example.invalid",
+          "expect_locked": null
+        },
+        "identity": null
+      },
       "findings": [
         {
           "rule_id": "id-no-home-domain",

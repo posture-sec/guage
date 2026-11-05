@@ -40,6 +40,22 @@
           }
         ]
       },
+      "facts": {
+        "reachability": {
+          "low": 1,
+          "medium": 1,
+          "high": 1
+        },
+        "declared": {
+          "role": "issuer",
+          "expected_signers": null,
+          "expected_thresholds": null,
+          "expected_flags": null,
+          "home_domain": null,
+          "expect_locked": null
+        },
+        "identity": null
+      },
       "findings": [
         {
           "rule_id": "sig-single-key-high",

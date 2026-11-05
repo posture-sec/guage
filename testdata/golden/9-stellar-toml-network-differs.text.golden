@@ -1,0 +1,29 @@
+Gauge test
+network: Test SDF Network ; September 2015
+ledger: 5466897
+
+account GBKDXQ7LCO3X23K4HUKSHCA3KMM3364M4UK3526XYMBWTDD4NJCSRNAI
+  endpoint: https://horizon-testnet.stellar.org
+  as of ledger 5466906, sequence 23472095056887815
+  thresholds: low 2, medium 2, high 2
+  minimum signers to authorize: low 2, medium 2, high 2
+  flags: auth_required=false auth_revocable=false auth_immutable=false clawback=false
+  home domain: gauge.example.invalid
+  sponsor: (none)
+  signers: 2
+    GBKDXQ7LCO3X23K4HUKSHCA3KMM3364M4UK3526XYMBWTDD4NJCSRNAI ed25519 weight 1
+    GD4FV55YUFEJWS5Z3VDFDSFFQVHNX2TCUANW24FKKA4XFSHVISQI35G2 ed25519 weight 1
+  declared: nothing; this run read no policy file, so only the universal rules ran
+  identity document: gauge.example.invalid served a readable file
+    step: ok
+    fetch: status 200, 1 redirect hops, 196 bytes, CORS present
+    network_passphrase: "Public Global Stellar Network ; September 2015" (not this network)
+    signing_key: "GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3"
+    horizon_url: "https://horizon-testnet.stellar.org"
+    version: "v0.8.3"
+    accounts: 2 listed
+  findings: none
+
+result: 0 findings (0 high, 0 warn, 0 info), 0 accepted
+exit code: 0
+limits: Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised.

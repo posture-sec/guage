@@ -59,7 +59,7 @@
         <a href="status.html" aria-current="page">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-04<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-05<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -70,7 +70,7 @@
       <div class="content">
         <p class="eyebrow">Status</p>
         <h1>Functional alpha. Testnet verified. Unaudited.</h1>
-        <p class="lede">Gauge reads real Horizon data and produces real findings. It is also early: all sixteen rules are registered and evaluating, none has a release tag, and every observation below comes from testnet. This page records what was run, when, and what it does not prove.</p>
+        <p class="lede">Gauge reads real Horizon data, prints the facts it read and produces real findings. It is also early: all sixteen rules are registered and evaluating, none has a release tag, and every observation below comes from testnet. This page records what was run, when, and what it does not prove.</p>
         <div class="chip-row">
           <span class="chip chip--live">Functional alpha</span>
           <span class="chip chip--warn">Unaudited</span>
@@ -87,11 +87,11 @@
               <tbody>
                 <tr><td>strict policy loader</td><td><span class="chip chip--live">Shipped</span></td><td>Unknown keys, duplicate accounts, bad values and secret seeds are rejected with exit 2.</td></tr>
                 <tr><td>Horizon source</td><td><span class="chip chip--live">Shipped</span></td><td>Timeouts, a 1 MiB cap, retries, bounded concurrency, no redirects and a passphrase check before any account read.</td></tr>
-                <tr><td>check and audit</td><td><span class="chip chip--live">Shipped</span></td><td>Text and JSON output, a stable exit code, and the limits footer on every report.</td></tr>
+                <tr><td>check and audit</td><td><span class="chip chip--live">Shipped</span></td><td>Text and JSON output, the facts each account read printed before any judgement, a stable exit code, and the limits footer on every report. The fact block is task 3.7.</td></tr>
                 <tr><td>rules</td><td><span class="chip chip--live">16 of 16</span></td><td>The account, signer, threshold, flag and identity families are registered and evaluated on every run; task 3.1 landed the nine that answer who can authorize an account.</td></tr>
                 <tr><td>threshold math</td><td><span class="chip chip--live">Shipped</span></td><td>Reachability and minimum signers, read from the protocol implementation in task 0.7 and implemented once in <code>internal/threshold</code>, which every signer rule calls.</td></tr>
                 <tr><td>role severities</td><td><span class="chip chip--live">Shipped</span></td><td>A declared role raises a finding to the severity Appendix A names and never lowers one. Task 3.4.</td></tr>
-                <tr><td>SEP-1 identity checks</td><td><span class="chip chip--live">Shipped</span></td><td>The home domain an account publishes is fetched through a dial-time address guard, and an identity Gauge could not verify is a warning rather than a pass. Read once against a live domain, on 2026-11-03; the address classes it refuses are proven by tests, not by runs.</td></tr>
+                <tr><td>SEP-1 identity checks</td><td><span class="chip chip--live">Shipped</span></td><td>The home domain an account publishes is fetched through a dial-time address guard, and an identity Gauge could not verify is a warning rather than a pass. Read twice against a live domain, on 2026-11-03 and again on 2026-11-05; the address classes it refuses are proven by tests, not by runs.</td></tr>
                 <tr><td>tagged release</td><td><span class="chip chip--warn">None</span></td><td>No version is tagged and no artifact is signed. Build from source.</td></tr>
                 <tr><td>this documentation site</td><td><span class="chip chip--live">Live</span></td><td>Static pages deployed from the repository by GitHub Actions. Task 5.9.</td></tr>
               </tbody>
@@ -116,7 +116,7 @@
                 <tr><td>Account absent (404)</td><td>1</td><td>Report with <code>acct-missing</code> for that account.</td></tr>
                 <tr><td>Unknown policy key</td><td>2</td><td>No report. The policy is rejected before any request.</td></tr>
                 <tr><td>Secret seed in the policy or arguments</td><td>2</td><td>No report, and the seed is never echoed.</td></tr>
-                <tr><td>Missing policy file</td><td>2</td><td>No report.</td></tr>
+                <tr><td>Missing policy file</td><td>2</td><td>No report. Since 3.7 the message names <code>gauge.example.toml</code> and points at <code>check</code>, which needs no file.</td></tr>
                 <tr><td>Rule panic</td><td>3</td><td>Report with <code>src-rule-panic</code>; the account's result is incomplete.</td></tr>
                 <tr><td>Identity fetcher will not build</td><td>3</td><td>No report. The stage never started.</td></tr>
                 <tr><td>Home domain resolves to a blocked address</td><td>0, or 1 under <code>--fail-on warn</code></td><td>Report with <code>id-toml-unreachable</code>. Nothing was dialed, and the document is not quoted.</td></tr>
@@ -128,7 +128,7 @@
 
         <section class="section">
           <h2>Testnet evidence</h2>
-          <p>These runs were made against <code>https://horizon-testnet.stellar.org</code> on 2026-10-30, again on 2026-11-02 and again on 2026-11-03, the last against the binary built from the merged 3.5 work. Ledger numbers are the endpoint's latest ledger at read time. Testnet resets, so a later run may not find the same accounts.</p>
+          <p>These runs were made against <code>https://horizon-testnet.stellar.org</code> on 2026-10-30, again on 2026-11-02, again on 2026-11-03 against the binary built from the merged 3.5 work, and again on 2026-11-05 against the build that carries the facts report (3.7). Ledger numbers are the endpoint's latest ledger at read time. Testnet resets, so a later run may not find the same accounts.</p>
           <div class="table-wrap">
             <table>
               <thead>
@@ -138,7 +138,7 @@
                 <tr>
                   <td>GBK4NFJ7…UKE7M3</td>
                   <td>5467515</td>
-                  <td>Exit 0. Facts printed, limits footer present.</td>
+                  <td>Exit 0. Account facts and the limits footer present. The reachability, <code>declared:</code> and identity lines are task 3.7's and first appear in the 2026-11-05 rows below.</td>
                 </tr>
                 <tr>
                   <td>GC2HHIM6…43LO2II (unfunded)</td>
@@ -158,7 +158,7 @@
                 <tr>
                   <td>GDSX2WUF…UVBEVG again on 2026-11-02, <code>--fail-on warn</code></td>
                   <td>5517199</td>
-                  <td>Exit 1. Same finding; this run is the report excerpt on the overview page.</td>
+                  <td>Exit 1. Same finding; the overview page's excerpt is the 2026-11-05 rerun of this account, which adds the fact block, the identity warning and the single-key INFO that 3.1's rules produce.</td>
                 </tr>
                 <tr>
                   <td>GCI76XDV…SD74A4AV on 2026-11-03, <code>--fail-on warn</code></td>
@@ -183,13 +183,23 @@
                 <tr>
                   <td><code>audit</code> on GCI76XDV…SD74A4AV with a policy that declares <code>clawback = true</code> and <code>home_domain = "example.org"</code>, 2026-11-03</td>
                   <td>5538914</td>
-                  <td>Exit 1 under <code>--fail-on warn</code> with two warnings, exit 0 at the default <code>--fail-on high</code> on the identical report. The same file also declares one signer the chain does not carry and a weight of 9 against an observed 1: no finding, because the signer family is task 3.1 and that silence is the point of recording it.</td>
+                  <td>Exit 1 under <code>--fail-on warn</code> with two warnings, exit 0 at the default <code>--fail-on high</code> on the identical report. The same file also declared one signer the chain does not carry and a weight of 9 against an observed 1: no finding, because that build predated task 3.1. The 2026-11-05 row below is the same policy against the shipped signer family, and the silence is gone.</td>
+                </tr>
+                <tr>
+                  <td>GBK4NFJ7…UKE7M3 and GDSX2WUF…UVBEVG, zero-config <code>check</code> on 2026-11-05</td>
+                  <td>5569491 and 5569489</td>
+                  <td>Exit 0 and exit 1 under <code>--fail-on warn</code>. Each prints the fact block 3.7 added: <code>minimum signers to authorize: low 1, medium 1, high 1</code>, <code>declared: nothing; this run read no policy file, so only the universal rules ran</code>, and for the account that publishes <code>komunitin.org</code>, an identity block naming the failing step (<code>parse</code>) with <code>fetch: status 200, 0 redirect hops, 3363 bytes, CORS absent</code>. The JSON form carries the same three fields, with <code>declared</code> and <code>identity</code> as null where nothing was read.</td>
+                </tr>
+                <tr>
+                  <td><code>audit</code> on GCI76XDV…SD74A4AV on 2026-11-05, same policy shape as the 2026-11-03 row, <code>--fail-on warn</code></td>
+                  <td>5569504</td>
+                  <td>Exit 1 with four findings: HIGH <code>sig-missing-expected</code> for the declared signer the chain does not carry, WARN <code>sig-weight-drift</code> for 9 against an observed 1, and the two warnings the earlier run already produced. The report prints <code>expected_signers: 7 keys declared</code> and <code>expect_locked: (not declared)</code>, so the reader can see which lines the policy carried.</td>
                 </tr>
               </tbody>
             </table>
           </div>
           <div class="note">
-            <p><strong>What this does not prove.</strong> One mainnet request has been made, on 2026-11-03, and it was the endpoint's root document, asked in order to show that a run demanding the testnet passphrase from the public endpoint stops before reading any account. No mainnet account has been read, and a mainnet account can carry flags or signer shapes that none of these fixtures show. One live home domain has been read, once, by one account, and it served a document Gauge refuses to parse: the fetcher's success path, its hop cap and every address class its guard blocks are proven by tests against a fake resolver, not by runs. The committed Horizon fixtures are testnet captures and are marked perishable for the same reason.</p>
+            <p><strong>What this does not prove.</strong> One mainnet request has been made, on 2026-11-03, and it was the endpoint's root document, asked in order to show that a run demanding the testnet passphrase from the public endpoint stops before reading any account. No mainnet account has been read, and a mainnet account can carry flags or signer shapes that none of these fixtures show. One live home domain has been read, twice, by one account, and both times it served a document Gauge refuses to parse: the fetcher's success path, its hop cap and every address class its guard blocks are proven by tests against a fake resolver, not by runs. The committed Horizon fixtures are testnet captures and are marked perishable for the same reason.</p>
           </div>
         </section>
 
@@ -197,14 +207,14 @@
           <h2>Roadmap position</h2>
           <div class="rail">
             <div class="rail-item">
-              <span class="rail-code">66%</span>
+              <span class="rail-code">68%</span>
               <span class="rail-label">Readiness</span>
-              <p class="rail-copy">52 of 78 tasks across Phases 0 to 6 are done.</p>
+              <p class="rail-copy">53 of 78 tasks across Phases 0 to 6 are done.</p>
             </div>
             <div class="rail-item">
-              <span class="rail-code">2/10</span>
+              <span class="rail-code">3/10</span>
               <span class="rail-label">Gates</span>
-              <p class="rail-copy">G3, fail-closed tests, and G2, every Appendix B scenario with a fixture and a golden report, are green. The rest are open.</p>
+              <p class="rail-copy">G1, a passing test for every P0 requirement, G2, every Appendix B scenario with a fixture and a golden report, and G3, fail-closed tests, are green. The rest are open.</p>
             </div>
             <div class="rail-item">
               <span class="rail-code">16/16</span>
@@ -217,7 +227,7 @@
               <p class="rail-copy">No tag, no signed artifact, no attestation yet.</p>
             </div>
           </div>
-          <p>Phase 3 is 6 of 7. Task 3.1 registered the nine signer and threshold rules on 2026-11-04, on top of the threshold math 2.3 built from the semantics 0.7 closed by reading the protocol code that enforces them, so a run now reports an unreachable tier, an account with no standing signing weight and a signer your policy did not declare. Task 3.4 landed behind it the same day and weights each of those findings by the account's declared role, which is the report an issuer, a treasury and a merchant each get. Task 3.6 landed on 2026-11-05 and closes gate G2: every Appendix B scenario has a fixture and a golden text and JSON report behind it, seven of the twelve fixtures built here and labelled as built rather than captured, so a severity, an evidence wording, a fingerprint or an exit code that moves fails a test instead of changing what an operator reads. What remains in Phase 3 is the facts report (3.7). The guarded SEP-1 fetcher and its three identity rules landed on 2026-11-03. <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Read the full roadmap</a>.</p>
+          <p>Phase 3 is 7 of 7 as of 2026-11-05. Task 3.1 registered the nine signer and threshold rules on 2026-11-04, on top of the threshold math 2.3 built from the semantics 0.7 closed by reading the protocol code that enforces them, so a run now reports an unreachable tier, an account with no standing signing weight and a signer your policy did not declare. Task 3.4 landed behind it the same day and weights each of those findings by the account's declared role, which is the report an issuer, a treasury and a merchant each get. Task 3.6 landed on 2026-11-05 and closes gate G2: every Appendix B scenario has a fixture and a golden text and JSON report behind it, seven of the twelve fixtures built here and labelled as built rather than captured, so a severity, an evidence wording, a fingerprint or an exit code that moves fails a test instead of changing what an operator reads. Task 3.7 landed the same day and is the last one in the phase: a run prints the facts it read before it prints any judgement, so the report names the minimum number of signatures each tier needs, which expectations the policy carried and which it left out, and what the home-domain fetch returned, including a document it could not read. A fact line is not a finding and cannot fail a run, which is why an unreachable <code>stellar.toml</code> prints as a fact and its warning separately. That covers the last P0 requirement gate G1 was waiting on, so every requirement in <code>PRD.md</code> FR-01 to FR-13 now has a passing test. What is left for v0.1.0 is Phase 4: dogfood on real operator accounts, the usage docs, the release artifacts. The guarded SEP-1 fetcher and its three identity rules landed on 2026-11-03. <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Read the full roadmap</a>.</p>
         </section>
 
         <section class="section">

@@ -6,11 +6,13 @@ account GBIY5RL644R6YRLYDZD5Y6VZXOWR3ZO2MTK4TSVTD4MAORSBKMKKO4RP
   endpoint: https://horizon-testnet.stellar.org
   as of ledger 5466901, sequence 23472095056887810
   thresholds: low 0, medium 0, high 0
+  minimum signers to authorize: low (unreachable), medium (unreachable), high (unreachable)
   flags: auth_required=false auth_revocable=false auth_immutable=false clawback=false
   home domain: (none)
   sponsor: (none)
   signers: 1
     GBIY5RL644R6YRLYDZD5Y6VZXOWR3ZO2MTK4TSVTD4MAORSBKMKKO4RP ed25519 weight 0
+  declared: nothing; this run read no policy file, so only the universal rules ran
   findings: 2 (0 accepted)
     [high] sig-no-signing-weight
       no signer can authorize an operation, so this account cannot sign anything again

@@ -6,11 +6,13 @@ account GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3
   endpoint: https://horizon-testnet.stellar.org
   as of ledger 5465023, sequence 23472095056887808
   thresholds: low 0, medium 0, high 0
+  minimum signers to authorize: low 1, medium 1, high 1
   flags: auth_required=false auth_revocable=false auth_immutable=false clawback=false
   home domain: (none)
   sponsor: (none)
   signers: 1
     GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3 ed25519 weight 1
+  declared: nothing; this run read no policy file, so only the universal rules ran
   findings: 1 (0 accepted)
     [info] sig-single-key-high
       one signer alone reaches the high threshold, so a single key holds the account
