@@ -97,6 +97,88 @@ func TestIDNoHomeDomain(t *testing.T) {
 	}
 }
 
+// The second trigger, which is the one Appendix A wrote rather than an operator:
+// only the issuer row says the account should publish a home domain, so only that
+// role can raise this rule with no declaration behind it. Every other role is the
+// silence the table's own rows describe.
+func TestIDNoHomeDomainRoleTrigger(t *testing.T) {
+	t.Parallel()
+	for _, tc := range []struct {
+		name string
+		role model.Role
+		want bool
+	}{
+		{name: "issuer", role: model.RoleIssuer, want: true},
+		{name: "treasury", role: model.RoleTreasury},
+		{name: "distribution", role: model.RoleDistribution},
+		{name: "merchant", role: model.RoleMerchant},
+		{name: "other", role: model.RoleOther},
+		{name: "an undeclared role is the other row"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			account := policy.Account{ID: testAccount, Role: tc.role}
+			ctx := identityContext(account, model.AccountSnapshot{}, listed(testAccount))
+			findings := idNoHomeDomain(ctx)
+			if !tc.want {
+				if len(findings) != 0 {
+					t.Fatalf("role %q raised %+v, want silence", tc.role, findings)
+				}
+				return
+			}
+			f := wantOneFinding(t, findings, "id-no-home-domain")
+			want := `role "issuer" expects a home_domain, observed none`
+			if f.Evidence != want {
+				t.Errorf("evidence = %q, want %q", f.Evidence, want)
+			}
+			if !strings.Contains(f.Message, "role") {
+				t.Errorf("message %q does not say which expectation raised it", f.Message)
+			}
+		})
+	}
+}
+
+// A declaration and a role point at the same gap, and it is one finding: the two
+// triggers describe one missing domain, not two, so an operator reading the report
+// is not told twice about it with a different evidence line each time.
+func TestIDNoHomeDomainRaisesOncePerAccount(t *testing.T) {
+	t.Parallel()
+	account := declared(testDomain)
+	account.Role = model.RoleIssuer
+	got := idNoHomeDomain(identityContext(account, model.AccountSnapshot{}, listed(testAccount)))
+	if len(got) != 1 {
+		t.Fatalf("got %d findings %+v, want the declared trigger alone", len(got), got)
+	}
+	if want := `home_domain declared "example.com", observed none`; got[0].Evidence != want {
+		t.Errorf("evidence = %q, want the declaration the operator wrote (%q)", got[0].Evidence, want)
+	}
+}
+
+// The role trigger fires through the registry, and nothing else fires with it: an
+// issuer that publishes no domain has an unverified identity claim to report and no
+// toml to be unreachable, so the two fetch rules stay quiet about a domain that was
+// never named.
+func TestIssuerRoleTriggerFiresAloneThroughEvaluate(t *testing.T) {
+	t.Parallel()
+	account := policy.Account{ID: testAccount, Role: model.RoleIssuer}
+	snapshot := signable(model.AccountSnapshot{})
+	got := Evaluate(identityContext(account, snapshot, nil))
+	f := wantOneFinding(t, got, "id-no-home-domain")
+	if f.Account != testAccount {
+		t.Errorf("account = %q, want the audited address", f.Account)
+	}
+}
+
+// An acceptance can silence this rule for the role that raises it, which is the
+// shape the accepted-risk list is for: an issuer whose domain went dead is a
+// decision, not a structural failure.
+func TestIssuerRoleTriggerIsAcceptable(t *testing.T) {
+	t.Parallel()
+	if !policy.Acceptable("id-no-home-domain") {
+		t.Error("a role-raised home domain cannot be accepted, so [[accept]] cannot cover the decision an operator made")
+	}
+}
+
 // An account with no declared home domain is not a finding, which is what lets
 // check mode, where nothing is declared, stay silent on identity.
 func TestIDNoHomeDomainSkipsUnreadAccounts(t *testing.T) {
@@ -281,7 +363,11 @@ func TestIdentityGapsAreFactsNotFindings(t *testing.T) {
 	t.Parallel()
 	mismatched := listed(testAccount)
 	mismatched.Identity.NetworkPassphrase = text(mainnetPassphrase)
-	ctx := identityContext(declared("other.example"), model.AccountSnapshot{HomeDomain: testDomain}, mismatched)
+	// A neutral account rather than a bare snapshot: since task 3.1 an account
+	// with no signers or with one key that reaches a tier raises signer findings
+	// of its own, and this test is about the two identity gaps raising nothing.
+	neutral := signable(model.AccountSnapshot{HomeDomain: testDomain})
+	ctx := identityContext(declared("other.example"), neutral, mismatched)
 	if got := Evaluate(ctx); len(got) != 0 {
 		t.Fatalf("got %+v, want no findings while the gaps are unresolved", got)
 	}
@@ -305,7 +391,7 @@ func TestABlankObservedDomainIsNoDomain(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			snapshot := model.AccountSnapshot{HomeDomain: tc.value}
+			snapshot := signable(model.AccountSnapshot{HomeDomain: tc.value})
 			if got := Evaluate(identityContext(policy.Account{}, snapshot, nil)); len(got) != 0 {
 				t.Fatalf("findings = %+v, want none for a domain that is only whitespace", got)
 			}
