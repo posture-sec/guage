@@ -205,7 +205,7 @@
 
         <section class="section">
           <h2>Rule articles, the first seven</h2>
-          <p>These seven landed before the signer family, so their articles were written while they were the whole catalog. Every one is registered in <code>internal/rules</code>, covered by positive and negative fixture cases, and exercised end to end by the CLI tests. The nine signer and threshold rules below were registered on 2026-11-04 and weighted by role on the same day.</p>
+          <p>These seven landed before the signer family, so their articles were written while they were the whole catalog. Every one is registered in <code>internal/rules</code>, covered by positive and negative fixture cases, and exercised end to end by the CLI tests. The nine signer and threshold rules below were registered on 2026-11-04 and weighted by role on the same day. All sixteen articles now carry the same four rows, so what a declared role does to a finding is readable per rule rather than only from the table above: five of the sixteen move above the severity a <code>check</code> prints, two more are named by a row whose number they already carry, and nine are untouched by every role.</p>
 
           <article class="rule">
             <div class="rule-head">
@@ -221,6 +221,8 @@
               <dd>No. An acceptance cannot hide a missing account.</dd>
               <dt>Exit effect</dt>
               <dd>HIGH fails the default <code>--fail-on high</code> and produces exit 1.</dd>
+              <dt>Role weight</dt>
+              <dd>None, and none is possible. No row of <code>PRD.md</code> Appendix A names this rule, a role can only raise a severity, and this one is already at the top of the scale. A missing account reads HIGH under an issuer, a treasury and an undeclared account alike.</dd>
             </dl>
           </article>
 
@@ -238,6 +240,8 @@
               <dd>No.</dd>
               <dt>Exit effect</dt>
               <dd>HIGH fails the default threshold and produces exit 1. The run did not read an account, but it did complete and name the disagreement.</dd>
+              <dt>Role weight</dt>
+              <dd>None, and none is possible. No Appendix A row names it and the severity is already HIGH, so the wrong-network read says the same thing for every role. Being on the non-acceptable list is what keeps a declaration of purpose from silencing it.</dd>
             </dl>
           </article>
 
@@ -255,6 +259,8 @@
               <dd>Yes, with a reason and an optional expiry. The owner adds accept entries.</dd>
               <dt>Exit effect</dt>
               <dd>WARN is below the default <code>--fail-on high</code>. It produces exit 1 only under <code>--fail-on warn</code>.</dd>
+              <dt>Role weight</dt>
+              <dd>HIGH on the <code>issuer</code> row, which is the one role whose flags decide what it can do to holders. The <code>distribution</code> and <code>merchant</code> rows write WARN against a rule that already says WARN, and no row names flag drift for a <code>treasury</code>, so a treasury whose declared flags disagree stays at WARN and does not fail the default gate on that finding alone.</dd>
             </dl>
           </article>
 
@@ -272,6 +278,8 @@
               <dd>Yes, with a reason and an optional expiry.</dd>
               <dt>Exit effect</dt>
               <dd>WARN. Exit 1 only under <code>--fail-on warn</code>.</dd>
+              <dt>Role weight</dt>
+              <dd>HIGH for an <code>issuer</code>, and the reading that got written down rather than inferred: Appendix A's issuer row says "flag drift is HIGH" without naming this rule in words, while <code>PRD.md</code> 6.1 writes the rule's own severity as "WARN (HIGH for issuer)". The catalog speaks by rule ID, so an undeclared clawback on an issuer fails the default gate. No other row names it, and it needs no declaration to fire, so it is one of the rules a <code>check</code> can raise.</dd>
             </dl>
           </article>
 
@@ -289,6 +297,8 @@
               <dd>Yes, with a reason and an optional expiry.</dd>
               <dt>Exit effect</dt>
               <dd>WARN. Exit 1 only under <code>--fail-on warn</code>.</dd>
+              <dt>Role weight</dt>
+              <dd>The role changes what makes this rule fire, not what the finding is worth. No Appendix A row raises it, so it stays WARN under every role, and it is the one rule a role can cause to fire on its own: <code>policy.ExpectsHomeDomain</code> is true for <code>issuer</code> alone, so an issuer that declared nothing about domains is still held to one. A treasury, distribution account or merchant publishing nothing is a finding only where its own file named a domain, and a <code>check</code> run can raise neither half.</dd>
             </dl>
           </article>
 
@@ -306,6 +316,8 @@
               <dd>Yes, with a reason and an optional expiry.</dd>
               <dt>Exit effect</dt>
               <dd>WARN. Exit 1 only under <code>--fail-on warn</code>.</dd>
+              <dt>Role weight</dt>
+              <dd>None. No row of <code>PRD.md</code> Appendix A names it, so an unreadable domain is a WARN for an issuer and for an undeclared account alike. A role cannot stack it either: an account under a domain whose file cannot be read gets this one warning and not <code>id-toml-account-unlisted</code> beside it.</dd>
             </dl>
           </article>
 
@@ -323,6 +335,8 @@
               <dd>Yes, with a reason and an optional expiry.</dd>
               <dt>Exit effect</dt>
               <dd>WARN. Exit 1 only under <code>--fail-on warn</code>.</dd>
+              <dt>Role weight</dt>
+              <dd>None. No Appendix A row names it and no role can raise it, so a document that reads cleanly and does not list the account is a WARN for an issuer too, which is the honest ordering: the domain said who it belongs to and this account is not on that list. The rule needs a reachable document, so under <code>check</code> it fires for any account that publishes a home domain and serves one Gauge can parse.</dd>
             </dl>
           </article>
         </section>
@@ -511,7 +525,7 @@
 
         <section class="section">
           <h2>What is not shipped</h2>
-          <p>All sixteen rules in the table are registered and evaluated on every run, and a declared role now weights them. Every Appendix B scenario now has a fixture and a golden pair behind it, landed 2026-11-05: twelve files in <code>testdata/horizon/</code>, five captured from testnet and seven built here and labelled as built, and 38 report files in <code>testdata/golden/</code> that one test run compares in both formats, so a severity, a wording, a fingerprint or an exit code that moves shows up as a diff rather than a silent pass. The same day brought the facts report (task 3.7): a run now prints what it read before it prints what it thinks, including the minimum signatures each tier needs, which expectations a policy carried and which it left out, and what the home-domain fetch returned. What is left on this page's horizon is the usage docs 4.2 still holds open; the rule articles for the nine signer and threshold checks landed with the rest on 2026-11-04. Still genuinely unwritten: a markdown report (5.3), snapshots and diffs (5.2), trustline exposure (5.5), the SEP-29 recipient check (5.6), multi-endpoint comparison (5.1) and the rest of what <code>PRD.md</code> marks P1 for v0.2.0. No release is tagged and no third party has audited any of it.</p>
+          <p>All sixteen rules in the table are registered and evaluated on every run, and a declared role now weights them. Every Appendix B scenario now has a fixture and a golden pair behind it, landed 2026-11-05: twelve files in <code>testdata/horizon/</code>, five captured from testnet and seven built here and labelled as built, and 38 report files in <code>testdata/golden/</code> that one test run compares in both formats, so a severity, a wording, a fingerprint or an exit code that moves shows up as a diff rather than a silent pass. The same day brought the facts report (task 3.7): a run now prints what it read before it prints what it thinks, including the minimum signatures each tier needs, which expectations a policy carried and which it left out, and what the home-domain fetch returned. What is left on this page's horizon is not the rule reference: 4.2 closed on 2026-11-05 with every article carrying its condition, evidence shape, acceptability and role weight, and the usage pages re-read against the shipped CLI. Still genuinely unwritten: a markdown report (5.3), snapshots and diffs (5.2), trustline exposure (5.5), the SEP-29 recipient check (5.6), multi-endpoint comparison (5.1) and the rest of what <code>PRD.md</code> marks P1 for v0.2.0. No release is tagged and no third party has audited any of it.</p>
           <div class="note">
             <p><strong>Read the status before trusting a pass.</strong> A clean result means all sixteen checks agreed with what the chain showed and with what your policy declared. It is not a statement about key custody: on-chain data cannot show who holds a key, and ten of the sixteen rules compare against a declaration, so a policy that says nothing about signers, thresholds or flags gets no answer about drift.</p>
           </div>
