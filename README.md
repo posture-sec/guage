@@ -6,6 +6,7 @@
   <a href="https://github.com/posture-sec/guage/actions/workflows/ci.yml"><img src="https://github.com/posture-sec/guage/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/posture-sec/guage/actions/workflows/roadmap-check.yml"><img src="https://github.com/posture-sec/guage/actions/workflows/roadmap-check.yml/badge.svg" alt="Roadmap check" /></a>
   <a href="https://scorecard.dev/viewer/?uri=github.com/posture-sec/guage"><img src="https://api.scorecard.dev/projects/github.com/posture-sec/guage/badge" alt="OpenSSF Scorecard" /></a>
+  <a href="https://posture-sec.github.io/guage/"><img src="https://img.shields.io/badge/docs-live-00ADD8" alt="Documentation Site" /></a>
   <img src="https://img.shields.io/badge/go-1.27.3-00ADD8" alt="Go 1.27.3" />
   <img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="Apache-2.0" />
   <a href="SECURITY.md#status-of-this-code"><img src="https://img.shields.io/badge/status-unaudited-orange" alt="Unaudited" /></a>
@@ -15,6 +16,8 @@
 # Gauge
 
 **Working name Gauge, binary `stellar-gauge`.** It reads the public configuration of your Stellar accounts and compares it with what you said you expect. Signers, thresholds, flags, home domain. It reports the difference and exits nonzero when the difference matters, so a scheduled run in CI catches a change to a treasury or issuer account the day it happens instead of the day it costs something.
+
+[Documentation site](https://posture-sec.github.io/guage/) · [Quick start](#usage) · [What it checks](#what-it-checks) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md)
 
 The problem it addresses: an account's control settings live on-chain, are public, and almost nobody reviews them. A signer added during an incident stays forever. A threshold that no longer matches the key layout makes a "2-of-3" account 1-of-1. A clawback flag appears without anyone declaring it. These are configuration facts, so they are checkable without touching a private key.
 
@@ -32,6 +35,8 @@ go run ./cmd/stellar-gauge check --network testnet --endpoint https://horizon-te
 A run reads the account, prints what the chain shows and exits `0`, `1`, `2` or `3`. A missing account or an endpoint on the wrong network is a HIGH finding and exits `1` by default, as does any run that could not complete. Declared flag drift, an undeclared clawback and a home domain whose `stellar.toml` cannot be read are warnings and exit `1` under `--fail-on warn`. A run also fetches the `stellar.toml` of any account that publishes a home domain, through a guard that resolves the name and then refuses loopback, private, link-local and other non-public addresses at dial time; an identity Gauge could not verify is a warning, never a pass. An account with no standing signing weight, a threshold tier its signers can never reach and a signer the policy does not declare are HIGH findings too, and an unreachable tier cannot be accepted away. What a finding is worth depends on the role you declared for the account: an issuer or treasury is held to a tighter bar than a distribution account or a merchant, a role can only raise a severity and never lower one, and `check`, which declares no role, reports at the baseline. There is no release to install.
 
 Ahead of every finding, a report prints the facts it read for that account: thresholds, how many of the account's own signers each tier needs, flags, home domain, sponsor, each signer, what your policy declared (or that it declared nothing, which is what a `check` run did) and what the identity fetch saw, including the step that decided it. Those lines carry no severity and cannot fail a run; they are what makes "no findings" readable as an observation rather than a verdict.
+
+A 7-page documentation site is published at **[https://posture-sec.github.io/guage/](https://posture-sec.github.io/guage/)**, covering policy specifications, CLI mechanics, integration guides, and an interactive rule reference.
 
 ## What it checks
 
