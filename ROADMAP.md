@@ -1,6 +1,6 @@
 # ROADMAP: Gauge
 
-Last updated: 2026-11-09T13:57Z (remove working name references and add dynamic README metric sync with Shields.io endpoints)
+Last updated: 2026-11-09T14:40Z (update Drips Wave 11 submission packet and sibling comparison)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
@@ -276,6 +276,7 @@ Newest first. One row per merged change.
 
 | Date (UTC) | Change | Tasks |
 |---|---|---|
+| 2026-11-09 | Updated Drips Wave submission packet (docs/WAVE_SUBMISSION.md) for Wave 11: confirmed 200 unit tests passing, all 16 rules registered, OpenSSF Scorecard at 6.8 with live badge, live documentation site at https://posture-sec.github.io/guage/, dynamic README metric sync, and updated sibling comparison data across org repositories. | none ticked |
 | 2026-11-09 | Finalized project naming by removing all occurrences of "working name" across repository documentation, PRD, architecture, and roadmap files. Implemented dynamic README metrics synchronization (`scripts/sync_readme.py`) generating live Shields.io endpoint JSON files under `site/data/` for 200 tests and 16 rules, and enforced with `--check` in the `roadmap-check` workflow. | none ticked |
 | 2026-11-09 | Add Docs Live badge to README and prominent navigation links to the 7-page live documentation site. | none ticked |
 | 2026-11-09 | Task 5.11, the site's motion layer, on the owner's instruction to take animation inspiration from land-book.com across the org's docs sites. `site/assets/motion.css` and `motion.js` are loaded by all seven pages: sections, cards, ledger rows and tables drift up 22px as they enter the viewport with a 70ms sibling stagger, the hero plays a staged entrance in 90ms steps with the paper report card a longer 0.9s rise, the report then drifts up to 18px under scroll, nav underlines slide in, cards lift on hover, and scrollbars carry the palette. Everything is gated behind `prefers-reduced-motion: no-preference`, and the script returns before touching the DOM when reduce is set, verified by emulation: no motion attribute, no reveal classes, content fully visible. Verification was headless Chrome driven over CDP rather than eyeballing: all seven pages scrolled end to end, every reveal target intersected, zero elements stuck hidden, zero left carrying the reveal class after the entrance, zero console errors, the theme toggle dark to light and back, and a 390px render of the index. Two defects found and fixed on the way: a transition needs a painted before-state, so observation starts after two animation frames (defer scripts run before first paint, and above-fold sections were otherwise appearing instantly with the reveal class stuck on them), and a 1400ms fallback cleans up any element whose transition never runs. The layer is written to be shared verbatim with the Airlock and corpus sites: the accent resolves through each site's own tokens rather than a hardcoded color, and the scrollbar styling is static CSS rather than script-injected so it holds under Airlock's `style-src 'self'` CSP. No CLI change, no dependency, no build step. | 5.11 |
