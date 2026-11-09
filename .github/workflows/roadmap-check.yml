@@ -22,6 +22,8 @@ jobs:
           scripts/check_roadmap_touched.sh "origin/${GITHUB_BASE_REF}"
       - name: progress table current
         run: scripts/roadmap_progress.sh --check ROADMAP.md
+      - name: README metrics and badge endpoints are synchronized
+        run: python3 scripts/sync_readme.py --check
       - name: issue backlog covers every open task
         run: scripts/generate_issues.sh --check
       - name: gate script self-test

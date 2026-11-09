@@ -6,6 +6,8 @@
   <a href="https://github.com/posture-sec/guage/actions/workflows/ci.yml"><img src="https://github.com/posture-sec/guage/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/posture-sec/guage/actions/workflows/roadmap-check.yml"><img src="https://github.com/posture-sec/guage/actions/workflows/roadmap-check.yml/badge.svg" alt="Roadmap check" /></a>
   <a href="https://scorecard.dev/viewer/?uri=github.com/posture-sec/guage"><img src="https://api.scorecard.dev/projects/github.com/posture-sec/guage/badge" alt="OpenSSF Scorecard" /></a>
+  <a href="https://github.com/posture-sec/guage/actions"><img src="https://img.shields.io/endpoint?url=https://posture-sec.github.io/guage/data/badge-tests.json" alt="Tests" /></a>
+  <a href="#what-it-checks"><img src="https://img.shields.io/endpoint?url=https://posture-sec.github.io/guage/data/badge-rules.json" alt="Rules" /></a>
   <a href="https://posture-sec.github.io/guage/"><img src="https://img.shields.io/badge/docs-live-00ADD8" alt="Documentation Site" /></a>
   <img src="https://img.shields.io/badge/go-1.27.3-00ADD8" alt="Go 1.27.3" />
   <img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="Apache-2.0" />
@@ -15,7 +17,7 @@
 
 # Gauge
 
-**Working name Gauge, binary `stellar-gauge`.** It reads the public configuration of your Stellar accounts and compares it with what you said you expect. Signers, thresholds, flags, home domain. It reports the difference and exits nonzero when the difference matters, so a scheduled run in CI catches a change to a treasury or issuer account the day it happens instead of the day it costs something.
+**Gauge (binary `stellar-gauge`)** reads the public configuration of your Stellar accounts and compares it with what you said you expect. Signers, thresholds, flags, home domain. It reports the difference and exits nonzero when the difference matters, so a scheduled run in CI catches a change to a treasury or issuer account the day it happens instead of the day it costs something.
 
 [Documentation site](https://posture-sec.github.io/guage/) · [Quick start](#usage) · [What it checks](#what-it-checks) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md)
 
@@ -24,6 +26,15 @@ The problem it addresses: an account's control settings live on-chain, are publi
 Gauge is read-only and secret-free. It never accepts, stores or echoes a secret seed, never builds or submits a transaction, and treats every value it fetches as hostile input.
 
 ## Status
+
+<!-- METRICS:START -->
+| Indicator | Value | Source |
+|---|---|---|
+| Unit & Integration Tests | **200 passing** | `go test ./...` |
+| Posture Rules | **16 verified** across 4 families | `internal/rules` |
+| Binary | **`stellar-gauge`** | `cmd/stellar-gauge` |
+| Security Guarantee | **Read-only / 0 secret keys** | Architecture spec |
+<!-- METRICS:END -->
 
 Functional alpha (ROADMAP Phase 2, tasks 2.1 to 2.11), with Phase 3 complete on 2026-11-05: the sixteen rules, the role profiles and the facts report. The policy loader, Horizon client, guarded `stellar.toml` fetcher, report renderers, orchestrator, rules and CLI are implemented and tested:
 

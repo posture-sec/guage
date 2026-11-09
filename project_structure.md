@@ -1,4 +1,4 @@
-# project_structure.md: Gauge (working name)
+# project_structure.md: Gauge
 
 Where everything lives, who may change it and which way imports may point. Read this before creating or moving a file. Decisions behind the layout: `ARCHITECTURE.md` section 5. Work queue: `ROADMAP.md`.
 

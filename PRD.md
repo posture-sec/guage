@@ -1,11 +1,11 @@
-# PRD: Gauge (working name)
+# PRD: Gauge
 
 | | |
 |---|---|
 | Status | Draft v0.1 (includes a red-team pass, section 15) |
 | Date | 2026-10-28 |
 | Owner | Ademola |
-| Working name | Gauge. Binary `stellar-gauge`. Scaffold repository `posture-sec/guage`, Apache-2.0; final product naming remains open (section 13) |
+| Name | Gauge. Binary `stellar-gauge`. Scaffold repository `posture-sec/guage`, Apache-2.0. |
 | Language | Go |
 | Sibling projects | Airlock (`posture-sec/airlock`, public since 2026-11-02): a Python scanner for Stellar and Soroban repositories. Stellar account fixtures (`posture-sec/stellar-account-fixtures`, public the same day): nine `GET /accounts/<id>` reads with provenance sidecars and the validator that recomputes them, eight on mainnet and one on testnet since 2026-11-03, which is where a rule fixture here can get a shape nobody typed by hand. Gauge audits on-chain account configuration. They share conventions, not code, and one owner organization |
 | Companion docs | `ARCHITECTURE.md`, `ARCHITECTURE_ESSENTIALS.md`, `ROADMAP.md`, `project_structure.md`, `AGENTS.md`, `CLAUDE.md` |
@@ -289,7 +289,7 @@ No calendar dates. Phases and exit criteria live in `ROADMAP.md`.
 
 | ID | Decision | Status | Notes |
 |---|---|---|---|
-| D-01 | Project and repo name | Decided 2026-10-30 | Working name Gauge, binary `stellar-gauge`, module `github.com/posture-sec/guage`. The slug question is D-15 in `ROADMAP.md` |
+| D-01 | Project and repo name | Decided 2026-10-30 | Name Gauge, binary `stellar-gauge`, module `github.com/posture-sec/guage`. The slug question is D-15 in `ROADMAP.md` |
 | D-02 | Host organization | Decided 2026-10-28: `posture-sec` | Existing repository; module `github.com/posture-sec/guage` |
 | D-03 | License | Decided 2026-10-28: Apache-2.0 | Retain the existing LICENSE |
 | D-04 | Sequencing | Decided 2026-10-30: proceed with Gauge now | Share conventions, not code, with Airlock. The 0.5 search found no duplicate of this job. Re-read 2026-11-02: Airlock is public again at `posture-sec/airlock` and still has no v0.1.0, so the decision holds on its original reasoning |
