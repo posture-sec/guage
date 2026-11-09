@@ -1,0 +1,62 @@
+name: codeql
+
+# CodeQL for Go, running on pull requests and on pushes to main. This is the one
+# repository change that moves the Scorecard `SAST` check, which reads the
+# `github/codeql-action/analyze` step and the workflow's triggers rather than the
+# badge, and it does not exist to raise a number: it is a second, independent
+# analyzer over the packages that parse untrusted chain and DNS input.
+#
+# It does not tick 4.6. That task asks for an aggregate of 8 or higher with the
+# score recorded, and the aggregate is 6.8 today with five checks at zero, three
+# of which no workflow can move at one maintainer. See ROADMAP.md 4.6.
+#
+# `ci / go`, `ci / vuln`, `ci / build-test` and `roadmap-check / gate` are
+# unchanged and stay the required checks. This adds a status, not a gate: a
+# CodeQL finding must never be answered by weakening a check to clear a queue.
+# Findings land in the repository's code scanning tab and are fixed in code.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: codeql / go
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      # Upload the SARIF to the code scanning tab. Nothing else in this job
+      # needs a write permission, and the workflow-level permission stays read.
+      security-events: write
+      actions: read
+    steps:
+      - name: checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: setup go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: init
+        uses: github/codeql-action/init@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+        with:
+          languages: go
+      - name: build for extraction
+        # CodeQL's Go extractor runs as the compiler, so the build has to happen
+        # inside the CodeQL context. `go build ./...` alone would extract
+        # nothing and analyze nothing, and a green job would prove nothing: the
+        # database would be empty rather than the suite failing. Autobuild is
+        # what makes the package set that `ci / go` tests the package set CodeQL
+        # reads.
+        uses: github/codeql-action/autobuild@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+      - name: analyze
+        uses: github/codeql-action/analyze@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+        with:
+          category: "/language:go"
