@@ -1,4 +1,4 @@
-# ARCHITECTURE: Gauge (working name)
+# ARCHITECTURE: Gauge
 
 | | |
 |---|---|
