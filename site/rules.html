@@ -199,6 +199,13 @@
                   <td><span class="chip chip--warn">WARN</span></td>
                   <td><span class="chip chip--live">Live</span></td>
                 </tr>
+                <tr>
+                  <td>Identity</td>
+                  <td>id-sep29-memo-required</td>
+                  <td>A merchant receiving account does not set the SEP-29 <code>config.memo_required</code> data entry.</td>
+                  <td><span class="chip chip--warn">WARN</span></td>
+                  <td><span class="chip chip--live">Live</span></td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -339,6 +346,25 @@
               <dd>WARN. Exit 1 only under <code>--fail-on warn</code>.</dd>
               <dt>Role weight</dt>
               <dd>None. No Appendix A row names it and no role can raise it, so a document that reads cleanly and does not list the account is a WARN for an issuer too, which is the honest ordering: the domain said who it belongs to and this account is not on that list. The rule needs a reachable document, so under <code>check</code> it fires for any account that publishes a home domain and serves one Gauge can parse.</dd>
+            </dl>
+          </article>
+
+          <article class="rule">
+            <div class="rule-head">
+              <h3>id-sep29-memo-required</h3>
+              <span class="chip chip--warn">WARN</span>
+              <span class="chip chip--live">Live</span>
+            </div>
+            <p>An account with the <code>merchant</code> role does not have the SEP-29 <code>config.memo_required</code> account data entry set to <code>"1"</code> (base64 <code>"MQ=="</code>). SEP-29 requires sending applications to attach a memo to payments destined for merchant accounts; Gauge inspects the account's declared on-chain data posture and does not build or submit transactions.</p>
+            <dl>
+              <dt>Evidence</dt>
+              <dd><code>config.memo_required expected "MQ==", observed none</code> (or observed value)</dd>
+              <dt>Acceptable</dt>
+              <dd>Yes, with a reason and an optional expiry.</dd>
+              <dt>Exit effect</dt>
+              <dd>WARN. Exit 1 only under <code>--fail-on warn</code>.</dd>
+              <dt>Role weight</dt>
+              <dd>Applies to the <code>merchant</code> role. Other roles do not trigger this check.</dd>
             </dl>
           </article>
         </section>

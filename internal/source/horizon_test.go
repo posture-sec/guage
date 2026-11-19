@@ -711,6 +711,35 @@ func TestAccountShapeStrictness(t *testing.T) {
 				}
 			},
 		},
+		{
+			name: "account data entry populated",
+			edit: func(m map[string]any) {
+				m["data"] = map[string]any{
+					"config.memo_required": "MQ==",
+					"custom_key":           "dmFsdWU=",
+				}
+			},
+			check: func(t *testing.T, s model.AccountSnapshot) {
+				if len(s.Data) != 2 {
+					t.Fatalf("len(s.Data) = %d, want 2", len(s.Data))
+				}
+				if s.Data["config.memo_required"] != "MQ==" {
+					t.Errorf("s.Data[config.memo_required] = %q, want \"MQ==\"", s.Data["config.memo_required"])
+				}
+				if s.Data["custom_key"] != "dmFsdWU=" {
+					t.Errorf("s.Data[custom_key] = %q, want \"dmFsdWU=\"", s.Data["custom_key"])
+				}
+			},
+		},
+		{
+			name: "account data entry with non-string value",
+			edit: func(m map[string]any) {
+				m["data"] = map[string]any{
+					"config.memo_required": 123,
+				}
+			},
+			wantErr: ErrDecode,
+		},
 	}
 
 	for _, tt := range cases {

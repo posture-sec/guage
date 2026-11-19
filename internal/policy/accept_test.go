@@ -22,7 +22,7 @@ func TestAcceptableIsExactlyTheNonAcceptableList(t *testing.T) {
 		"sig-no-signing-weight", "sig-threshold-order", "sig-single-key-high", "sig-hashx",
 		"sig-unexpected-signer", "sig-missing-expected", "sig-weight-drift", "thr-drift",
 		"flag-drift", "flag-undeclared-clawback", "id-no-home-domain", "id-toml-unreachable",
-		"id-toml-account-unlisted",
+		"id-toml-account-unlisted", "id-sep29-memo-required",
 	} {
 		if !Acceptable(rule) {
 			t.Errorf("%s is acceptable and must not be refused", rule)

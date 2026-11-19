@@ -52,6 +52,7 @@ var registry = []Rule{
 	{ID: "id-no-home-domain", Check: idNoHomeDomain},
 	{ID: "id-toml-unreachable", Check: idTomlUnreachable},
 	{ID: "id-toml-account-unlisted", Check: idTomlAccountUnlisted},
+	{ID: "id-sep29-memo-required", Check: idSep29MemoRequired},
 }
 
 // All returns the registered rules in evaluation order.
