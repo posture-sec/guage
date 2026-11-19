@@ -1,6 +1,6 @@
 # ROADMAP: Gauge
 
-Last updated: 2026-11-19T11:05Z (task 7.10, Valid and Equal helpers for Thresholds and Flags)
+Last updated: 2026-11-19T12:30Z (task 7.19, renderer determinism test)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
@@ -40,7 +40,7 @@ The repository is 100% ready when every task in Phases 0 to 6 is done and every 
 | 4 | Dogfood and release v0.1.0 | 2 | 9 | 22% |
 | 5 | v0.2 features | 3 | 11 | 27% |
 | 6 | Release v0.2.0 and community | 0 | 5 | 0% |
-| 7 (backlog) | Backlog | 1 | 5 | 20% |
+| 7 (backlog) | Backlog | 2 | 6 | 33% |
 | **Phases 0 to 6** | **Readiness total** | **56** | **79** | **70%** |
 | Gates | G1 to G10 | 3 | 10 | 30% |
 <!-- PROGRESS:END -->
@@ -227,6 +227,7 @@ Constraint on the two remaining experimental tasks: Gauge never builds or submit
 - [ ] **7.3** Alert integrations (probably never; JSON and CI cover it).
 - [ ] **7.4** Cross-check issued assets against `stellar.toml` currencies.
 - [x] **7.10** `Thresholds.Valid`, `Thresholds.Equal`, `Flags.Valid` and `Flags.Equal` in `internal/model`, so an observation can be range-checked and two observations compared. M. Deps: 2.1. Done when: `Thresholds.Valid` is false below 0 or above 255, both `Equal` methods compare every field, and `internal/model/account_thresholds_test.go` covers the boundaries, equality and all sixteen flag combinations. (done 2026-11-19: `Valid` bounds each threshold tier to 0 through 255, the range the schema fixes and the loader already enforces on declared values, and says nothing about tier order, which `sig-threshold-order` owns. `Flags.Valid` is true for all sixteen combinations because every bool is in range and no exclusion is documented; the test sweeps them so adding one is a visible change. Both `Equal` methods compare the whole struct, so a field added later is covered without editing them. No change to `internal/rules`, `internal/policy` or `internal/source`: the `compare` closures in `flagDrift` and `thrDrift` stay, since they carry a message and compare against the declared type.)
+- [x] **7.19** renderer determinism: text and JSON are byte-identical across twenty runs and across a fixed-seed shuffle, plus `TestRenderingIsByteIdentical` in `internal/report/determinism_test.go`. S. Deps: 2.6. Done when: twenty text and twenty JSON runs all equal the first byte for byte, a copy shuffled with `rand.New(rand.NewSource(1))` renders identically to ordered input, and two findings sharing severity and account but differing by rule ID plus two equal keys prove sort stability.
 
 ## 6. Dependency map (critical path)
 
