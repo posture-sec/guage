@@ -64,7 +64,7 @@ Status: design target v0.1; Phase 3 is complete as of 2026-11-05 and v0.1.0 now 
 - `AccountSnapshot`: ID, Network, Endpoint, Ledger, Sequence, Thresholds, Signers, Flags, HomeDomain, Sponsor, Balances.
 - `Finding`: RuleID, Severity, Account, Message, Evidence, Fingerprint (`sha256(rule|account|evidence)`), Accepted. Severity is outside the hash, which is what lets a role re-weight a finding without moving the key an acceptance matches on.
 - `NetworkInfo`: Passphrase, Ledger. `AccountReport`: Snapshot, Facts (the run's observations: reachability per tier, what the policy declared, what the identity fetch saw; each a pointer because each has a real "no answer" state), Findings. `Report`: ToolVersion, Network, Ledger, Accounts, typed ExitCode.
-- Config `gauge.toml`: `version`, `network`, `endpoints`, `[[account]]` (id, name, role, expected_signers, expected_thresholds, expected_flags, home_domain, expect_locked), `[[accept]]` (rule, account, reason, optional expires). Pointer fields preserve omitted expectations; strict decode, seed rejection, per-entry validation and the role severity floors are all implemented.
+- Config `gauge.toml`: `version`, `network`, `endpoints`, one or more `[[account]]` tables (id, name, role, expected_signers, expected_thresholds, expected_flags, home_domain, expect_locked), `[[accept]]` (rule, account, reason, optional expires). Pointer fields preserve omitted expectations; strict decode, seed rejection, per-entry validation, endpoint base-URL checks, parse positions without source lines and the role severity floors are all implemented. [7.20 to 7.22]
 
 ## 7. Threshold math [6.3]
 

@@ -118,6 +118,9 @@ backlog() {
     '7.17	type: test	area: report	test(report): exit mapping for accepted findings and fail-on warn' \
     '7.18	type: test	area: report	test(report): accepted findings counted once in the summary line' \
     '7.19	type: test	area: report	test(report): repeated rendering is byte-identical in text and JSON' \
+    '7.20	type: bug	area: policy	fix(policy): reject endpoint paths and out-of-range ports' \
+    '7.21	type: feature	area: policy	feat(policy): keep TOML line and column in syntax errors' \
+    '7.22	type: bug	area: policy	fix(policy): reject a policy with no accounts' \
     'G1	type: test	area: rules	gate: every P0 requirement has passing tests' \
     'G2	type: test	area: rules	gate: every scenario has a fixture and expected findings' \
     'G3	type: test	area: cli	gate: fail-closed paths all exit non-zero' \

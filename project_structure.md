@@ -51,6 +51,7 @@ guage/
       {config,expectations,accept}.go      # policy declarations, no decoding or acceptance logic
       {decode,validate,roles}.go           # strict loading, rejection kinds, network passphrases and the Appendix A role floors (2.4, 3.4)
       config_test.go                       # loader tests, including that the shipped example policy loads (2.4)
+      {endpoint_shape,syntax_position,empty_policy}_test.go # load boundary cases for base URLs, parse positions and empty declarations (7.20 to 7.22)
       {accept,roles}_test.go               # acceptance refusals and the role-floor table (3.4)
     source/
       source.go                           # Source interface and the passphrase comparison

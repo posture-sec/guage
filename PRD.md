@@ -200,6 +200,8 @@ reason  = "Regulated asset; clawback disclosed in terms"
 expires = "2027-04-27"                   # optional
 ```
 
+The loader rejects a file with no `[[account]]` table: an audit with nothing declared audits nothing, so the refusal belongs where the file can be named. Each `endpoints` entry is a base URL with a host, no path, userinfo, query or fragment, and a port from 1 to 65535 when one is present; plain HTTP stays limited to loopback hosts. A malformed file reports the parser's line and column and, when set, its last key, never the source line or a value. All three are config errors and exit 2.
+
 ### 6.4 Endpoints and what they cost (task 0.12, 2026-10-30)
 
 `endpoints` defaults to nothing; the file or `--endpoint` must say which Horizon to use, and the run verifies the passphrase that endpoint reports before trusting any account data from it. The two public endpoints to offer as the documented choices are `https://horizon.stellar.org` for `mainnet` and `https://horizon-testnet.stellar.org` for `testnet`. Per D-16 the verification pass only touched testnet, so the mainnet figures below are quoted from the documentation and have not been observed here.

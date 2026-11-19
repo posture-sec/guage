@@ -23,6 +23,9 @@ func (c *Config) validate() error {
 			return withDetail(ErrEndpoint, "endpoints["+strconv.Itoa(i)+"]")
 		}
 	}
+	if len(c.Accounts) == 0 {
+		return withDetail(ErrNoAccounts, "account")
+	}
 
 	seen := make(map[string]bool, len(c.Accounts))
 	for i := range c.Accounts {
@@ -73,7 +76,18 @@ func validEndpoint(endpoint string) bool {
 	if err != nil {
 		return false
 	}
-	if u.Host == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
+	if u.Host == "" || u.Opaque != "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
+		return false
+	}
+	if (u.Path != "" && u.Path != "/") || (u.EscapedPath() != "" && u.EscapedPath() != "/") {
+		return false
+	}
+	if port := u.Port(); port != "" {
+		n, err := strconv.Atoi(port)
+		if err != nil || n < 1 || n > 65535 {
+			return false
+		}
+	} else if strings.HasSuffix(u.Host, ":") {
 		return false
 	}
 	switch strings.ToLower(u.Scheme) {

@@ -124,7 +124,7 @@ expect_locked = false
               <tbody>
                 <tr><td>version</td><td>Yes</td><td>The integer <code>1</code>. Any other value is rejected.</td></tr>
                 <tr><td>network</td><td>Yes</td><td><code>mainnet</code>, <code>testnet</code> or a full passphrase such as <code>Test SDF Network ; September 2015</code>.</td></tr>
-                <tr><td>endpoints</td><td>Yes</td><td>An HTTPS URL with a host, no userinfo, query or fragment. More than one entry is rejected because comparison is not implemented.</td></tr>
+                <tr><td>endpoints</td><td>Yes</td><td>An HTTPS base URL with a host, no path, userinfo, query or fragment, and a port from 1 to 65535 when one is present. Plain HTTP is limited to loopback hosts. More than one entry is rejected because comparison is not implemented.</td></tr>
                 <tr><td>account</td><td>1+</td><td>One or more <code>[[account]]</code> tables. The same G address may not appear twice.</td></tr>
                 <tr><td>accept</td><td>No</td><td>Zero or more <code>[[accept]]</code> tables, each covering one rule for one account.</td></tr>
               </tbody>
@@ -211,8 +211,9 @@ expect_locked = false
             <li>Unknown keys are errors. A typo cannot silently drop an expectation.</li>
             <li>A duplicate account ID or duplicate rule-and-account acceptance is an error.</li>
             <li>Every token in the raw file is scanned for a valid <code>S</code> seed, including comments and keys the schema does not define. A match is rejected and the seed is never printed.</li>
-            <li>Errors name a field path such as <code>account[2].expected_thresholds.high</code>, never a value from the file.</li>
-            <li>Endpoints are checked with the same rule the HTTP client uses, so a file cannot name an endpoint the client would refuse.</li>
+            <li>Errors name a field path such as <code>account[2].expected_thresholds.high</code>, never a value from the file. A syntax error names the parser's line and column and its last key when set, without quoting the bad line.</li>
+            <li>Endpoints are checked with the same base-URL rule the HTTP client uses, so a file cannot name an endpoint the client would refuse. That includes paths, encoded slashes, a trailing colon and ports outside 1 to 65535.</li>
+            <li>A file with no <code>[[account]]</code> table is refused at load. An audit with nothing declared audits nothing.</li>
           </ul>
           <p class="table-caption">A secret seed in a policy file is a key-handling incident. Remove it, rotate the key and check the file's history. The message says to rotate for that reason.</p>
         </section>

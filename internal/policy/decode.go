@@ -1,8 +1,11 @@
 package policy
 
 import (
+	"errors"
+	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -30,6 +33,9 @@ func Load(r io.Reader) (*Config, error) {
 	var cfg Config
 	md, err := toml.Decode(string(data), &cfg)
 	if err != nil {
+		if detail := parseDetail(err); detail != "" {
+			return nil, withDetail(ErrSyntax, detail)
+		}
 		return nil, ErrSyntax
 	}
 	if undecoded := md.Undecoded(); len(undecoded) > 0 {
@@ -49,6 +55,25 @@ func LoadFile(path string) (*Config, error) {
 	}
 	defer f.Close()
 	return Load(f)
+}
+
+// parseDetail keeps the decoder's position without keeping its message, which
+// can quote a line from the file. BurntSushi/toml v1.6.0 returns ParseError as
+// a value, so both the value and pointer shapes are checked.
+func parseDetail(err error) string {
+	var value toml.ParseError
+	if !errors.As(err, &value) {
+		var pointer *toml.ParseError
+		if !errors.As(err, &pointer) || pointer == nil {
+			return ""
+		}
+		value = *pointer
+	}
+	detail := fmt.Sprintf("line %d, column %d", value.Position.Line, value.Position.Col)
+	if value.LastKey != "" {
+		detail += ", last key " + strconv.Quote(value.LastKey)
+	}
+	return detail
 }
 
 // containsSeed scans the raw text for a token that is a valid S strkey, so a
