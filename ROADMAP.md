@@ -1,6 +1,6 @@
 # ROADMAP: Gauge
 
-Last updated: 2026-11-09T14:40Z (update Drips Wave 11 submission packet and sibling comparison)
+Last updated: 2026-11-19T07:49Z (task 5.7: performance, rate-limit, and many-account load checks)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
@@ -38,10 +38,10 @@ The repository is 100% ready when every task in Phases 0 to 6 is done and every 
 | 2 | Core | 11 | 11 | 100% |
 | 3 | Rules | 7 | 7 | 100% |
 | 4 | Dogfood and release v0.1.0 | 2 | 9 | 22% |
-| 5 | v0.2 features | 3 | 11 | 27% |
+| 5 | v0.2 features | 4 | 11 | 36% |
 | 6 | Release v0.2.0 and community | 0 | 5 | 0% |
 | 7 (backlog) | Backlog | 0 | 4 | 0% |
-| **Phases 0 to 6** | **Readiness total** | **56** | **79** | **70%** |
+| **Phases 0 to 6** | **Readiness total** | **57** | **79** | **72%** |
 | Gates | G1 to G10 | 3 | 10 | 30% |
 <!-- PROGRESS:END -->
 
@@ -206,7 +206,7 @@ Constraint on the two remaining experimental tasks: Gauge never builds or submit
 - [ ] **5.4** Scheduled GitHub Action template that opens an issue on findings, with minimal permissions and SHA pinning. M. Deps: 5.2, 5.3.
 - [ ] **5.5** Trustline exposure facts (issuer flags for each held asset). M. Deps: 0.6.
 - [ ] **5.6** SEP-29 memo-required check for merchant accounts. S. Deps: 0.8.
-- [ ] **5.7** Performance and rate-limit tests with many accounts. S. Deps: 2.7.
+- [x] **5.7** Performance and rate-limit tests with many accounts. S. Deps: 2.7. Done when: bounded concurrency, 429 rate-limiting, bounded retries with backoff and retry-after, timeouts, and body size caps are tested under many-account load against fake servers, and the 0.12 defaults are verified. (done 2026-11-19: `internal/source/horizon_test.go` adds four concurrent load tests over `httptest.Server` with 50 and 60 accounts, proving peak in-flight requests never exceed configured concurrency caps, rate-limit 429 retries back off and honor `Retry-After: 1s` while fetching all 50 accounts, rate-limit exhaustion fails closed after bounded retries without leaking response bodies, mixed load tests verify timeouts and size caps isolate properly across accounts, and programmatic tests verify the documented 0.12 defaults.)
 - [ ] **5.8** Documentation site separate from the README (GitBook or equivalent): introduction with cited figures, protocol mechanics and the economic model with worked numbers, contract and rule reference, end-user guides per persona, developer guide, contributing guide. M. Deps: 4.2, 4.3. Done when: the site is linked from `README.md` and every page reflects the shipped behavior. Stays open after 5.9: its deps 4.2 and 4.3 landed on 2026-11-05, so nothing in the roadmap blocks it any more, and the economic-model and contract-reference clauses still describe a Soroban project rather than this CLI. What is left here is the persona depth 5.9's pages do not carry, and that needs an operator's questions to answer, which is 4.1.
 - [x] **5.9** Documentation site v1 on GitHub Pages, separate from the README: hand-written static HTML, CSS and vanilla JS under `site/` (no generator, so the dependency rule holds), deployed by the `pages` workflow. Seven pages: overview, rules, policy, mechanics, guides, status and a 404. M. Deps: none (8.2 and 4.3 are not preconditions for documenting what already ships; 5.8's economic-model and contract clauses do not apply to a Go CLI). Done when: the site is live at `https://posture-sec.github.io/guage/`, linked from `README.md`, and every page states shipped behavior only. (done 2026-11-02: the site is live and the design is flat, no gradients, every claim traced to code or an observed testnet run; the pages that describe unshipped behavior say so, e.g. `policy.html` records that only network, existence and flags are compared today.)
 - [x] **5.10** Site theme and audit pass: light and dark mode on the same flat ink-and-paper identity, plus a measured UI/UX and responsiveness audit with the fixes it found. No new dependency and no build step; the theme is tokens plus a pre-paint script. M. Deps: 5.9. Done when: both themes are readable at every breakpoint with no flash of the wrong theme and no layout shift when the toggle is used, no page overflows its viewport at 320px, and every text pair meets WCAG AA, each proven by measurement rather than by looking. (done 2026-11-02: contrast computed per token pair with a relative-luminance helper for both themes, lowest text pair 4.86:1 dark and 4.66:1 light, which fixed one real failure where the side-nav label used the hairline token as type at 2.23:1; every page loaded into an iframe at seven widths in both themes, 98 runs, zero page overflow and byte-identical geometry between the themes, which found one real bug (an unbreakable install command in `guides.html` pushed the page to 336px inside a 305px viewport); the theme is chosen by an inline head script before the stylesheet, so neither mode flashes.)
@@ -276,6 +276,7 @@ Newest first. One row per merged change.
 
 | Date (UTC) | Change | Tasks |
 |---|---|---|
+| 2026-11-19 | Task 5.7: Performance, rate-limit, and bounded-concurrency tests with many accounts in `internal/source/horizon_test.go`. Verified peak in-flight requests stay bounded by concurrency caps under 50-account load, HTTP 429 rate limits with `Retry-After` back off and complete without leaking responses, rate-limit exhaustion fails closed after bounded retries, concurrent mixed load enforces timeouts and body size caps, and programmatic checks verify the 0.12 defaults. | 5.7 |
 | 2026-11-09 | Updated Drips Wave submission packet (docs/WAVE_SUBMISSION.md) for Wave 11: confirmed 200 unit tests passing, all 16 rules registered, OpenSSF Scorecard at 6.8 with live badge, live documentation site at https://posture-sec.github.io/guage/, dynamic README metric sync, and updated sibling comparison data across org repositories. | none ticked |
 | 2026-11-09 | Finalized project naming by removing all occurrences of "working name" across repository documentation, PRD, architecture, and roadmap files. Implemented dynamic README metrics synchronization (`scripts/sync_readme.py`) generating live Shields.io endpoint JSON files under `site/data/` for 200 tests and 16 rules, and enforced with `--check` in the `roadmap-check` workflow. | none ticked |
 | 2026-11-09 | Add Docs Live badge to README and prominent navigation links to the 7-page live documentation site. | none ticked |
