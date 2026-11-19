@@ -1,6 +1,6 @@
 # ROADMAP: Gauge
 
-Last updated: 2026-11-19T12:45Z (task 7.18, accepted findings counted once in summary)
+Last updated: 2026-11-19T13:00Z (task 7.17, exit mapping for accepted findings and fail-on warn)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
@@ -40,7 +40,7 @@ The repository is 100% ready when every task in Phases 0 to 6 is done and every 
 | 4 | Dogfood and release v0.1.0 | 2 | 9 | 22% |
 | 5 | v0.2 features | 3 | 11 | 27% |
 | 6 | Release v0.2.0 and community | 0 | 5 | 0% |
-| 7 (backlog) | Backlog | 3 | 7 | 42% |
+| 7 (backlog) | Backlog | 4 | 8 | 50% |
 | **Phases 0 to 6** | **Readiness total** | **56** | **79** | **70%** |
 | Gates | G1 to G10 | 3 | 10 | 30% |
 <!-- PROGRESS:END -->
@@ -227,6 +227,7 @@ Constraint on the two remaining experimental tasks: Gauge never builds or submit
 - [ ] **7.3** Alert integrations (probably never; JSON and CI cover it).
 - [ ] **7.4** Cross-check issued assets against `stellar.toml` currencies.
 - [x] **7.10** `Thresholds.Valid`, `Thresholds.Equal`, `Flags.Valid` and `Flags.Equal` in `internal/model`, so an observation can be range-checked and two observations compared. M. Deps: 2.1. Done when: `Thresholds.Valid` is false below 0 or above 255, both `Equal` methods compare every field, and `internal/model/account_thresholds_test.go` covers the boundaries, equality and all sixteen flag combinations. (done 2026-11-19: `Valid` bounds each threshold tier to 0 through 255, the range the schema fixes and the loader already enforces on declared values, and says nothing about tier order, which `sig-threshold-order` owns. `Flags.Valid` is true for all sixteen combinations because every bool is in range and no exclusion is documented; the test sweeps them so adding one is a visible change. Both `Equal` methods compare the whole struct, so a field added later is covered without editing them. No change to `internal/rules`, `internal/policy` or `internal/source`: the `compare` closures in `flagDrift` and `thrDrift` stay, since they carry a message and compare against the declared type.)
+- [x] **7.17** `report.Exit` boundary matrix for accepted findings and fail-on warn, plus `TestExitBoundaryMatrix` in `internal/report/exit_test.go`. S. Deps: 2.6. Done when: accepted High exits pass at SevInfo, SevWarn and SevHigh, open Warn exits findings at SevWarn and pass at SevHigh, Info exits findings at SevInfo and pass at SevWarn and SevHigh, accepted High plus open Warn exits pass at SevHigh and findings at SevWarn, and a two-account report exits findings when any unaccepted finding meets the threshold.
 - [x] **7.18** `report.Text` summary arithmetic so an accepted finding is a subset of its severity bucket and never inflates the total, plus `TestAcceptedFindingsCountedOnce` in `internal/report/accepted_summary_test.go`. S. Deps: 2.6. Done when: one accepted High and one open Warn render `result: 2 findings (1 high, 1 warn, 0 info), 1 accepted`, the per-account line reads `findings: 2 (1 accepted)` with only the High accepted-marked, and two accepted findings of one severity total 2 (not 4) with accepted count 2.
 - [x] **7.19** renderer determinism: text and JSON are byte-identical across twenty runs and across a fixed-seed shuffle, plus `TestRenderingIsByteIdentical` in `internal/report/determinism_test.go`. S. Deps: 2.6. Done when: twenty text and twenty JSON runs all equal the first byte for byte, a copy shuffled with `rand.New(rand.NewSource(1))` renders identically to ordered input, and two findings sharing severity and account but differing by rule ID plus two equal keys prove sort stability.
 
