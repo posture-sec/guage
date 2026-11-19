@@ -462,3 +462,47 @@ func TestAFailingDocumentPrintsTheStepAndNoParsedValues(t *testing.T) {
 		}
 	}
 }
+
+func TestTrustlineFactsFormatting(t *testing.T) {
+	t.Parallel()
+	var buf bytes.Buffer
+	report := model.Report{Accounts: []model.AccountReport{{
+		Snapshot: model.AccountSnapshot{ID: accountOne},
+		Facts: &model.AccountFacts{
+			Trustlines: []model.TrustlineFact{
+				{
+					AssetCode:   "USDC",
+					AssetIssuer: accountTwo,
+					Authorized:  true,
+					Clawback:    false,
+					IssuerFlags: &model.Flags{
+						AuthRequired:    true,
+						AuthRevocable:   true,
+						AuthImmutable:   false,
+						ClawbackEnabled: true,
+					},
+				},
+				{
+					AssetCode:    "EURT",
+					AssetIssuer:  "GDF6B4EQSNXLTSN4QROIVYLIKDFGUOZLCAGGWSGFAKPY7US72Y4A2IRJ",
+					Authorized:   false,
+					Clawback:     true,
+					IssuerStatus: "not found",
+				},
+			},
+		},
+	}}}
+	if err := Text(&buf, report); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	for _, want := range []string{
+		"trustlines: 2 held",
+		"USDC (issuer GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3): auth_required=true auth_revocable=true auth_immutable=false clawback=true",
+		"EURT (issuer GDF6B4EQSNXLTSN4QROIVYLIKDFGUOZLCAGGWSGFAKPY7US72Y4A2IRJ (unauthorized) (clawback enabled)): issuer not found",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("output missing %q:\n%s", want, out)
+		}
+	}
+}

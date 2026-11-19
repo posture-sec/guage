@@ -102,6 +102,11 @@ func Run(ctx context.Context, job Job) (model.Report, error) {
 		return model.Report{}, fmt.Errorf("run: %w", err)
 	}
 
+	issuers, err := observeIssuers(ctx, src, observations, job.Concurrency, mismatch)
+	if err != nil {
+		return model.Report{}, fmt.Errorf("run: %w", err)
+	}
+
 	result := model.Report{
 		ToolVersion: job.ToolVersion,
 		Network:     info.Passphrase,
@@ -116,6 +121,7 @@ func Run(ctx context.Context, job Job) (model.Report, error) {
 			Account:  job.Accounts[i],
 			Snapshot: snapshot,
 			Identity: identities[i],
+			Issuers:  issuers,
 			Missing:  obs.missing,
 			Mismatch: mismatch,
 			Network:  info.Passphrase,
@@ -349,6 +355,70 @@ func identify(ctx context.Context, job Job, observations []observation, mismatch
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
+	return results, nil
+}
+
+// observeIssuers reads the issuer accounts for all held non-native assets.
+// Like identify, an issuer that returns 404 or fails to fetch does not abort
+// the run: it records the status so facts can state it.
+func observeIssuers(ctx context.Context, src source.Source, observations []observation, limit int, mismatch bool) (map[string]rules.IssuerObservation, error) {
+	if mismatch || src == nil {
+		return nil, nil
+	}
+	issuers := make(map[string]struct{})
+	for _, obs := range observations {
+		if obs.missing {
+			continue
+		}
+		for _, b := range obs.snapshot.Balances {
+			if b.AssetIssuer != "" {
+				issuers[b.AssetIssuer] = struct{}{}
+			}
+		}
+	}
+	if len(issuers) == 0 {
+		return nil, nil
+	}
+
+	if limit <= 0 {
+		limit = defaultConcurrency
+	}
+	fetchCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	sem := make(chan struct{}, limit)
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	results := make(map[string]rules.IssuerObservation, len(issuers))
+
+	for id := range issuers {
+		wg.Add(1)
+		go func(issuerID string) {
+			defer wg.Done()
+			select {
+			case sem <- struct{}{}:
+			case <-fetchCtx.Done():
+				mu.Lock()
+				results[issuerID] = rules.IssuerObservation{Failed: true}
+				mu.Unlock()
+				return
+			}
+			defer func() { <-sem }()
+
+			snapshot, err := src.Account(fetchCtx, issuerID)
+			mu.Lock()
+			defer mu.Unlock()
+			if errors.Is(err, source.ErrNotFound) {
+				results[issuerID] = rules.IssuerObservation{NotFound: true}
+			} else if err != nil {
+				results[issuerID] = rules.IssuerObservation{Failed: true}
+			} else {
+				flags := snapshot.Flags
+				results[issuerID] = rules.IssuerObservation{Flags: &flags}
+			}
+		}(id)
+	}
+	wg.Wait()
 	return results, nil
 }
 

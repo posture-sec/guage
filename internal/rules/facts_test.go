@@ -262,3 +262,67 @@ func TestFactsCarryTheShapeOfAReadableDocument(t *testing.T) {
 		t.Errorf("accounts = %d listed, %d malformed", len(identity.Accounts), identity.MalformedAccounts)
 	}
 }
+
+func TestFactsCarryTrustlines(t *testing.T) {
+	t.Parallel()
+
+	issuerOne := testAccount
+	issuerTwo := secondAccount
+
+	ctx := Context{
+		Snapshot: model.AccountSnapshot{
+			Balances: []model.Balance{
+				{AssetCode: "", AssetIssuer: "", IsAuthorized: true}, // native ignored
+				{AssetCode: "USDC", AssetIssuer: issuerOne, IsAuthorized: true, ClawbackEnabled: false},
+				{AssetCode: "EURT", AssetIssuer: issuerTwo, IsAuthorized: false, ClawbackEnabled: true},
+			},
+		},
+		Issuers: map[string]IssuerObservation{
+			issuerOne: {
+				Flags: &model.Flags{
+					AuthRequired:    false,
+					AuthRevocable:   false,
+					AuthImmutable:   true,
+					ClawbackEnabled: false,
+				},
+			},
+			issuerTwo: {
+				NotFound: true,
+			},
+		},
+	}
+
+	facts := Facts(ctx)
+	if len(facts.Trustlines) != 2 {
+		t.Fatalf("len(facts.Trustlines) = %d, want 2", len(facts.Trustlines))
+	}
+
+	// Sorted by code: EURT then USDC
+	eurt := facts.Trustlines[0]
+	if eurt.AssetCode != "EURT" || eurt.AssetIssuer != issuerTwo {
+		t.Errorf("eurt mismatch: %+v", eurt)
+	}
+	if eurt.Authorized {
+		t.Errorf("expected unauthorized")
+	}
+	if !eurt.Clawback {
+		t.Errorf("expected clawback true")
+	}
+	if eurt.IssuerFlags != nil || eurt.IssuerStatus != "not found" {
+		t.Errorf("expected issuer not found: %+v", eurt)
+	}
+
+	usdc := facts.Trustlines[1]
+	if usdc.AssetCode != "USDC" || usdc.AssetIssuer != issuerOne {
+		t.Errorf("usdc mismatch: %+v", usdc)
+	}
+	if !usdc.Authorized {
+		t.Errorf("expected authorized")
+	}
+	if usdc.Clawback {
+		t.Errorf("expected clawback false")
+	}
+	if usdc.IssuerFlags == nil || !usdc.IssuerFlags.AuthImmutable {
+		t.Errorf("expected issuerFlags.AuthImmutable true: %+v", usdc.IssuerFlags)
+	}
+}
