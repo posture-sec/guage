@@ -1,6 +1,6 @@
 # ROADMAP: Gauge
 
-Last updated: 2026-11-20T10:30Z (task 5.2, snapshot and diff with baseline files and review banner)
+Last updated: 2026-11-20T10:45Z (task 5.7: performance and rate-limit tests with many accounts)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
@@ -38,10 +38,10 @@ The repository is 100% ready when every task in Phases 0 to 6 is done and every 
 | 2 | Core | 11 | 11 | 100% |
 | 3 | Rules | 7 | 7 | 100% |
 | 4 | Dogfood and release v0.1.0 | 2 | 9 | 22% |
-| 5 | v0.2 features | 5 | 11 | 45% |
+| 5 | v0.2 features | 6 | 11 | 54% |
 | 6 | Release v0.2.0 and community | 0 | 5 | 0% |
 | 7 (backlog) | Backlog | 24 | 28 | 85% |
-| **Phases 0 to 6** | **Readiness total** | **58** | **79** | **73%** |
+| **Phases 0 to 6** | **Readiness total** | **59** | **79** | **74%** |
 | Gates | G1 to G10 | 3 | 10 | 30% |
 <!-- PROGRESS:END -->
 
