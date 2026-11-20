@@ -69,12 +69,34 @@ func SeverityFor(role model.Role, ruleID string, emitted model.Severity) model.S
 	return emitted
 }
 
+// roleTraits is one row of the two traits Appendix A states about a role. Both
+// predicates below read this one table so a future role that may lock but
+// publishes no domain is one edit rather than two comparisons that can disagree.
+//
+// Every declared role gets a row even when both fields are false: a missing row
+// and a row that deliberately says false look the same to a map lookup, and the
+// test beside this file can only tell them apart when the row exists to be found.
+type roleTraits struct {
+	homeDomain   bool
+	expectLocked bool
+}
+
+// roleTraitsByRole is roleTraits as data. Only the issuer row carries either
+// trait: a treasury, merchant or distribution account is not described as
+// publishing a domain, and the other row is explicitly facts and universal rules.
+var roleTraitsByRole = map[model.Role]roleTraits{
+	model.RoleIssuer:       {homeDomain: true, expectLocked: true},
+	model.RoleTreasury:     {},
+	model.RoleDistribution: {},
+	model.RoleMerchant:     {},
+	model.RoleOther:        {},
+}
+
 // ExpectsHomeDomain reports whether the role's own row says the account should
-// publish a home domain. Only the issuer row does: a treasury, merchant or
-// distribution account is not described as publishing one, and the other row is
-// explicitly facts and universal rules.
+// publish a home domain. Only the issuer row does; an unknown role gets the zero
+// row and therefore false.
 func ExpectsHomeDomain(role model.Role) bool {
-	return role == model.RoleIssuer
+	return roleTraitsByRole[role].homeDomain
 }
 
 // AllowsExpectLocked reports whether the role may declare expect_locked, which is
@@ -84,7 +106,7 @@ func ExpectsHomeDomain(role model.Role) bool {
 // it only here, so an ineffective declaration still leaves the account at HIGH and
 // 3.7 can print what was declared.
 func AllowsExpectLocked(role model.Role) bool {
-	return role == model.RoleIssuer
+	return roleTraitsByRole[role].expectLocked
 }
 
 // ExpectedPassphrase returns the network passphrase a run must see from its

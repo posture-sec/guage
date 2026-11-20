@@ -20,7 +20,7 @@ guage/
   CONTRIBUTING.md, SECURITY.md             # process drafts carrying the roadmap rule (1.8)
   LICENSE                                 # existing Apache-2.0 license
   .gitignore                              # local policies, outputs, briefings and secrets stay untracked
-  go.mod                                  # module identity, Go 1.27.3 and BurntSushi/toml v1.6.0 (ADR-004)
+  go.mod                                  # module identity, Go 1.27.4 and BurntSushi/toml v1.6.0 (ADR-004)
   go.sum                                  # checksums for the one approved module
   staticcheck.conf                        # enable all checks
   gauge.example.toml                      # the documented starting point: loads through the strict parser, and `audit` with no policy file names it (3.7)
@@ -39,19 +39,26 @@ guage/
       {finding,report,role,severity,exit}.go # findings, per-account reports and enums
       facts.go                            # the fact shapes a report prints ahead of its findings (3.7)
       model_test.go                       # severity names, fingerprint, ordering, JSON and exit-code contracts
+      account_sequence_test.go            # the sequence token stays a JSON string above 2^53
+      facts_nil_test.go                   # null and zero fact blocks on the wire, with round trips
+      severity_bounds_test.go             # valid severities, marshal refusal and invalid-severity sort order
     strkey/
       {address,checksum,seed}.go           # SEP-23 classify, CRC16 and seed detection (2.2)
       {address_test,fuzz_test}.go          # SEP-23 vectors, shape and sentinel tests; FuzzClassify
     threshold/
       {threshold,threshold_test}.go       # authorization math as verified in 0.7 (2.3)
+      cap_test.go                         # the 20-signature envelope cap at its boundary, largest weights kept (7.29)
+      crosscheck_test.go                  # subset search to 12 signers and a count-indexed cap DP at 24 (7.30)
     sanitize/
       {text,domain,markdown}.go            # output and domain handling (2.5, 5.3)
       {sanitize_test,fuzz_test}.go         # injection classes, IDN, fencing; FuzzText and FuzzFenced
+      {zero_width,tag_block,c1}_test.go    # per-rune boundaries of the dropped sets (7.23, 7.24, 7.25)
     policy/
       {config,expectations,accept}.go      # policy declarations, no decoding or acceptance logic
       {decode,validate,roles}.go           # strict loading, rejection kinds, network passphrases and the Appendix A role floors (2.4, 3.4)
       config_test.go                       # loader tests, including that the shipped example policy loads (2.4)
       {accept,roles}_test.go               # acceptance refusals and the role-floor table (3.4)
+      unknown_keys_test.go                 # one load names every unknown key, sorted, never a value (7.31)
     source/
       source.go                           # Source interface and the passphrase comparison
       {horizon,http,errors}.go             # Horizon client: caps, retries, strict decode (2.7)
@@ -63,10 +70,15 @@ guage/
       {rules,account,signers,thresholds,flags,identity}.go # registry and pure rule boundaries; identity and signers read the two role expectations 3.4 defines (3.1 to 3.5 done)
       facts.go                            # rules.Facts: the observations of one context, in the same pure shape as a rule and returning no finding (3.7)
       {rules,identity,signers,thresholds,facts}_test.go # positive and negative cases, guard proofs, a captured account and the two kinds of absence (3.1 to 3.7)
+      purity_test.go                      # Evaluate, Facts and every rule leave a deep-copied Context unchanged, and a second Evaluate gives the same findings (7.8)
+      finding_ruleid_test.go              # one firing context per registered rule; every finding's RuleID equals its registry ID (7.9)
+      arithmetic_guard_test.go            # go/ast guard: no weight sum, 20 cap or stray Weight-vs-0 filter in a rule; allowlist and delegation sites pinned (7.32)
     report/
       {text,json,exit}.go                  # P0 renderers, the fact block ahead of the findings, limits footer and outcome mapping (2.6, 3.7)
-      markdown.go                         # P1 output (5.3)
+      markdown.go                         # P1 output: escaped values, fenced evidence, limits footer (5.3)
+      markdown_test.go                    # golden, hostile markup built from fragments, fencing, wording and footer (5.3)
       report_test.go                      # golden files, sanitization, determinism, exit tests and the fact block in both formats
+      {limits,empty,nil_facts}_test.go    # golden-free contracts: limits footer last and a JSON key, the empty report in both formats, nil and empty fact blocks (7.14 to 7.16)
     run/
       {run,check,audit}.go                 # P0 orchestration: passphrase, bounded fetch, identity fetch, role severity, accepts, the fact block and `HasPolicy` (2.8, 3.4, 3.5, 3.7)
       {compare,snapshot,diff}.go           # P1 orchestration (5.1, 5.2)

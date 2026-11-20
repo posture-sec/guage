@@ -570,8 +570,13 @@ func runScenario(t *testing.T, sc scenario) {
 	if err := report.JSON(&document, result); err != nil {
 		t.Fatalf("report.JSON: %v", err)
 	}
+	var page bytes.Buffer
+	if err := report.Markdown(&page, result); err != nil {
+		t.Fatalf("report.Markdown: %v", err)
+	}
 	checkGolden(t, sc.name+".text.golden", text.String())
 	checkGolden(t, sc.name+".json.golden", document.String())
+	checkGolden(t, sc.name+".markdown.golden", page.String())
 }
 
 // decodeFixture serves one committed fixture over a socket that is not the
