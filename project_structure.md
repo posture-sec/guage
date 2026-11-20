@@ -30,6 +30,9 @@ guage/
     main.go                               # dispatch, exit-code mapping, report rendering and the deps seam (2.9, 3.5)
     {check,audit,version}.go              # P0 commands: flags, account validation, policy load (2.9)
     cli_test.go                           # in-process CLI tests: check, audit, JSON output, failure modes
+    concurrency_flag_test.go              # check concurrency bounds and observed in-flight account reads (7.39)
+    format.go                             # shared format rejection message (7.40)
+    format_flag_test.go                   # shared check and audit format rejection (7.40)
     facts_test.go                         # the zero-config surface: fact lines, the example policy and the messages that name what to type (3.7)
     g3_test.go                            # fail-closed gate G3 cases (2.10)
     {snapshot,diff}.go                    # P1 command placeholders (5.2)
@@ -84,6 +87,7 @@ guage/
       {run,check,audit}.go                 # P0 orchestration: passphrase, bounded fetch, identity fetch, role severity, accepts, the fact block and `HasPolicy` (2.8, 3.4, 3.5, 3.7)
       {compare,snapshot,diff}.go           # P1 orchestration (5.1, 5.2)
       run_test.go                         # end-to-end orchestration with a fake source and an offline fetcher, the UTC expiry judgement and the two builders' fact shapes (2.8, 3.4, 3.5, 3.7)
+      mismatch_short_circuit_test.go      # account and identity stages stay skipped on network mismatch (7.38)
       roles_test.go                       # one account at five roles: severity, fingerprint, accepts and the lock declaration (3.4)
 
   testdata/

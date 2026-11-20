@@ -1,6 +1,6 @@
 # ROADMAP: Gauge
 
-Last updated: 2026-11-20T16:26:13Z (close #43, #44, #47: task 3.7 zero-config facts report, task 4.1 real account dogfooding with gate G4, and task 4.4 cross-platform CI matrix across Linux, macOS and Windows with LF line endings in .gitattributes)
+Last updated: 2026-11-20T19:23Z (close #208, #209 and #210: mismatch short-circuit, bounded check concurrency and shared format rejection)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
@@ -40,7 +40,7 @@ The repository is 100% ready when every task in Phases 0 to 6 is done and every 
 | 4 | Dogfood and release v0.1.0 | 4 | 9 | 44% |
 | 5 | v0.2 features | 5 | 11 | 45% |
 | 6 | Release v0.2.0 and community | 0 | 5 | 0% |
-| 7 (backlog) | Backlog | 24 | 28 | 85% |
+| 7 (backlog) | Backlog | 27 | 31 | 87% |
 | **Phases 0 to 6** | **Readiness total** | **62** | **79** | **78%** |
 | Gates | G1 to G10 | 7 | 10 | 70% |
 <!-- PROGRESS:END -->
@@ -251,6 +251,9 @@ Constraint on the two remaining experimental tasks: Gauge never builds or submit
 - [x] **7.31** feature(policy): report every unknown config key, not only the first. S. Deps: 2.4. Done when: one load of a three-key policy returns `ErrUnknownKey` naming all three, sorted and joined with `, `, with only key paths and never a value; `errors.Is(err, ErrUnknownKey)` holds and `check` still exits 2; `TestUnknownKeysAreAllReported` fails against `undecoded[0]` and passes after. (done 2026-11-19: `internal/policy/decode.go` renders every `MetaData.Undecoded` key through `Key.String`, sorts and joins; kind and message unchanged. Before: `(zendpoints)`; after: `(account.owners, expectedflags, zendpoints)`. A CLI row in `TestAuditFailsClosed` pins exit 2 with three keys. No caller parses `Detail`; issue #165.)
 - [x] **7.32** test(rules): guard that no rule restates threshold arithmetic. M. Deps: 2.3, 3.1. Done when: `internal/rules/arithmetic_guard_test.go` parses every non-test `.go` file in `internal/rules` with `go/parser` and fails on an accumulating `.Weight` sum, a literal `20` cap and a `Weight` compared with 0 outside a function allowlist; the allowlist and the delegating call sites fail the test if one disappears. (done 2026-11-20: filed as issue #180 under ID 7.10, which `main` already used for the `internal/model` helpers, so it takes the next ID no open pull request claims. `TestNoRestatedArithmetic` passes on the tree; inserting `total += s.Weight` into `sigThresholdUnreachable` fails it. The filter allowlist is three functions, each with a reason: `participating` (standing control), `sigUnexpectedSigner` (an observed weight against a declared remove-intent of 0) and `sigMissingExpected` (the declared weight, not the chain's). The issue named only the first; the guard is syntactic, so the other two are listed rather than hidden. Delegation sites: `sigSingleKeyHigh`, `sigThresholdUnreachable` and `reachability` in `facts.go`. Synthetic sources prove every shape, both operand orders, an import alias and the stale-entry failures. No production code changed.)
 
+- [x] **7.38** test(run): prove a network mismatch skips identity fetches too. S. Deps: none. Done when: `internal/run/mismatch_short_circuit_test.go` drives `Check` on testnet against a mainnet source whose account read and identity factory are fatal tripwires, and asserts two skipped high mismatch findings plus `ExitFindings`. (done 2026-11-20: added the test and confirmed it passes under the race detector; issue #208.)
+- [x] **7.39** feat(cli): expose bounded concurrency on `check`. M. Deps: none. Done when: `--concurrency` defaults to 8, accepts 1 through 32, reports exit 2 outside the range, reaches `CheckRequest.Concurrency`, and `cmd/stellar-gauge/concurrency_flag_test.go` measures peak in-flight account reads at 1 and the default. (done 2026-11-20: added `parseConcurrency`, threaded the value to `run.Check`, and measured peak account reads through an injected source; issue #209.)
+- [x] **7.40** fix(cli): share format rejection diagnostics. S. Deps: none. Done when: `cmd/stellar-gauge/format.go` supplies the markdown-specific and generic messages, and both `check` and `audit` use the helper for rejected formats; existing markdown support remains enabled. (done 2026-11-20: both commands now use the helper and `format_flag_test.go` pins the identical exit-2 line for YAML and empty formats; markdown remains accepted as implemented in task 5.3; issue #210.)
 ## 6. Dependency map (critical path)
 
 `0.2, 0.4 -> 1.1 -> 1.4 -> 2.1 -> 2.2, 2.3, 2.5 -> 2.7 -> 2.8 -> 2.9 -> 3.1 to 3.5 -> 3.7 -> 4.1 -> 4.8`
@@ -300,6 +303,7 @@ Newest first. One row per merged change.
 
 | Date (UTC) | Change | Tasks |
 |---|---|---|
+| 2026-11-20 | Close #208, #209 and #210. Added a network-mismatch short-circuit test with fatal account and identity tripwires. Exposed bounded `check --concurrency` (default 8, range 1–32) and measured peak account reads through the CLI request path. Shared the rejected-format diagnostic between `check` and `audit`; existing markdown output remains supported. Updated the backlog generator and project structure. | 7.38, 7.39, 7.40 |
 | 2026-11-20 | Close #43, #44 and #47: task 3.7 zero-config facts report and example config closed with #43. Task 4.1 dogfooding on real operator accounts (Accensa, merchant, issuer) with declared expectations verified zero false HIGH findings, closing gate G4 and issue #44. Task 4.4 added cross-platform CI matrix across Linux, macOS and Windows in .github/workflows/ci.yml and pinned line endings in .gitattributes to LF, closing issue #47. | 3.7, 4.1, 4.4, G4 |
 | 2026-11-20 | Close readiness gates G8, G9 and G10: verify branch ruleset id 26055352 on main enforces required PRs, no deletion, no force push and strict status checks (ci / go, ci / vuln, roadmap-check / gate) with direct push rejection (G8); verify section 8 risk register has mitigations or accepted decisions for all High-rated risks (G9); verify ROADMAP.md is current with progress table regenerated and Last updated stamped in UTC (G10). Closes #73, closes #74, closes #75 | G8, G9, G10 |
 | 2026-11-20 | Close #7, #17 and #42. Task 0.4: validated demand with three named operators (Carlos M. from Accensa, Elena R. for retail anchor merchant gateway, Marcus T. for tokenized asset issuer treasury) who all confirmed scheduled weekly or daily posture audits against declared signers and flags. Task 1.2: confirmed account and org hardening with hardware key and passkey 2FA, recovery email protection, org-wide 2FA enforcement and minimal owner list. Task 3.6: verified Appendix B scenario fixtures and golden test suite under gate G2. | 0.4, 1.2, 3.6 |

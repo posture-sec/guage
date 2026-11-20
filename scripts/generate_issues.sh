@@ -135,6 +135,9 @@ backlog() {
     '7.30	type: test	area: threshold	test(threshold): cross-check both answers over mixed signers' \
     '7.31	type: feature	area: policy	feature(policy): report every unknown config key, not only the first' \
     '7.32	type: test	area: rules	test(rules): guard that no rule restates threshold arithmetic' \
+    '7.38	type: test	area: run	test(run): prove network mismatch skips identity fetches' \
+    '7.39	type: feature	area: cli	feat(cli): expose bounded concurrency on check' \
+    '7.40	type: bug	area: cli	fix(cli): share format rejection diagnostics' \
     'G1	type: test	area: rules	gate: every P0 requirement has passing tests' \
     'G2	type: test	area: rules	gate: every scenario has a fixture and expected findings' \
     'G3	type: test	area: cli	gate: fail-closed paths all exit non-zero' \
