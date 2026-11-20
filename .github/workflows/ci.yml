@@ -36,6 +36,28 @@ jobs:
           go install honnef.co/go/tools/cmd/staticcheck@v0.8.2
           staticcheck ./...
 
+  build-test:
+    name: ci / build-test (${{ matrix.os }})
+    # Task 4.4: build and test on the three platforms a release names. The
+    # linting legs stay on Linux so the run does not triple in cost, and this
+    # job does not replace them. It also does not replace the go job above on
+    # Linux: ci / go is a required check on main, so removing its build and test
+    # steps would loosen a gate rather than deduplicate a runner.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: build
+        run: go build ./...
+      - name: test
+        run: go test ./... -race -count=1
+
   vuln:
     name: ci / vuln
     runs-on: ubuntu-latest

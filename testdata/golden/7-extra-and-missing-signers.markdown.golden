@@ -1,0 +1,77 @@
+# Gauge posture report
+
+- tool: Gauge test
+- network: Test SDF Network ; September 2015
+- ledger: 5466897
+
+## Account GBQHXYDEJD6NEIUQ5NYDBVNTRCACJXMLO32JUQHBGO524NMVYOMIN5CP
+
+- endpoint: https://horizon-testnet.stellar.org
+- as of ledger 5466881, sequence 57891864273137
+- thresholds: low 3, medium 3, high 3
+- minimum signers to authorize: low 3, medium 3, high 3
+- flags: auth\_required=false auth\_revocable=false auth\_immutable=false clawback=false
+- home domain: (none)
+- sponsor: (none)
+
+### Signers (6)
+
+| key | type | weight | sponsor |
+| --- | --- | ---: | --- |
+| GA5J6K77LKAXSRM4VRKBXAOQXVOVYWARIG7NQURWGBXMQWIXS7R5KHRV | ed25519 | 1 | (none) |
+| GABVD2TOKWRPASQUCSOYD6V5GMFOVTSSLMGBGDHQANZPMCKSLGKQU7JQ | ed25519 | 1 | (none) |
+| GAKECSILEKZCLRPOMPRYTRFCOXWSSJRJ5BCHZ53BMJNL4AAQ3RKOZ5CO | ed25519 | 1 | (none) |
+| GBRTKUSLK55UOXBT34X2LNJ7VXJTSE7T5J5PBV7SV73QL3YAROHK3W22 | ed25519 | 1 | (none) |
+| GD2SIZATHHGBMHJEAEGJBQTASQYE3ZW2BCLSOJPD6AJPHFWXIWYO7PN7 | ed25519 | 1 | (none) |
+| GBQHXYDEJD6NEIUQ5NYDBVNTRCACJXMLO32JUQHBGO524NMVYOMIN5CP | ed25519 | 0 | (none) |
+
+### Declared
+
+- role: other
+- expected\_signers: 3 keys declared
+- expected\_thresholds: (not declared)
+- expected\_flags: (not declared)
+- home\_domain: (not declared)
+- expect\_locked: (not declared)
+
+### Findings: 3 (0 accepted)
+
+#### \[high\] sig-missing-expected
+
+- message: a declared signer cannot authorize on this account
+- fingerprint: 952b93db5ffe773be625601ffa7a3587c72999ad8d2c750c0caf334db0a9ff05
+
+Evidence:
+
+```
+GBK4NF...E7M3 declared at weight 2, chain shows 0
+```
+
+#### \[high\] sig-unexpected-signer
+
+- message: the account carries signers the policy does not declare
+- fingerprint: 4654b13ed3c8d34a2995e00595def0fa7da4705016a6f9e5236eebd1c15eb7e3
+
+Evidence:
+
+```
+GAKECS...Z5CO ed25519 at weight 1 is not declared; GBRTKU...3W22 ed25519 at weight 1 is not declared; GD2SIZ...7PN7 ed25519 at weight 1 is not declared; GBQHXY...N5CP ed25519 at weight 0 is not declared
+```
+
+#### \[warn\] sig-weight-drift
+
+- message: a signer holds a different weight than the policy declares
+- fingerprint: f28e0206463c17eebdfb1867816f9d9497a73a36e1ef89efacc18c57970ce229
+
+Evidence:
+
+```
+GABVD2...U7JQ declared 3, chain shows 1
+```
+
+## Result
+
+- findings: 3 (2 high, 1 warn, 0 info), 0 accepted
+- exit code: 1
+
+**Limits.** Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised.

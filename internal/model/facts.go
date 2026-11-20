@@ -65,10 +65,13 @@ type DeclaredThresholds struct {
 }
 
 type DeclaredFlags struct {
-	AuthRequired    *bool `json:"auth_required"`
-	AuthRevocable   *bool `json:"auth_revocable"`
-	AuthImmutable   *bool `json:"auth_immutable"`
-	ClawbackEnabled *bool `json:"clawback"`
+	AuthRequired  *bool `json:"auth_required"`
+	AuthRevocable *bool `json:"auth_revocable"`
+	AuthImmutable *bool `json:"auth_immutable"`
+	// ClawbackEnabled renders as clawback_enabled, the name Flags uses in account.go,
+	// so one report spells the bit one way. The TOML key stays clawback
+	// (internal/policy/expectations.go); only the JSON name follows the snapshot.
+	ClawbackEnabled *bool `json:"clawback_enabled"`
 }
 
 // IdentityFacts is what the guarded fetcher observed for one home domain. The

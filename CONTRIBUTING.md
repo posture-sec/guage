@@ -33,7 +33,10 @@ govulncheck ./...                            # v1.9.0
 scripts/check_roadmap_touched.sh origin/main
 scripts/roadmap_progress.sh --check ROADMAP.md
 scripts/test_roadmap_gate.sh                 # self-test for the roadmap gate
+python3 scripts/sync_readme.py --check-base origin/main
 ```
+
+The `<!-- METRICS:START -->` table in `README.md` and the `site/data/badge-*.json` endpoints are generated, and `scripts/sync_readme.py` is their only writer. The maintainer runs it on `main`; you do not touch those files in a pull request, so adding tests does not put you in conflict with the next contributor who adds tests. If the check names them, drop them from your branch with `git checkout origin/main -- README.md site/data/badge-tests.json`.
 
 CI runs the same set as `ci / go`, `ci / vuln` and `roadmap-check / gate`, with every action pinned by commit SHA and `permissions: contents: read`. The fuzz targets in `internal/strkey` and `internal/sanitize` exist and are run as a smoke before a release-facing change, one target per command because `-fuzz` refuses multiple packages. They are not CI jobs:
 

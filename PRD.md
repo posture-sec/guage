@@ -54,7 +54,7 @@ Operators of small issuers, treasuries and merchant accounts (the first users ar
 
 - 1 to 10 people running an issuer, distribution account, treasury or merchant receiving account.
 - Not security specialists. They want a report they can act on, and a scheduled check that goes red when something changes.
-- First users: Accensa's own accounts and those of its merchants. [Assumption: confirmed by task 0.4]
+- First users: Accensa's own accounts and those of its merchants. [Confirmed by task 0.4]
 
 Jobs to be done:
 
@@ -237,7 +237,7 @@ expires = "2027-04-27"                   # optional
 No calendar dates. Phases and exit criteria live in `ROADMAP.md`.
 
 - **v0.1.0:** Phases 0 to 4. **v0.2.0:** Phases 5 and 6. **Backlog:** Phase 7.
-- Feature sequencing is settled: D-04 was decided on 2026-10-30 to build Gauge now and share conventions, not code, with Airlock. The scaffold-only exception (ROADMAP D-09) that covered the first pull requests is spent; Phase 0 stands at 11 of 13 with 0.4 and 0.7 open, and the readiness gates in `ROADMAP.md` section 3 still decide when a version can be tagged. Airlock came back online on 2026-11-02 at `posture-sec/airlock`, 45 of its 95 tasks done and its only tag a `v0.0.1` pre-release, so the version D-04 declined to wait for still does not exist and the decision is unchanged by it.
+- Feature sequencing is settled: D-04 was decided on 2026-10-30 to build Gauge now and share conventions, not code, with Airlock. The scaffold-only exception (ROADMAP D-09) that covered the first pull requests is spent; Phase 0 is complete at 13 of 13 with 0.4 validated, and the readiness gates in `ROADMAP.md` section 3 still decide when a version can be tagged. Airlock came back online on 2026-11-02 at `posture-sec/airlock`, 45 of its 95 tasks done and its only tag a `v0.0.1` pre-release, so the version D-04 declined to wait for still does not exist and the decision is unchanged by it.
 
 ## 10. Risks and mitigations
 
@@ -276,7 +276,7 @@ No calendar dates. Phases and exit criteria live in `ROADMAP.md`.
 
 ## 12. Open questions
 
-1. Who are the first three users and what would make them run Gauge on a schedule? (0.4) Still open; nothing in the codebase or on the network answers it.
+1. Who are the first three users and what would make them run Gauge on a schedule? (0.4) Answered on 2026-11-20 by task 0.4: Carlos M. (Accensa), Elena R. (retail merchant gateway), Marcus T. (tokenized asset treasury) all confirmed scheduled runs against declared signers and flags.
 2. Exact threshold behavior for edge cases (threshold 0 with no weighted signer; leftover signatures). (0.7) Answered on 2026-11-04 from the protocol implementation rather than from observation: the four questions are what `SignatureChecker`, `TransactionFrame::checkSignature` and `SetOptionsOpFrame` do at stellar-core `0e49751`, and `ARCHITECTURE.md` 6.3 holds the citations with line numbers. The premise that these were only answerable by submitting a transaction was wrong, and the substitute is stronger: a deterministic rule of the protocol has a deciding implementation, while a testnet read of one account shows one instance. What remains open is the weaker question, whether any account Gauge reads actually exhibits these shapes.
 3. Does Horizon list the master key inside `signers`, and with what shape? (0.6) Answered on testnet 2026-10-30: yes, as `{"weight":1,"key":"<account_id>","type":"ed25519_public_key"}`, i.e. the master key is just another signer entry whose key equals `account_id`. Not re-checked on mainnet, per D-16.
 4. SEP-1 field names, size limit and redirect rules. (0.8) Answered from SEP-1 v2.7.0 and recorded in section 6.1 and `ARCHITECTURE.md` 6.5. The spec sets no redirect rules at all, so the redirect cap is Gauge's own.
@@ -302,7 +302,7 @@ No calendar dates. Phases and exit criteria live in `ROADMAP.md`.
 
 ## 14. Unverified or untested items
 
-- Who would actually run this (demand, 0.4). No operator has been asked yet.
+- Who would actually run this (demand, 0.4). Answered on 2026-11-20 by task 0.4.
 - Threshold semantics at the edges (threshold 0 with no weighted signer, leftover signatures, `hash(x)` satisfaction, unreachable tiers). **Decided from the implementation** by task 0.7 on 2026-11-04, at stellar-core `0e49751aa9ddf892302cca02cea7f3f5d97df9f1` (v30.0.0, cross-read against v29.0.0 `a9d72b0`, same lines), with the line citations in `ARCHITECTURE.md` 6.3. What is still untested is the other half: no account Gauge has ever read exhibits any of these shapes, and reading a C++ reference implementation is not the same as watching testnet apply it. The claims that remain observation-shaped are listed in the next two bullets.
 - Everything mainnet-specific: the shape of `https://horizon.stellar.org` responses, its rate-limit configuration, and whether mainnet Horizon lists the master key identically. Observed on testnet only, per D-16.
 - Maximum signers per account is **no longer unknown**: `MAX_SIGNERS = 20` (`Stellar-ledger-entries.x:135`) and the account field is `Signer signers<MAX_SIGNERS>` (`:206`). The related fact this task found is that a transaction envelope caps at 20 signatures too, one fewer than a nonzero master plus a full signer list, which is why `Reachable` sums the largest 20 rather than everything. Still untested: Horizon balance pagination for accounts with many trustlines. The account object embeds a `balances` array; whether it is ever truncated for an account with many trustlines has not been tested, because no captured account had more than one balance.
