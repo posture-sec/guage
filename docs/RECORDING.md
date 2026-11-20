@@ -385,7 +385,7 @@ Record this last, or not at all if the recording is already long. The fields a c
       "expected_thresholds": null,
       "expected_flags": {
         "auth_required": null, "auth_revocable": null,
-        "auth_immutable": null, "clawback": true
+        "auth_immutable": null, "clawback_enabled": true
       },
       "home_domain": "example.org",
       "expect_locked": null

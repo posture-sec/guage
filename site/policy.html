@@ -208,7 +208,7 @@ expect_locked = false
           <p>A policy that cannot be parsed exactly is rejected before any network call, and the run exits 2. The rules are deliberate:</p>
           <ul class="flow-list">
             <li>At most 1 MiB is read. A larger file is rejected, not truncated.</li>
-            <li>Unknown keys are errors. A typo cannot silently drop an expectation.</li>
+            <li>Unknown keys are errors. A typo cannot silently drop an expectation, and one run names every unknown key, sorted, so several typos are fixed in one pass.</li>
             <li>A duplicate account ID or duplicate rule-and-account acceptance is an error.</li>
             <li>Every token in the raw file is scanned for a valid <code>S</code> seed, including comments and keys the schema does not define. A match is rejected and the seed is never printed.</li>
             <li>Errors name a field path such as <code>account[2].expected_thresholds.high</code>, never a value from the file.</li>
