@@ -131,6 +131,10 @@ func (a *Account) validate(index int) error {
 			{"medium", t.Medium},
 			{"high", t.High},
 		} {
+			// Only the range is a config error. Ordering between low, medium and high
+			// is deliberately left to sig-threshold-order, which reports an account
+			// whose stored tiers are out of order; a declaration mirroring such an
+			// account has to stay loadable, so no comparison happens here.
 			if v.value != nil && (*v.value < 0 || *v.value > 255) {
 				return withDetail(ErrThreshold, field+".expected_thresholds."+v.name)
 			}

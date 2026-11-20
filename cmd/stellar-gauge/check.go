@@ -14,11 +14,11 @@ import (
 
 func checkCommand(args []string, stdout, stderr io.Writer, d deps) int {
 	fs := newFlagSet("check", stderr,
-		"usage: stellar-gauge check --network NETWORK --endpoint URL [--format text|json] [--fail-on high|warn] G...")
+		"usage: stellar-gauge check --network NETWORK --endpoint URL [--format text|json|markdown] [--fail-on high|warn] G...")
 	network := fs.String("network", "", "mainnet, testnet, or a full network passphrase")
 	endpoints := &stringList{}
 	fs.Var(endpoints, "endpoint", "Horizon endpoint; exactly one at v0.1")
-	format := fs.String("format", "text", "output format: text or json")
+	format := fs.String("format", "text", "output format: text, json or markdown")
 	failOn := fs.String("fail-on", "high", "fail at this severity: high or warn")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
@@ -42,7 +42,7 @@ func checkCommand(args []string, stdout, stderr io.Writer, d deps) int {
 		return usageError(stderr, "--fail-on must be high or warn")
 	}
 	if !validFormat(*format) {
-		return usageError(stderr, "--format must be text or json")
+		return usageError(stderr, "--format must be text, json or markdown")
 	}
 	if err := validateAccountArgs(ids); err != nil {
 		fmt.Fprintf(stderr, "stellar-gauge: %v\n", err)

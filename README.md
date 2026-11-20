@@ -30,8 +30,8 @@ Gauge is read-only and secret-free. It never accepts, stores or echoes a secret 
 <!-- METRICS:START -->
 | Indicator | Value | Source |
 |---|---|---|
-| Unit & Integration Tests | **201 passing** | `go test ./...` |
-| Posture Rules | **17 verified** across 4 families | `internal/rules` |
+| Unit & Integration Tests | **207 passing** | `go test ./...` |
+| Posture Rules | **16 verified** across 4 families | `internal/rules` |
 | Binary | **`stellar-gauge`** | `cmd/stellar-gauge` |
 | Security Guarantee | **Read-only / 0 secret keys** | Architecture spec |
 <!-- METRICS:END -->

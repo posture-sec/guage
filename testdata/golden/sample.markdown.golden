@@ -1,0 +1,114 @@
+# Gauge posture report
+
+- tool: Gauge 0.0.0-test
+- network: Test SDF Network ; September 2015
+- ledger: 5466897
+
+## Account GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ
+
+- endpoint: https://horizon-testnet.stellar.org
+- as of ledger 5466881, sequence 9007199254740993
+- thresholds: low 1, medium 2, high 1
+- minimum signers to authorize: low 1, medium (unreachable), high 1
+- flags: auth\_required=true auth\_revocable=false auth\_immutable=false clawback=false
+- home domain: exаmple.com (IDN)
+- sponsor: sponsor
+
+### Signers (1)
+
+| key | type | weight | sponsor |
+| --- | --- | ---: | --- |
+| GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ | ed25519 | 1 | (none) |
+
+### Declared
+
+- role: treasury
+- name: "treasury"
+- expected\_signers: 1 key declared
+- expected\_thresholds: low 2, medium 2, high 3
+- expected\_flags: (not declared)
+- home\_domain: (not declared)
+- expect\_locked: true, which role "treasury" is not allowed to declare; it is read for issuer alone
+
+### Identity document
+
+- result: example.com served a readable file
+- step: ok
+- fetch: status 200, 1 redirect hops, 132 bytes, CORS present
+- network\_passphrase: "Test SDF Network ; September 2015" (this network)
+- signing\_key: "GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3"
+- horizon\_url: (not named)
+- version: "v1.2"
+- accounts: 1 listed, 1 rejected as not an address
+
+### Findings: 3 (1 accepted)
+
+#### \[high\] sig-single-key-high
+
+- message: One signing key controls the high threshold.
+- fingerprint: 197d9ec2e2f0c17cd2496f045938fcbde78fb3d7cc31fa84d53c00d1658b705b
+
+Evidence:
+
+```
+minimum signers: 1
+```
+
+#### \[warn\] flag-drift (accepted)
+
+- message: Declared flags differ from the chain.
+- fingerprint: 1df656afe9e674d296da9049114c5ddfea5c04fe365831815af700b0cda4b531
+
+Evidence:
+
+```
+auth_required declared false, observed true
+```
+
+#### \[warn\] thr-drift
+
+- message: Declared thresholds differ from the chain.
+- fingerprint: 23ed595205dd01c02f9ce9aed8050632b8f2059d895fb73a1dfb467712913f0d
+
+Evidence:
+
+```
+low 2, medium 2, high 3
+```
+
+## Account GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3
+
+- endpoint: https://horizon-testnet.stellar.org
+- as of ledger 5466881, sequence (none)
+- thresholds: low 2, medium 2, high 2
+- minimum signers to authorize: low 2, medium 2, high 2
+- flags: auth\_required=false auth\_revocable=false auth\_immutable=false clawback=false
+- home domain: (none)
+- sponsor: (none)
+
+### Signers (2)
+
+| key | type | weight | sponsor |
+| --- | --- | ---: | --- |
+| GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ | ed25519 | 1 | (none) |
+| GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3 | ed25519 | 1 | (none) |
+
+### Declared
+
+- role: other
+- expected\_signers: (not declared)
+- expected\_thresholds: (not declared)
+- expected\_flags: (not declared)
+- home\_domain: (not declared)
+- expect\_locked: (not declared)
+
+### Findings
+
+None.
+
+## Result
+
+- findings: 3 (1 high, 2 warn, 0 info), 1 accepted
+- exit code: 1
+
+**Limits.** Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised.

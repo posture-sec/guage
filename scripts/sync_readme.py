@@ -6,6 +6,10 @@ Inspects the repository test suite, active rules, and status, and writes:
 2. Marked block between `<!-- METRICS:START -->` and `<!-- METRICS:END -->` in `README.md`.
 
 With `--check`, exits 1 if any target is stale without modifying files.
+With `--check-base <ref>`, exits 1 if the pull request changed the metrics block
+or a badge endpoint at all. Those files are written by this script on the default
+branch and nowhere else, so two branches that each add tests cannot collide on the
+same twice-edited table row.
 """
 
 from __future__ import annotations
@@ -13,6 +17,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -127,12 +132,72 @@ def sync(*, check: bool = False) -> bool:
     return True
 
 
+def git(*args: str) -> str:
+    return subprocess.run(
+        ["git", *args], cwd=REPO_ROOT, check=True, capture_output=True, text=True
+    ).stdout
+
+
+def managed_paths() -> list[str]:
+    """Repository-relative paths this script owns."""
+    paths = ["README.md"]
+    if DATA_DIR.is_dir():
+        paths += [p.relative_to(REPO_ROOT).as_posix() for p in sorted(DATA_DIR.glob("badge-*.json"))]
+    return paths
+
+
+def check_untouched(base: str) -> bool:
+    """Fail if the branch edits a file this script owns on the default branch."""
+    try:
+        git("rev-parse", "--verify", "--quiet", f"{base}^{{commit}}")
+    except subprocess.CalledProcessError:
+        print(
+            f"sync_readme: base ref '{base}' is not available; fetch it before running",
+            file=sys.stderr,
+        )
+        return False
+
+    changed = set(git("diff", "--name-only", f"{base}...HEAD").splitlines())
+    # Also catch edits that are still staged or unsaved, so the check fails the
+    # same way locally as it does on the pull request.
+    changed |= set(git("diff", "--name-only", "HEAD").splitlines())
+    owned = managed_paths()
+    touched = [p for p in sorted(changed) if p in owned]
+    if not touched:
+        return True
+
+    print(
+        "sync_readme: this branch changes files that scripts/sync_readme.py owns "
+        "on the default branch:",
+        file=sys.stderr,
+    )
+    for p in touched:
+        print(f"  {p}", file=sys.stderr)
+    print(
+        "\nThese are generated, not hand-maintained: contributors do not update the "
+        "metrics row or the badge endpoints, and the maintainer refreshes them on "
+        "the default branch with `python3 scripts/sync_readme.py`. Drop them from "
+        "this branch with:\n\n"
+        f"  git checkout {base} -- {' '.join(touched)}\n",
+        file=sys.stderr,
+    )
+    return False
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--check", action="store_true", help="Exit 1 if stale without modifying files"
     )
+    parser.add_argument(
+        "--check-base",
+        metavar="REF",
+        help="Exit 1 if the branch changed the metrics block or a badge endpoint",
+    )
     args = parser.parse_args()
+
+    if args.check_base:
+        return 0 if check_untouched(args.check_base) else 1
 
     ok = sync(check=args.check)
     return 0 if ok else 1
