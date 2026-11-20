@@ -23,7 +23,7 @@ Run from a clean checkout of the tag, not of a branch, because Go stamps the VCS
 
 ```
 git checkout v0.1.0
-go version                              # go1.27.3, which is D-10's pinned toolchain
+go version                              # go1.27.4, the toolchain go.mod pins (D-10 chose 1.27.3; moved for GO-2026-6859)
 ```
 
 One target per line, five targets total. `CGO_ENABLED=0` keeps the binary static and removes the C toolchain from the equation, which is what makes a macOS artifact buildable on Linux. `-trimpath` removes the build directory from the embedded paths. `-s -w` strips the symbol and DWARF tables. `-X main.version=$(VERSION)` overwrites the `0.1.0-dev` string, and `version` is the whole of it: `check` and `audit` print `ToolVersion` into both the text report and the JSON document, so an unstamped artifact reports itself as a development build forever.
@@ -135,7 +135,7 @@ Two of those four pins are copied from `.github/workflows/ci.yml`, which is wher
 Three constraints the release workflow inherits, one of which is not yet a house rule:
 
 - No workflow-level write permission, and narrow job-level permissions. All four existing workflows do this.
-- `go-version-file: go.mod` rather than a hand-written version, because `go.mod` declares `go 1.27.3` and that is D-10's pinned toolchain.
+- `go-version-file: go.mod` rather than a hand-written version, because `go.mod` declares `go 1.27.4`, the toolchain D-10 pinned at 1.27.3 and moved for GO-2026-6859.
 - `persist-credentials: false` on checkout is what `scorecard.yml` sets, and the other three workflows do not set it. For a release job holding an OIDC token that mints a signed attestation, the safer answer is to set it. Say so deliberately rather than discovering it by copy-paste from `ci.yml`.
 
 The verification command a user runs against an attested artifact:

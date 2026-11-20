@@ -49,7 +49,7 @@ Status: design target v0.1; Phase 3 is complete as of 2026-11-05 and v0.1.0 now 
 
 - `source`: `Network()`, `Account()`; Horizon first, RPC later. [6.4]
 - `rules`: pure functions over `AccountSnapshot` plus policy, and one pure `Facts` function over the same context that returns observations rather than findings. [6.7]
-- `report`: text, JSON, markdown (P1); facts printed ahead of findings, then ordering severity, account, rule. Exit reads findings only, so a fact cannot fail a run. [6.8]
+- `report`: text, JSON, markdown (P1, shipped by 5.3); facts printed ahead of findings, then ordering severity, account, rule. Exit reads findings only, so a fact cannot fail a run. [6.8]
 
 ## 5. Packages (import direction) [project_structure.md]
 
@@ -120,7 +120,7 @@ Verified from the protocol implementation by task 0.7 on 2026-11-04, at stellar-
 ## 13. Cut or deferred (do not build without a roadmap decision) [14.3]
 
 - Cut: watch daemon, alert integrations, rules language, dashboard, reputation scoring, contract-account auditing, CLI framework, full Stellar SDK import.
-- Deferred: RPC source, two-endpoint comparison, markdown output, snapshot and diff, trustline exposure, SEP-29 check.
+- Deferred: RPC source, two-endpoint comparison, snapshot and diff, trustline exposure, SEP-29 check.
 
 ## 14. Known unknowns (do not assume) [15]
 

@@ -3,6 +3,7 @@ package policy
 import (
 	"io"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -33,12 +34,25 @@ func Load(r io.Reader) (*Config, error) {
 		return nil, ErrSyntax
 	}
 	if undecoded := md.Undecoded(); len(undecoded) > 0 {
-		return nil, withDetail(ErrUnknownKey, undecoded[0].String())
+		return nil, withDetail(ErrUnknownKey, unknownKeys(undecoded))
 	}
 	if err := cfg.validate(); err != nil {
 		return nil, err
 	}
 	return &cfg, nil
+}
+
+// unknownKeys renders every undecoded key path, sorted and joined, so one load
+// names all of an operator's misspellings rather than the first. Key.String
+// yields a dotted path and never the value assigned to it, which keeps the
+// detail within the Error contract.
+func unknownKeys(undecoded []toml.Key) string {
+	paths := make([]string, len(undecoded))
+	for i, key := range undecoded {
+		paths[i] = key.String()
+	}
+	sort.Strings(paths)
+	return strings.Join(paths, ", ")
 }
 
 // LoadFile opens path and calls Load. The file is never logged.

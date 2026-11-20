@@ -76,7 +76,7 @@
 
         <section class="section">
           <h2>Prerequisites</h2>
-          <p>Go 1.27.3 or newer. No credentials, no wallet, no Stellar SDK and no configuration beyond the command. Gauge reads public Horizon data over HTTPS, so a network that reaches <code>horizon-testnet.stellar.org</code> is enough for the first run.</p>
+          <p>Go 1.27.4 or newer. No credentials, no wallet, no Stellar SDK and no configuration beyond the command. Gauge reads public Horizon data over HTTPS, so a network that reaches <code>horizon-testnet.stellar.org</code> is enough for the first run.</p>
           <div class="code" data-copy>
             <div class="code-label"><span>Shell</span></div>
             <pre>git clone https://github.com/posture-sec/guage
@@ -106,7 +106,7 @@ go build -o stellar-gauge ./cmd/stellar-gauge
               <tbody>
                 <tr><td>--network</td><td>(required)</td><td><code>mainnet</code>, <code>testnet</code> or a full passphrase. There is no default and no discovery.</td></tr>
                 <tr><td>--endpoint</td><td>(required)</td><td>May be repeated by the parser, but exactly one is accepted at v0.1. Must be HTTPS, except loopback.</td></tr>
-                <tr><td>--format</td><td>text</td><td><code>text</code> or <code>json</code>. Any other value exits 2.</td></tr>
+                <tr><td>--format</td><td>text</td><td><code>text</code>, <code>json</code> or <code>markdown</code>. Any other value exits 2.</td></tr>
                 <tr><td>--fail-on</td><td>high</td><td><code>high</code> or <code>warn</code>. Sets the severity at which a finding produces exit 1.</td></tr>
               </tbody>
             </table>
@@ -129,7 +129,7 @@ go build -o stellar-gauge ./cmd/stellar-gauge
               </thead>
               <tbody>
                 <tr><td>--config</td><td>gauge.toml</td><td>Path to the policy. A missing or rejected file exits 2 before any request.</td></tr>
-                <tr><td>--format</td><td>text</td><td><code>text</code> or <code>json</code>. <code>markdown</code> is refused with "not implemented yet".</td></tr>
+                <tr><td>--format</td><td>text</td><td><code>text</code>, <code>json</code> or <code>markdown</code>. Any other value exits 2.</td></tr>
                 <tr><td>--fail-on</td><td>high</td><td><code>high</code> or <code>warn</code>.</td></tr>
               </tbody>
             </table>
@@ -188,7 +188,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
         with:
-          go-version: "1.27.3"
+          go-version: "1.27.4"
       - run: go build -o stellar-gauge ./cmd/stellar-gauge
       - name: Audit the declared accounts
         run: ./stellar-gauge audit --config gauge.toml --format json &gt; report.json
@@ -200,6 +200,12 @@ jobs:
           </div>
           <p class="table-caption">Start on testnet. Moving to mainnet changes <code>network</code> and <code>endpoints</code> in the policy, and nothing in the job. The repository pins its own actions by commit SHA; consumer workflows can use release tags.</p>
           <p>For a merge gate, run the audit on the pull request and leave the policy file under review like any other code. An acceptance that changes a red job to green should arrive as a visible policy diff with a reason, not as a CI variable.</p>
+        </section>
+
+        <section class="section">
+          <h2>Markdown output</h2>
+          <p><code>--format markdown</code> prints the same facts, findings, exit code and limits footer as the text report, as GitHub-flavoured markdown for a step summary or an issue body, for example <code>./stellar-gauge audit --config gauge.toml --format markdown &gt;&gt; "$GITHUB_STEP_SUMMARY"</code>. The exit code does not change with the format.</p>
+          <p>Every string that comes from the chain, a <code>stellar.toml</code> or the policy file is escaped and printed after a label, so a link, an image or a tag in an account label shows up as the characters it is made of and cannot start a list or a heading. Finding evidence sits in a code fence longer than any run of backticks inside it, so it cannot close its own block. One thing escaping does not change: a bare URL is still a URL, and GitHub may render it as a link whose visible text is the URL itself.</p>
         </section>
 
         <section class="section">
@@ -219,6 +225,31 @@ jobs:
                        role: .facts.declared.role}'</pre>
           </div>
           <p class="table-caption">The report header includes the ledger the endpoint reported at read time, so an archived report can be tied to a point in chain history. The limits footer is part of the JSON, not only the text output. A null <code>.facts.reachability.high</code> is the JSON shape of the finding <code>sig-threshold-unreachable</code> raises at HIGH: the tier no combination of this account's signers can reach.</p>
+        </section>
+
+        <section class="section">
+          <h2>snapshot and diff: baseline tracking</h2>
+          <p><code>snapshot</code> records the current state of accounts declared in a policy file into a baseline JSON file, with schema version 1 and the review banner: <em>"A baseline is a record of state, not an approval of it. Review every threshold and signer before adopting this baseline."</em> <code>diff</code> compares live chain observations against that saved baseline and reports added or removed signers, weight changes, threshold shifts, flag drift and domain changes.</p>
+          <div class="code" data-copy>
+            <div class="code-label"><span>Shell</span></div>
+            <pre>./stellar-gauge snapshot --config gauge.toml --out /secure/baselines/gauge-baseline.json
+./stellar-gauge diff --config gauge.toml --baseline /secure/baselines/gauge-baseline.json
+./stellar-gauge diff --config gauge.toml --baseline /secure/baselines/gauge-baseline.json --format markdown</pre>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Flag</th><th>Command</th><th>Notes</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>--out</td><td>snapshot</td><td>(required) Path to write the baseline JSON file. This is the only file write Gauge performs.</td></tr>
+                <tr><td>--baseline</td><td>diff</td><td>(required) Path to read the saved baseline file. Exits 2 if missing or invalid.</td></tr>
+                <tr><td>--config</td><td>both</td><td>Path to the policy file (default: <code>gauge.toml</code>).</td></tr>
+                <tr><td>--format</td><td>diff</td><td><code>text</code> (default), <code>json</code> or <code>markdown</code>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-caption"><strong>Security guidance: Store baselines outside the audited repository.</strong> Keeping baseline files inside the same repository as the audited code allows an attacker who compromises the repository or PR workflow to simultaneously modify both <code>gauge.toml</code> and the baseline file, hiding malicious changes (threat GB1). Store baselines in a separate restricted repository, private cloud storage (e.g. S3/GCS with strict IAM), or an offline vault.</p>
         </section>
 
         <section class="section">

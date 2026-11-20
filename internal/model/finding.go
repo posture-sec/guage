@@ -38,7 +38,7 @@ func SortFindings(findings []Finding) {
 	sort.SliceStable(findings, func(i, j int) bool {
 		a, b := findings[i], findings[j]
 		if a.Severity != b.Severity {
-			return a.Severity > b.Severity
+			return a.Severity.rank() > b.Severity.rank()
 		}
 		if a.Account != b.Account {
 			return a.Account < b.Account
