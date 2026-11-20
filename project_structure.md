@@ -47,6 +47,7 @@ guage/
     sanitize/
       {text,domain,markdown}.go            # output and domain handling (2.5, 5.3)
       {sanitize_test,fuzz_test}.go         # injection classes, IDN, fencing; FuzzText and FuzzFenced
+      conformance_test.go                 # one hostile corpus held against Text, Markdown, Fenced and Domain (7.29)
     policy/
       {config,expectations,accept}.go      # policy declarations, no decoding or acceptance logic
       {decode,validate,roles}.go           # strict loading, rejection kinds, network passphrases and the Appendix A role floors (2.4, 3.4)
@@ -72,6 +73,8 @@ guage/
       {compare,snapshot,diff}.go           # P1 orchestration (5.1, 5.2)
       run_test.go                         # end-to-end orchestration with a fake source and an offline fetcher, the UTC expiry judgement and the two builders' fact shapes (2.8, 3.4, 3.5, 3.7)
       roles_test.go                       # one account at five roles: severity, fingerprint, accepts and the lock declaration (3.4)
+      first_error_test.go                 # two ordered concurrent read failures: the first, with its account ID, wins and a queued account is never read (7.30)
+      stage_cancel_test.go                # a context that ends between stages returns no report and builds no identity fetcher (7.31)
 
   testdata/
     horizon/README.md                     # provenance of every file: which five are testnet captures, which seven are built, and how (0.6, 3.6)

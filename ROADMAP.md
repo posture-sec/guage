@@ -1,6 +1,6 @@
 # ROADMAP: Gauge
 
-Last updated: 2026-11-19T11:05Z (task 7.10, Valid and Equal helpers for Thresholds and Flags)
+Last updated: 2026-11-20T12:00Z (tasks 7.29 to 7.31, sanitizer conformance matrix, first account error, stage-boundary cancellation)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
@@ -40,7 +40,7 @@ The repository is 100% ready when every task in Phases 0 to 6 is done and every 
 | 4 | Dogfood and release v0.1.0 | 2 | 9 | 22% |
 | 5 | v0.2 features | 3 | 11 | 27% |
 | 6 | Release v0.2.0 and community | 0 | 5 | 0% |
-| 7 (backlog) | Backlog | 1 | 5 | 20% |
+| 7 (backlog) | Backlog | 4 | 8 | 50% |
 | **Phases 0 to 6** | **Readiness total** | **56** | **79** | **70%** |
 | Gates | G1 to G10 | 3 | 10 | 30% |
 <!-- PROGRESS:END -->
@@ -227,6 +227,9 @@ Constraint on the two remaining experimental tasks: Gauge never builds or submit
 - [ ] **7.3** Alert integrations (probably never; JSON and CI cover it).
 - [ ] **7.4** Cross-check issued assets against `stellar.toml` currencies.
 - [x] **7.10** `Thresholds.Valid`, `Thresholds.Equal`, `Flags.Valid` and `Flags.Equal` in `internal/model`, so an observation can be range-checked and two observations compared. M. Deps: 2.1. Done when: `Thresholds.Valid` is false below 0 or above 255, both `Equal` methods compare every field, and `internal/model/account_thresholds_test.go` covers the boundaries, equality and all sixteen flag combinations. (done 2026-11-19: `Valid` bounds each threshold tier to 0 through 255, the range the schema fixes and the loader already enforces on declared values, and says nothing about tier order, which `sig-threshold-order` owns. `Flags.Valid` is true for all sixteen combinations because every bool is in range and no exclusion is documented; the test sweeps them so adding one is a visible change. Both `Equal` methods compare the whole struct, so a field added later is covered without editing them. No change to `internal/rules`, `internal/policy` or `internal/source`: the `compare` closures in `flagDrift` and `thrDrift` stay, since they carry a message and compare against the declared type.)
+- [x] **7.29** Sanitizer conformance matrix across `Text`, `Markdown`, `Fenced` and `Domain` (issue #199). M. Deps: 2.5. Done when: `internal/sanitize/conformance_test.go` holds one hostile corpus (OSC 8, CSI colour, C1 U+009B, RLO U+202E, U+200B, tag U+E0041, NUL, truncated UTF-8, a backtick run) against all four entry points with no ESC, no dropped rune and valid UTF-8, and `Fenced` equals a fence longer than any backtick run around `stripControls(s)`. (done 2026-11-20: test only, no defect found; a deliberate break of `Fenced` or the tag range fails it.)
+- [x] **7.30** Keep the first account error when a later read fails (issue #200). M. Deps: 2.8. Done when: `TestFirstAccountErrorSurvives` passes `-race -count=20` with A failing first, B released only after, C never read, and the error wrapping `errA` with A's ID and not `errB`. (done 2026-11-20: the test exposed that workers raced for the semaphore, so C was read first in 2649 of 3000 runs; `fetchAll` now takes slots in policy order and checks the context after winning one, approved by the owner as outside the fail closure. Passes 3000 of 3000.)
+- [x] **7.31** Stop the run when the context ends between stages (issue #201). M. Deps: 2.8, 3.5. Done when: a run cancelled during `Network` against a mismatched endpoint returns `context.Canceled`, a zero report and builds no identity fetcher. (done 2026-11-20: `Run` checks its context after observe and before returning, both wrapped with `run:`.)
 
 ## 6. Dependency map (critical path)
 
@@ -277,6 +280,7 @@ Newest first. One row per merged change.
 
 | Date (UTC) | Change | Tasks |
 |---|---|---|
+| 2026-11-20 | Tasks 7.29 to 7.31: sanitizer conformance matrix over all four entry points; `fetchAll` takes semaphore slots in policy order so the first account error survives and a queued account is never read; `Run` checks its context after observe and before returning so a cancelled run yields no report. Backlog rows added to `scripts/generate_issues.sh`. | 7.29, 7.30, 7.31 |
 | 2026-11-19 | Task 7.10: added `Valid` and `Equal` to `model.Thresholds` and `model.Flags`, with boundary, equality and sixteen-combination tests in `internal/model/account_thresholds_test.go`. A threshold outside 0 to 255 in a decode or fixture is now detectable; the drift rules and their messages are unchanged. Backlog row added to `scripts/generate_issues.sh`. | 7.10 |
 | 2026-11-09 | Updated Drips Wave submission packet (docs/WAVE_SUBMISSION.md) for Wave 11: confirmed 200 unit tests passing, all 16 rules registered, OpenSSF Scorecard at 6.8 with live badge, live documentation site at https://posture-sec.github.io/guage/, dynamic README metric sync, and updated sibling comparison data across org repositories. | none ticked |
 | 2026-11-09 | Finalized project naming by removing all occurrences of "working name" across repository documentation, PRD, architecture, and roadmap files. Implemented dynamic README metrics synchronization (`scripts/sync_readme.py`) generating live Shields.io endpoint JSON files under `site/data/` for 200 tests and 16 rules, and enforced with `--check` in the `roadmap-check` workflow. | none ticked |

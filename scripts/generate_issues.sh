@@ -112,6 +112,9 @@ backlog() {
     '6.4	type: research	area: docs	docs(decisions): decide funding and applications (D-07)' \
     '6.5	type: docs	area: docs	docs(outreach): contact issuers, anchors and treasury teams' \
     '7.10	type: feature	area: model	feat(model): add Valid and Equal helpers to Thresholds and Flags' \
+    '7.29	type: security	area: sanitize	security(sanitize): conformance matrix across all four entry points' \
+    '7.30	type: test	area: run	test(run): keep the first account error when a later read fails' \
+    '7.31	type: fix	area: run	fix(run): stop the run when the context ends between stages' \
     'G1	type: test	area: rules	gate: every P0 requirement has passing tests' \
     'G2	type: test	area: rules	gate: every scenario has a fixture and expected findings' \
     'G3	type: test	area: cli	gate: fail-closed paths all exit non-zero' \
