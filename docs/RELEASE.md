@@ -5,7 +5,7 @@ Task 4.5 asks for a release workflow with build provenance attestation and a ver
 - `.github/` is a protected path under AGENTS.md section 12, so a new workflow is an owner decision rather than a contributor's convenience.
 - An attestation workflow can only be proven by a tag, and cutting a release tag to prove the machinery that makes tags is backwards. D-12 already declines a tag until an auditing build exists, and of Phase 4's release preconditions 4.1, 4.4 and 4.6 are open alongside this task's own 4.5; 4.2 and 4.3 closed on 2026-11-05.
 
-So 4.5 stays unticked and G6 stays unchecked. What this file buys is that the person cutting `v0.1.0` is following steps that have been run, not steps invented at the tag.
+So 4.5 stayed unticked and G6 stayed unchecked while this file was the only artifact. Task 6.2 has since added `.github/workflows/release.yml`, which reuses the mechanism described here rather than inventing a second one; the runbook below stays the executable record of the build and checksum steps, and 4.5 and G6 still want a tag before either can claim a verified release. What this file buys is that the person cutting the tag is following steps that have been run, not steps invented at the tag.
 
 ## 0. What is true today
 
@@ -136,7 +136,7 @@ jobs:
 
 All four actions are pinned to immutable commit SHAs with version comments: `checkout` and `setup-go` match `ci.yml`, `upload-artifact` matches `scorecard.yml`, and `attest-build-provenance` is pinned to v4.2.2.
 
-Three constraints the release workflow inherits, one of which is not yet a house rule:
+Every pin is a full SHA with the tag in a trailing comment, the form `.github/workflows/ci.yml` already uses and the state Scorecard's `Pinned-Dependencies` measures. The three constraints the workflow inherits are all kept:
 
 - No workflow-level write permission, and narrow job-level permissions. All four existing workflows do this.
 - `go-version-file: go.mod` rather than a hand-written version, because `go.mod` declares `go 1.27.4`, the toolchain D-10 pinned at 1.27.3 and moved for GO-2026-6859.
@@ -161,7 +161,7 @@ What SLSA v1 build provenance proves: the bytes were produced by a specific work
 
 ## 6. What remains unproven here
 
-- No artifact was published and no tag was cut, so section 5 has not been executed. Section 2's build, section 3's checksum verification, and the packaging loop have been executed and verified.
-- The provenance workflow design has its action pins resolved to immutable commit SHAs with SLSA v1 build provenance attestation. Adding a workflow into `.github/workflows/` is a protected path operation requiring owner merge.
+- No artifact was published and no tag was cut, so nothing in sections 4 and 5 has been executed. Section 2's build and section 3's checksum verification are the parts that were run, and their results are quoted above with the date.
+- The release workflow is merged but unexecuted. Every action is pinned, but no tag has been pushed through it, so its first real run is the `v0.2.0` tag itself.
 - The three non-Linux platforms are compiled and unexecuted until 4.4 lands.
 - `Packaging` and `Signed-Releases` stay at -1, and G6 stays unchecked, and both are correct readings of a repository that has released nothing. Writing the runbook does not move either number, and this branch claims neither.

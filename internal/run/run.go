@@ -97,6 +97,12 @@ func Run(ctx context.Context, job Job) (model.Report, error) {
 	if err != nil {
 		return model.Report{}, fmt.Errorf("run: %w", err)
 	}
+	// A wrong-network observe reads nothing and so never looks at the context.
+	// Checking here keeps a context that ended during an earlier stage from
+	// carrying the run on into identity and rule evaluation.
+	if err := ctx.Err(); err != nil {
+		return model.Report{}, fmt.Errorf("run: %w", err)
+	}
 	identities, err := identify(ctx, job, observations, mismatch)
 	if err != nil {
 		return model.Report{}, fmt.Errorf("run: %w", err)
@@ -148,6 +154,11 @@ func Run(ctx context.Context, job Job) (model.Report, error) {
 	result.ExitCode = report.Exit(result, job.FailOn)
 	if panicked {
 		result.ExitCode = model.ExitSource
+	}
+	// A run whose context ended has no trustworthy report, even when every stage
+	// that was running returned without an error.
+	if err := ctx.Err(); err != nil {
+		return model.Report{}, fmt.Errorf("run: %w", err)
 	}
 	return result, nil
 }
@@ -241,16 +252,28 @@ func fetchAll(ctx context.Context, src source.Source, endpoint string, accounts 
 		})
 	}
 
+	// Slots are taken here, in policy order, rather than inside each worker, so the
+	// scheduler cannot start a later account ahead of an earlier one. The context is
+	// checked after a slot is won because a worker that failed cancels before it
+	// releases its slot: an account that acquires a freed slot after the first
+	// failure sees the cancellation and is never read.
 	for i := range accounts {
+		acquired := false
+		select {
+		case sem <- struct{}{}:
+			acquired = true
+		case <-fetchCtx.Done():
+		}
+		if err := fetchCtx.Err(); err != nil {
+			if acquired {
+				<-sem
+			}
+			fail(err)
+			break
+		}
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			select {
-			case sem <- struct{}{}:
-			case <-fetchCtx.Done():
-				fail(fetchCtx.Err())
-				return
-			}
 			defer func() { <-sem }()
 			snapshot, err := src.Account(fetchCtx, accounts[i].ID)
 			if errors.Is(err, source.ErrNotFound) {

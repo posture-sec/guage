@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Draft v0.1 (includes a red-team pass, section 15) |
+| Status | Draft v0.2 (includes a red-team pass, section 15) |
 | Date | 2026-10-28 |
 | Owner | Ademola |
 | Name | Gauge. Binary `stellar-gauge`. Scaffold repository `posture-sec/guage`, Apache-2.0. |
@@ -130,7 +130,7 @@ Priority: **P0** ships in v0.1.0, **P1** in v0.2.0, **Later** is backlog. Task I
 | FR-21 | Claimable balances, liquidity pool and sponsorship analysis | Later | |
 | FR-22 | Alert integrations (chat, email) | Later, probably never | Use JSON output and CI instead |
 
-### 6.1 Rule catalog (v0.1)
+### 6.1 Rule catalog (v0.2)
 
 Severities shown are defaults; a role raises a finding to the value its Appendix A row names and never lowers one, which is how the table reads since task 3.4 landed on 2026-11-04. The `sig-single-key-high` row above once omitted `distribution`, whose Appendix A row says WARN; the omission was a typo in this table rather than a third reading of the role.
 
