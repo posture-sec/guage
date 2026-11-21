@@ -79,7 +79,7 @@ Verified from the protocol implementation by task 0.7 on 2026-11-04, at stellar-
 - Unused signatures are an error, not a spare: `txBAD_AUTH_EXTRA`.
 - An unreachable or out-of-order tier is a legal stored state, because `SetOptions` validates ranges and nothing else. That is what `sig-threshold-unreachable` and `sig-threshold-order` are for.
 
-## 8. Rules (v0.1) [9]
+## 8. Rules (v0.2)
 
 `acct-missing`, `acct-network-mismatch`, `sig-no-signing-weight`, `sig-threshold-unreachable`, `sig-threshold-order`, `sig-single-key-high`, `sig-hashx`, `sig-unexpected-signer`, `sig-missing-expected`, `sig-weight-drift`, `thr-drift`, `flag-drift`, `flag-undeclared-clawback`, `id-no-home-domain`, `id-toml-unreachable`, `id-toml-account-unlisted`.
 

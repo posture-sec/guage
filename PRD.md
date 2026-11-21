@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Draft v0.1 (includes a red-team pass, section 15) |
+| Status | Draft v0.2 (includes a red-team pass, section 15) |
 | Date | 2026-10-28 |
 | Owner | Ademola |
 | Name | Gauge. Binary `stellar-gauge`. Scaffold repository `posture-sec/guage`, Apache-2.0. |
@@ -113,7 +113,7 @@ Priority: **P0** ships in v0.1.0, **P1** in v0.2.0, **Later** is backlog. Task I
 | FR-04 | Exact threshold math as a pure, exhaustively tested function (reachability, minimum signers) | P0 | Matches the semantics task 0.7 verified from the protocol implementation, with table tests and a randomized brute-force cross-check; the observed-account half is still open, because the fixtures 3.6 shipped on 2026-11-05 for these shapes are built here and labelled as built, which proves the math against a decoded response and not against an account the chain served (amended 2026-11-05, the same reason 0.7's method changed: the criterion read "fixtures captured from real accounts and testnet experiments (task 0.7)", and 0.7 closed by reading the code that decides those rules) |
 | FR-05 | Signer, flag, account and network rules (6.2) | P0 | Each rule has a positive and a negative fixture |
 | FR-06 | Role profiles: `issuer`, `treasury`, `distribution`, `merchant`, `other` change severities (Appendix A) | P0 | Same account yields different severity per role |
-| FR-07 | Accepted risks: `[[accept]]` entries with `rule`, `account`, `reason`, optional `expires` | P0 | Accepting never hides a non-acceptable rule |
+| FR-07 | Accepted risks: `[[accept]]` entries with `rule`, `account`, `reason`, optional `network` and `expires` | P0 | Accepting never hides a non-acceptable rule |
 | FR-08 | Reject secret seeds in any input; never echo them | P0 | A valid `S...` string exits 2 with a rotate-the-key warning |
 | FR-09 | Outputs: text and JSON; sanitized strings | P0 | Control and bidi characters are stripped from all chain-derived text |
 | FR-10 | Exit codes: 0 pass, 1 findings at or above `fail_on`, 2 config or usage error, 3 source or internal error | P0 | Unreachable endpoint is exit 3, never 0 |
@@ -130,7 +130,7 @@ Priority: **P0** ships in v0.1.0, **P1** in v0.2.0, **Later** is backlog. Task I
 | FR-21 | Claimable balances, liquidity pool and sponsorship analysis | Later | |
 | FR-22 | Alert integrations (chat, email) | Later, probably never | Use JSON output and CI instead |
 
-### 6.1 Rule catalog (v0.1)
+### 6.1 Rule catalog (v0.2)
 
 Severities shown are defaults; a role raises a finding to the value its Appendix A row names and never lowers one, which is how the table reads since task 3.4 landed on 2026-11-04. The `sig-single-key-high` row above once omitted `distribution`, whose Appendix A row says WARN; the omission was a typo in this table rather than a third reading of the role.
 
@@ -196,6 +196,7 @@ home_domain = "example.com"
 [[accept]]
 rule    = "flag-undeclared-clawback"
 account = "G..."
+network = "mainnet"                      # optional; empty covers every network
 reason  = "Regulated asset; clawback disclosed in terms"
 expires = "2027-04-27"                   # optional
 ```

@@ -65,7 +65,7 @@ var (
 	ErrHomeDomain       = &Error{Kind: kindHomeDomain, Message: "home_domain must be a bare host name, not a URL or an IP address"}
 	ErrAccept           = &Error{Kind: kindAccept, Message: "each accept entry needs a rule, a G account and a reason, and an optional YYYY-MM-DD expiry"}
 	ErrAcceptRule       = &Error{Kind: kindAcceptRule, Message: "the accept rule must be a concrete rule ID that may be accepted"}
-	ErrDuplicateAccept  = &Error{Kind: kindDuplicateAccept, Message: "the same rule is accepted twice for one account"}
+	ErrDuplicateAccept  = &Error{Kind: kindDuplicateAccept, Message: "the same rule and network are accepted twice for one account"}
 	ErrSecretSeed       = &Error{Kind: kindSecretSeed, Message: "a secret seed is present in the policy; remove it and rotate the key"}
 )
 

@@ -108,6 +108,7 @@ expect_locked = false
 # [[accept]]
 # rule = "flag-drift"
 # account = "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+# network = "mainnet"
 # reason = "Observed change is scheduled for the November rotation."
 # expires = "2027-04-27"</pre>
           </div>
@@ -177,7 +178,7 @@ expect_locked = false
 
         <section class="section">
           <h2>Accepting a known risk</h2>
-          <p>An acceptance marks one finding as known without hiding it. The report keeps the finding, labels it accepted, and leaves it out of the exit-code decision. Matching is on rule and account, and a role's severity is applied before the match, so giving an account a role never un-accepts a risk you had already recorded.</p>
+          <p>An acceptance marks one finding as known without hiding it. The report keeps the finding, labels it accepted, and leaves it out of the exit-code decision. Matching is on rule and account, plus the network when the entry names one, and a role's severity is applied before the match, so giving an account a role never un-accepts a risk you had already recorded.</p>
           <div class="table-wrap">
             <table>
               <thead>
@@ -185,7 +186,8 @@ expect_locked = false
               </thead>
               <tbody>
                 <tr><td>rule</td><td>A concrete rule ID. Wildcards, a leading or trailing hyphen and the three structural rules below are refused. An ID that is well formed but names no shipped rule loads and matches nothing, which the paragraph after the three chips spells out.</td></tr>
-                <tr><td>account</td><td>The G address the finding belongs to. The match is rule plus account, so one entry covers one finding type for one account.</td></tr>
+                <tr><td>account</td><td>The G address the finding belongs to. The match is rule plus account plus the network when one is named, so one entry covers one finding type for one account.</td></tr>
+                <tr><td>network</td><td>Optional. <code>mainnet</code>, <code>testnet</code> or a full passphrase. Omitted or empty covers any network; a named value pins the entry to the network the run verified, so one account can hold a testnet acceptance and a mainnet acceptance of the same rule without either one covering the other.</td></tr>
                 <tr><td>reason</td><td>Required and non-empty. It is stored in the policy, not printed in the report footer.</td></tr>
                 <tr><td>expires</td><td>Optional <code>YYYY-MM-DD</code>. The date is inclusive and evaluated in UTC, so an entry expires at the start of the following day.</td></tr>
               </tbody>
