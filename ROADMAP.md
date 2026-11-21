@@ -1,6 +1,6 @@
 # ROADMAP: Gauge
 
-Last updated: 2026-11-21T13:28Z (task 5.1: multi-endpoint comparison with src-disagreement)
+Last updated: 2026-11-21T13:33Z (sync README metrics: 336 tests, 17 rules)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
@@ -338,6 +338,7 @@ Newest first. One row per merged change.
 
 | Date (UTC) | Change | Tasks |
 |---|---|---|
+| 2026-11-21 | Refresh README metrics row and Shields.io badges to 336 passing tests and 17 rules via `scripts/sync_readme.py`. | none ticked |
 | 2026-11-21 | Task 5.1 (close #267): multi-endpoint comparison. `check --endpoint` repeats up to five times and `audit` reads every `endpoints` entry; every account is read from each endpoint and compared with the first by `source.Compare`, and a difference is one HIGH, non-acceptable `src-disagreement` per disagreeing endpoint, naming fields only. | 5.1 |
 | 2026-11-21 | Tasks 7.65 to 7.67 (close #259, close #139, close #140, close #141): enforce load-time config boundaries in `internal/policy` (reject path and out-of-range port in endpoint validation, keep TOML parser line and column in syntax error, and reject empty policy with no accounts). | 7.65, 7.66, 7.67 |
 | 2026-11-21 | Task 1.15 (close #244): refreshed Drips Wave submission packet inside Wave 11 with live sources, backlog recount, and sibling audits (`docs/WAVE_SUBMISSION.md`). | 1.15 |
