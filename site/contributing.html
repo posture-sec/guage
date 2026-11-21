@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contributing · Gauge docs</title>
+  <meta name="description" content="How to contribute to Gauge: read order, roadmap rule, branch and commit conventions, the checks a pull request runs, protected paths and what needs owner approval.">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Contributing · Gauge docs">
+  <meta property="og:description" content="One task per pull request, a failing test first, and ROADMAP.md updated in the same change.">
+  <meta property="og:url" content="https://posture-sec.github.io/guage/contributing.html">
+  <meta property="og:image" content="https://posture-sec.github.io/guage/assets/og.png">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#080b10">
+  <script>
+    // Choose the theme before first paint so neither mode flashes the other.
+    (() => {
+      let stored = null;
+      try { stored = localStorage.getItem("gauge-theme"); } catch {}
+      const light = stored ? stored === "light" : matchMedia("(prefers-color-scheme: light)").matches;
+      document.documentElement.dataset.theme = light ? "light" : "dark";
+      document.documentElement.dataset.themeReady = "";
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/site.css">
+  <link rel="stylesheet" href="assets/motion.css">
+  <script src="assets/site.js" defer></script>
+  <script src="assets/motion.js" defer></script>
+</head>
+<body data-page="contributing">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="site">
+    <header class="topbar">
+      <a class="brand" href="index.html"><span class="brand-mark"></span>Gauge<span class="brand-sub">docs</span></a>
+      <div class="topbar-right">
+        <span class="status-pill">Functional alpha</span>
+        <span class="version-pill">v0.1.0-dev</span>
+        <button class="theme-toggle" type="button" aria-label="Switch to light theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5" fill="currentColor"/><path fill="none" stroke="currentColor" stroke-width="2" d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.4 4.4l2.1 2.1M17.5 17.5l2.1 2.1M19.6 4.4l-2.1 2.1M6.5 17.5l-2.1 2.1"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg>
+          <span>Light</span>
+        </button>
+        <a class="icon-link" href="https://github.com/posture-sec/guage">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.2-1.7-1.2-1.7-1-.7.1-.7.1-.7 1.1.1 1.7 1.2 1.7 1.2 1 1.7 2.6 1.2 3.2.9.1-.7.4-1.2.7-1.5-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0C17.1 4.2 18.1 4.5 18.1 4.5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </header>
+
+    <aside class="sidebar">
+      <p class="side-label">Documentation</p>
+      <nav class="side-nav" aria-label="Documentation">
+        <a href="index.html">Overview <span>start</span></a>
+        <a href="mechanics.html">Mechanics <span>how</span></a>
+        <a href="rules.html">Rules <span>16</span></a>
+        <a href="policy.html">Policy <span>toml</span></a>
+        <a href="guides.html">Guides <span>run</span></a>
+        <a href="developers.html">Developers <span>code</span></a>
+        <a href="contributing.html" aria-current="page">Contributing <span>pr</span></a>
+        <a href="status.html">Status <span>now</span></a>
+      </nav>
+      <div class="side-meta">
+        <p>Docs updated 2026-11-18<br>Gauge 0.1.0-dev</p>
+        <a href="https://github.com/posture-sec/guage">Repository</a>
+        <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
+        <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
+      </div>
+    </aside>
+
+    <main class="main" id="main">
+      <div class="content">
+        <p class="eyebrow">Contributing</p>
+        <h1>Start from the roadmap, not from an idea.</h1>
+        <p class="lede">Gauge is a read-only audit tool, so the bar for a change is that it cannot produce a false pass. Every change starts from a task in <code>ROADMAP.md</code>, arrives as one pull request with a failing test first, and updates <code>ROADMAP.md</code> in the same change.</p>
+
+        <section class="section">
+          <h2>Read before you write</h2>
+          <ol class="status-list">
+            <li><b>The roadmap</b><span><code>ROADMAP.md</code> section 4 for the current focus, then the task you are taking. It is the work queue and the source of truth when an issue and its row disagree.</span></li>
+            <li><b>The hard rules</b><span><code>ARCHITECTURE_ESSENTIALS.md</code> in full. Section 2 is not negotiable and section 12 of <code>AGENTS.md</code> lists the paths that need extra care.</span></li>
+            <li><b>The file map</b><span><code>project_structure.md</code>: where a file goes, which way imports point and what is protected.</span></li>
+            <li><b>The detail you need</b><span><code>ARCHITECTURE.md</code> only for the section an essentials item cites, and <code>PRD.md</code> when scope is unclear.</span></li>
+          </ol>
+        </section>
+
+        <section class="section">
+          <h2>Pick a task and check its dependencies</h2>
+          <p>Dependencies are written on the task line as <code>Deps:</code>, and a task whose dependency is open is not ready. Say so on the issue rather than working around it: a green pull request for a task whose prerequisite is missing describes an order that did not happen.</p>
+          <p>If no task covers the work, add one first with the next free ID in its phase and say why. Task IDs are stable: never renumber and never reuse. The issue backlog is generated from the roadmap, so an added task needs its row in <code>scripts/generate_issues.sh</code> in the same pull request; <code>--check</code> fails when an open task has none.</p>
+        </section>
+
+        <section class="section">
+          <h2>The workflow</h2>
+          <ol class="status-list">
+            <li><b>Branch from main</b><span>One task or one tightly related group per branch. Never commit to <code>main</code>; it is protected by a ruleset that requires a pull request and passing checks.</span></li>
+            <li><b>Write the failing test first</b><span>Run it and watch it fail for the right reason. A test that fails for the wrong reason proves nothing.</span></li>
+            <li><b>Implement the smallest change</b><span>No unrequested features, no drive-by refactors, no dependency updates bundled in.</span></li>
+            <li><b>Run the checks locally</b><span>The full list is below. Paste the real output in the pull request.</span></li>
+            <li><b>Update the docs the change touches</b><span><code>project_structure.md</code> when a file is added, moved or removed; <code>PRD.md</code> and the architecture documents when behavior changes.</span></li>
+            <li><b>Update the roadmap</b><span>Task boxes, a changelog row with the UTC date, the progress table and <code>Last updated</code>.</span></li>
+            <li><b>Open one pull request</b><span>Use the template. List the task IDs, the commands you ran and their results, the docs you changed, and confirm the roadmap update.</span></li>
+            <li><b>Wait for review</b><span>Do not merge your own pull request and do not auto-merge. Never force-push a shared branch.</span></li>
+          </ol>
+        </section>
+
+        <section class="section">
+          <h2>Branches and commits</h2>
+          <p>Branch names follow the change's type and its task ID, in the form the repository already uses: <code>feat/3.7-facts-report</code> for a feature, <code>docs/4.2-4.3-usage-and-readme</code> for documentation, and a <code>ci/</code> or <code>chore/</code> prefix where that is the honest label. Commits are Conventional Commits with a subject under 72 characters: <code>feat:</code>, <code>fix:</code>, <code>docs:</code>, <code>test:</code>, <code>ci:</code>, <code>chore:</code>.</p>
+          <p>Write the subject about why the change exists, not only what moved. Do not put an em dash in a subject, a document or a comment.</p>
+        </section>
+
+        <section class="section">
+          <h2>The checks a pull request runs</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Command</th><th>What it proves</th><th>CI job</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>gofmt -l .</code></td><td>Formats; it must print nothing.</td><td><code>ci / go</code></td></tr>
+                <tr><td><code>go vet ./...</code></td><td>Checks the compiler does not.</td><td><code>ci / go</code></td></tr>
+                <tr><td><code>go build ./...</code></td><td>Every package compiles.</td><td><code>ci / go</code></td></tr>
+                <tr><td><code>go test ./... -race -count=1</code></td><td>The suite, with the race detector and no cached results.</td><td><code>ci / go</code></td></tr>
+                <tr><td><code>staticcheck ./...</code></td><td>Static analysis, v0.8.2 with <code>staticcheck.conf</code>.</td><td><code>ci / go</code></td></tr>
+                <tr><td><code>govulncheck ./...</code></td><td>Known vulnerabilities, v1.9.0.</td><td><code>ci / vuln</code></td></tr>
+                <tr><td><code>scripts/check_roadmap_touched.sh origin/main</code></td><td><code>ROADMAP.md</code> changed and <code>Last updated</code> moved.</td><td><code>roadmap-check / gate</code></td></tr>
+                <tr><td><code>scripts/roadmap_progress.sh --check ROADMAP.md</code></td><td>The committed progress table matches the checkboxes.</td><td><code>roadmap-check / gate</code></td></tr>
+                <tr><td><code>python3 scripts/sync_readme.py --check</code></td><td>README metrics and the badge JSON under <code>site/data/</code> are current.</td><td><code>roadmap-check / gate</code></td></tr>
+                <tr><td><code>scripts/generate_issues.sh --check</code></td><td>Every open task has a backlog row.</td><td><code>roadmap-check / gate</code></td></tr>
+                <tr><td><code>scripts/test_roadmap_gate.sh</code></td><td>The gate scripts still fail when they should.</td><td><code>roadmap-check / gate</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p><code>staticcheck</code> and <code>govulncheck</code> are not part of the Go distribution. Install the pinned versions:</p>
+          <div class="code" data-copy>
+            <div class="code-label"><span>Shell</span></div>
+            <pre>go install honnef.co/go/tools/cmd/staticcheck@v0.8.2
+go install golang.org/x/vuln/cmd/govulncheck@v1.9.0</pre>
+          </div>
+          <p class="table-caption">If a command in this list does not exist in your checkout, say so in the pull request instead of silently skipping it. Never weaken, skip or delete a check to get a green run. If a test is wrong, fix it and explain why.</p>
+        </section>
+
+        <section class="section">
+          <h2>The roadmap rule</h2>
+          <p>Every contribution updates <code>ROADMAP.md</code> in the same pull request, including documentation, CI and dependency changes. There are no exemptions, including Dependabot's grouped weekly updates. Four edits, every time:</p>
+          <ul class="flow-list">
+            <li>Tick a box only when the task's "Done when" is true. Untick or add tasks when the work moves.</li>
+            <li>Add a changelog row at the top of section 9: the UTC date from <code>date -u</code>, one line on what changed, and the task IDs.</li>
+            <li>Regenerate the progress table with <code>scripts/roadmap_progress.sh</code>. Do not edit the numbers by hand; <code>--check</code> compares them with the checkboxes.</li>
+            <li>Update the <code>Last updated</code> line at the top of the file.</li>
+          </ul>
+          <p>A completed task also gets its dated record on the task line and, where the file's own style keeps one, a paragraph in section 4. That record is where a claim gets its evidence: the command that was run, the ledger it read or the file it was read from.</p>
+        </section>
+
+        <section class="section">
+          <h2>Stop and ask the owner</h2>
+          <p><code>AGENTS.md</code> section 10 lists the cases. In short, ask before you:</p>
+          <ul class="flow-list">
+            <li>Add a Go module or any dependency. The only permitted third-party module is <code>github.com/BurntSushi/toml</code>.</li>
+            <li>Add a network call or a package that dials a socket. Only <code>internal/source</code> and <code>internal/sep1</code> do today.</li>
+            <li>Change a validator refusal, which makes a previously rejected input acceptable.</li>
+            <li>Loosen, skip or delete a check, or make one optional.</li>
+            <li>Change a file under a protected path: <code>internal/source/</code>, <code>internal/sep1/</code>, <code>internal/policy/</code>, <code>internal/strkey/</code>, <code>internal/sanitize/</code>, <code>internal/threshold/</code>, <code>go.mod</code>, <code>go.sum</code>, <code>.github/</code> and <code>scripts/</code>.</li>
+            <li>Move or bump a pinned GitHub Action without reading the SHA to SHA diff, or pin a new one without resolving the exact upstream commit.</li>
+            <li>Build on a statement marked [Unverified], or resolve two documents that disagree by picking one.</li>
+          </ul>
+          <div class="note">
+            <p><strong>A gate may gain a check, never lose one.</strong> That is the rule for <code>.github/workflows/</code> and <code>scripts/</code>, and it is why those paths need owner review even for a one-line change.</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Fixtures and goldens</h2>
+          <ul class="flow-list">
+            <li>Captured account JSON is preferred, because account data is public. Record the network, date and ledger in the sidecar <code>testdata/horizon/README.md</code>.</li>
+            <li>Where no capture can exist, a fixture is built here and labelled as built. It proves the decoder and the rules, not that the chain served the shape.</li>
+            <li>Testnet fixtures are perishable because testnet resets. They stay static files and tests never refetch them.</li>
+            <li>Hostile strings (ANSI escapes, bidi overrides, markdown) are built from fragments or written as JSON <code>\u</code> escapes, so no control byte sits in the file while the decoded value still carries one.</li>
+            <li>Golden files are regenerated only with <code>-update</code> and reviewed like code. The commands are on <a href="developers.html">the developer guide</a>.</li>
+            <li>Never commit a secret seed, even a testnet one. A test that needs a seed-shaped string builds it from fragments at runtime.</li>
+          </ul>
+        </section>
+
+        <section class="section">
+          <h2>Evidence and wording</h2>
+          <p>A factual claim names the run that produced it or says plainly that it is local. Documentation uses testnet observations only (decision D-16), so a mainnet figure is quoted from documentation and labelled as not observed. A claim marked [Unverified] stays unverified until the Phase 0 task that verifies it is done.</p>
+          <p>Output describes posture. It never calls an account secure or safe, and a clean report is not an approval. Reports carry the limits footer, and the README disclaimer is the same constant rather than a second sentence that can drift.</p>
+        </section>
+
+        <section class="section">
+          <p class="eyebrow">The boundary</p>
+          <blockquote class="limits">
+            A review is not an audit, and a passing suite is not a guarantee. Gauge ships unaudited and says so.
+            <cite>Gauge documentation</cite>
+          </blockquote>
+          <p class="lede">Contributions are judged on whether they can produce a false pass, not on how large they are. A small change with a failing test that now passes and a roadmap row that names it is worth more than a large one without either.</p>
+        </section>
+
+        <footer class="footer">
+          <p>Functional alpha, unaudited. Commands, paths and CI job names on this page were re-read against the tree and the workflow files on 2026-11-18, locally.</p>
+          <div class="footer-links">
+            <a href="developers.html">Developer guide</a>
+            <a href="https://github.com/posture-sec/guage/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a>
+            <a href="https://github.com/posture-sec/guage/blob/main/AGENTS.md">AGENTS.md</a>
+          </div>
+        </footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

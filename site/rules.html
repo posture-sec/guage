@@ -58,10 +58,12 @@
         <a href="rules.html" aria-current="page">Rules <span>16</span></a>
         <a href="policy.html">Policy <span>toml</span></a>
         <a href="guides.html">Guides <span>run</span></a>
+        <a href="developers.html">Developers <span>code</span></a>
+        <a href="contributing.html">Contributing <span>pr</span></a>
         <a href="status.html">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-05<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-18<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -196,6 +198,13 @@
                   <td>Identity</td>
                   <td>id-toml-account-unlisted</td>
                   <td>The account is not listed in its home domain's <code>stellar.toml</code>.</td>
+                  <td><span class="chip chip--warn">WARN</span></td>
+                  <td><span class="chip chip--live">Live</span></td>
+                </tr>
+                <tr>
+                  <td>Identity</td>
+                  <td>id-sep29-memo-required</td>
+                  <td>A merchant receiving account does not set the SEP-29 <code>config.memo_required</code> data entry.</td>
                   <td><span class="chip chip--warn">WARN</span></td>
                   <td><span class="chip chip--live">Live</span></td>
                 </tr>
@@ -339,6 +348,25 @@
               <dd>WARN. Exit 1 only under <code>--fail-on warn</code>.</dd>
               <dt>Role weight</dt>
               <dd>None. No Appendix A row names it and no role can raise it, so a document that reads cleanly and does not list the account is a WARN for an issuer too, which is the honest ordering: the domain said who it belongs to and this account is not on that list. The rule needs a reachable document, so under <code>check</code> it fires for any account that publishes a home domain and serves one Gauge can parse.</dd>
+            </dl>
+          </article>
+
+          <article class="rule">
+            <div class="rule-head">
+              <h3>id-sep29-memo-required</h3>
+              <span class="chip chip--warn">WARN</span>
+              <span class="chip chip--live">Live</span>
+            </div>
+            <p>An account with the <code>merchant</code> role does not have the SEP-29 <code>config.memo_required</code> account data entry set to <code>"1"</code> (base64 <code>"MQ=="</code>). SEP-29 requires sending applications to attach a memo to payments destined for merchant accounts; Gauge inspects the account's declared on-chain data posture and does not build or submit transactions.</p>
+            <dl>
+              <dt>Evidence</dt>
+              <dd><code>config.memo_required expected "MQ==", observed none</code> (or observed value)</dd>
+              <dt>Acceptable</dt>
+              <dd>Yes, with a reason and an optional expiry.</dd>
+              <dt>Exit effect</dt>
+              <dd>WARN. Exit 1 only under <code>--fail-on warn</code>.</dd>
+              <dt>Role weight</dt>
+              <dd>Applies to the <code>merchant</code> role. Other roles do not trigger this check.</dd>
             </dl>
           </article>
         </section>
@@ -527,7 +555,7 @@
 
         <section class="section">
           <h2>What is not shipped</h2>
-          <p>All sixteen rules in the table are registered and evaluated on every run, and a declared role now weights them. Every Appendix B scenario now has a fixture and a golden pair behind it, landed 2026-11-05: twelve files in <code>testdata/horizon/</code>, five captured from testnet and seven built here and labelled as built, and 38 report files in <code>testdata/golden/</code> that one test run compares in both formats, so a severity, a wording, a fingerprint or an exit code that moves shows up as a diff rather than a silent pass. The same day brought the facts report (task 3.7): a run now prints what it read before it prints what it thinks, including the minimum signatures each tier needs, which expectations a policy carried and which it left out, and what the home-domain fetch returned. What is left on this page's horizon is not the rule reference: 4.2 closed on 2026-11-05 with every article carrying its condition, evidence shape, acceptability and role weight, and the usage pages re-read against the shipped CLI. Still genuinely unwritten: a markdown report (5.3), snapshots and diffs (5.2), trustline exposure (5.5), the SEP-29 recipient check (5.6), multi-endpoint comparison (5.1) and the rest of what <code>PRD.md</code> marks P1 for v0.2.0. No release is tagged and no third party has audited any of it.</p>
+          <p>All sixteen rules in the table are registered and evaluated on every run, and a declared role now weights them. Every Appendix B scenario now has a fixture and a golden pair behind it, landed 2026-11-05: twelve files in <code>testdata/horizon/</code>, five captured from testnet and seven built here and labelled as built, and 57 report files in <code>testdata/golden/</code> (markdown joined text and JSON with task 5.3) that one test run compares in all three formats, so a severity, a wording, a fingerprint or an exit code that moves shows up as a diff rather than a silent pass. The same day brought the facts report (task 3.7): a run now prints what it read before it prints what it thinks, including the minimum signatures each tier needs, which expectations a policy carried and which it left out, and what the home-domain fetch returned. What is left on this page's horizon is not the rule reference: 4.2 closed on 2026-11-05 with every article carrying its condition, evidence shape, acceptability and role weight, and the usage pages re-read against the shipped CLI. Still genuinely unwritten: trustline exposure (5.5), the SEP-29 recipient check (5.6), multi-endpoint comparison (5.1) and the rest of what <code>PRD.md</code> marks P1 for v0.2.0. No release is tagged and no third party has audited any of it.</p>
           <div class="note">
             <p><strong>Read the status before trusting a pass.</strong> A clean result means all sixteen checks agreed with what the chain showed and with what your policy declared. It is not a statement about key custody: on-chain data cannot show who holds a key, and ten of the sixteen rules compare against a declaration, so a policy that says nothing about signers, thresholds or flags gets no answer about drift.</p>
           </div>

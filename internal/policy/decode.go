@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	"github.com/posture-sec/guage/internal/strkey"
 )
 
 // MaxConfigBytes bounds how much of a policy file is read. A policy is a small
@@ -39,12 +39,25 @@ func Load(r io.Reader) (*Config, error) {
 		return nil, ErrSyntax
 	}
 	if undecoded := md.Undecoded(); len(undecoded) > 0 {
-		return nil, withDetail(ErrUnknownKey, undecoded[0].String())
+		return nil, withDetail(ErrUnknownKey, unknownKeys(undecoded))
 	}
 	if err := cfg.validate(); err != nil {
 		return nil, err
 	}
 	return &cfg, nil
+}
+
+// unknownKeys renders every undecoded key path, sorted and joined, so one load
+// names all of an operator's misspellings rather than the first. Key.String
+// yields a dotted path and never the value assigned to it, which keeps the
+// detail within the Error contract.
+func unknownKeys(undecoded []toml.Key) string {
+	paths := make([]string, len(undecoded))
+	for i, key := range undecoded {
+		paths[i] = key.String()
+	}
+	sort.Strings(paths)
+	return strings.Join(paths, ", ")
 }
 
 // LoadFile opens path and calls Load. The file is never logged.
@@ -76,8 +89,10 @@ func parseDetail(err error) string {
 	return detail
 }
 
-// containsSeed scans the raw text for a token that is a valid S strkey, so a
-// seed is rejected even in a comment or an unknown key. The token is never
+// containsSeed scans the raw text for a 56-character base32 token beginning
+// with S or s, the shape of a secret seed. It rejects the token regardless of
+// whether the checksum validates, because a single mistyped character turns a
+// real seed into a corrupted copy that must not be echoed. The token is never
 // returned and the caller never sees it.
 func containsSeed(data []byte) bool {
 	for i := 0; i < len(data); {
@@ -90,7 +105,7 @@ func containsSeed(data []byte) bool {
 			j++
 		}
 		tok := string(data[i:j])
-		if len(tok) == 56 && (tok[0] == 'S' || tok[0] == 's') && strkey.IsSeed(strings.ToUpper(tok)) {
+		if len(tok) == 56 && (tok[0] == 'S' || tok[0] == 's') {
 			return true
 		}
 		i = j

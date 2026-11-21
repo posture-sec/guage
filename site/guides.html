@@ -58,10 +58,12 @@
         <a href="rules.html">Rules <span>16</span></a>
         <a href="policy.html">Policy <span>toml</span></a>
         <a href="guides.html" aria-current="page">Guides <span>run</span></a>
+        <a href="developers.html">Developers <span>code</span></a>
+        <a href="contributing.html">Contributing <span>pr</span></a>
         <a href="status.html">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-05<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-18<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -76,7 +78,7 @@
 
         <section class="section">
           <h2>Prerequisites</h2>
-          <p>Go 1.27.3 or newer. No credentials, no wallet, no Stellar SDK and no configuration beyond the command. Gauge reads public Horizon data over HTTPS, so a network that reaches <code>horizon-testnet.stellar.org</code> is enough for the first run.</p>
+          <p>Go 1.27.4 or newer. No credentials, no wallet, no Stellar SDK and no configuration beyond the command. Gauge reads public Horizon data over HTTPS, so a network that reaches <code>horizon-testnet.stellar.org</code> is enough for the first run.</p>
           <div class="code" data-copy>
             <div class="code-label"><span>Shell</span></div>
             <pre>git clone https://github.com/posture-sec/guage
@@ -106,7 +108,7 @@ go build -o stellar-gauge ./cmd/stellar-gauge
               <tbody>
                 <tr><td>--network</td><td>(required)</td><td><code>mainnet</code>, <code>testnet</code> or a full passphrase. There is no default and no discovery.</td></tr>
                 <tr><td>--endpoint</td><td>(required)</td><td>May be repeated by the parser, but exactly one is accepted at v0.1. Must be HTTPS, except loopback.</td></tr>
-                <tr><td>--format</td><td>text</td><td><code>text</code> or <code>json</code>. Any other value exits 2.</td></tr>
+                <tr><td>--format</td><td>text</td><td><code>text</code>, <code>json</code> or <code>markdown</code>. Any other value exits 2.</td></tr>
                 <tr><td>--fail-on</td><td>high</td><td><code>high</code> or <code>warn</code>. Sets the severity at which a finding produces exit 1.</td></tr>
               </tbody>
             </table>
@@ -129,7 +131,7 @@ go build -o stellar-gauge ./cmd/stellar-gauge
               </thead>
               <tbody>
                 <tr><td>--config</td><td>gauge.toml</td><td>Path to the policy. A missing or rejected file exits 2 before any request.</td></tr>
-                <tr><td>--format</td><td>text</td><td><code>text</code> or <code>json</code>. <code>markdown</code> is refused with "not implemented yet".</td></tr>
+                <tr><td>--format</td><td>text</td><td><code>text</code>, <code>json</code> or <code>markdown</code>. Any other value exits 2.</td></tr>
                 <tr><td>--fail-on</td><td>high</td><td><code>high</code> or <code>warn</code>.</td></tr>
               </tbody>
             </table>
@@ -188,7 +190,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
         with:
-          go-version: "1.27.3"
+          go-version: "1.27.4"
       - run: go build -o stellar-gauge ./cmd/stellar-gauge
       - name: Audit the declared accounts
         run: ./stellar-gauge audit --config gauge.toml --format json &gt; report.json
@@ -200,6 +202,12 @@ jobs:
           </div>
           <p class="table-caption">Start on testnet. Moving to mainnet changes <code>network</code> and <code>endpoints</code> in the policy, and nothing in the job. The repository pins its own actions by commit SHA; consumer workflows can use release tags.</p>
           <p>For a merge gate, run the audit on the pull request and leave the policy file under review like any other code. An acceptance that changes a red job to green should arrive as a visible policy diff with a reason, not as a CI variable.</p>
+        </section>
+
+        <section class="section">
+          <h2>Markdown output</h2>
+          <p><code>--format markdown</code> prints the same facts, findings, exit code and limits footer as the text report, as GitHub-flavoured markdown for a step summary or an issue body, for example <code>./stellar-gauge audit --config gauge.toml --format markdown &gt;&gt; "$GITHUB_STEP_SUMMARY"</code>. The exit code does not change with the format.</p>
+          <p>Every string that comes from the chain, a <code>stellar.toml</code> or the policy file is escaped and printed after a label, so a link, an image or a tag in an account label shows up as the characters it is made of and cannot start a list or a heading. Finding evidence sits in a code fence longer than any run of backticks inside it, so it cannot close its own block. One thing escaping does not change: a bare URL is still a URL, and GitHub may render it as a link whose visible text is the URL itself.</p>
         </section>
 
         <section class="section">
@@ -222,6 +230,31 @@ jobs:
         </section>
 
         <section class="section">
+          <h2>snapshot and diff: baseline tracking</h2>
+          <p><code>snapshot</code> records the current state of accounts declared in a policy file into a baseline JSON file, with schema version 1 and the review banner: <em>"A baseline is a record of state, not an approval of it. Review every threshold and signer before adopting this baseline."</em> <code>diff</code> compares live chain observations against that saved baseline and reports added or removed signers, weight changes, threshold shifts, flag drift and domain changes.</p>
+          <div class="code" data-copy>
+            <div class="code-label"><span>Shell</span></div>
+            <pre>./stellar-gauge snapshot --config gauge.toml --out /secure/baselines/gauge-baseline.json
+./stellar-gauge diff --config gauge.toml --baseline /secure/baselines/gauge-baseline.json
+./stellar-gauge diff --config gauge.toml --baseline /secure/baselines/gauge-baseline.json --format markdown</pre>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Flag</th><th>Command</th><th>Notes</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>--out</td><td>snapshot</td><td>(required) Path to write the baseline JSON file. This is the only file write Gauge performs.</td></tr>
+                <tr><td>--baseline</td><td>diff</td><td>(required) Path to read the saved baseline file. Exits 2 if missing or invalid.</td></tr>
+                <tr><td>--config</td><td>both</td><td>Path to the policy file (default: <code>gauge.toml</code>).</td></tr>
+                <tr><td>--format</td><td>diff</td><td><code>text</code> (default), <code>json</code> or <code>markdown</code>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-caption"><strong>Security guidance: Store baselines outside the audited repository.</strong> Keeping baseline files inside the same repository as the audited code allows an attacker who compromises the repository or PR workflow to simultaneously modify both <code>gauge.toml</code> and the baseline file, hiding malicious changes (threat GB1). Store baselines in a separate restricted repository, private cloud storage (e.g. S3/GCS with strict IAM), or an offline vault.</p>
+        </section>
+
+        <section class="section">
           <h2>Advice by account role</h2>
           <dl class="ledger">
             <div class="ledger-row">
@@ -239,6 +272,10 @@ jobs:
             <div class="ledger-row">
               <dt>Merchant</dt>
               <dd><strong>Use <code>check</code> for a quick read and a policy once the set of accounts is stable.</strong> A merchant account is usually the simplest to describe, so drift stands out. Be clear about what the merchant role does not buy yet: its weighting is the distribution row, and the check a receiving account actually asks for is SEP-29, task 5.6, still unshipped. That is the <code>config.memo_required</code> data entry, the one a sending client reads before it will pay you without a memo, and Gauge reports no account data today. A merchant report answers who controls the account and at what weight, not whether the payments it expects to receive will arrive attributable.</dd>
+            </div>
+            <div class="ledger-row">
+              <dt>Other</dt>
+              <dd><strong>Declare the role you actually have, even when it is <code>other</code>.</strong> <code>check</code> runs at this row, so single-key control is INFO and every drift rule stays at its baseline severity. Writing <code>role = "other"</code> in a policy still buys the comparison half: an undeclared signer, a declared key the chain no longer shows, a weight or threshold that moved and a declared flag that drifted all become findings at the baseline severity. What this row does not do is raise anything, which is the honest reading for an account whose purpose the policy does not state.</dd>
             </div>
           </dl>
           <p class="table-caption">These are authoring recommendations, not severity profiles. The profiles themselves are <code>PRD.md</code> Appendix A, applied since task 3.4: a declared role raises a finding to the severity its row names and never lowers one. Only seven rules appear in a row at all, so a role moves <code>sig-single-key-high</code>, <code>flag-drift</code>, <code>flag-undeclared-clawback</code>, <code>sig-weight-drift</code> and <code>thr-drift</code> above the severity <code>check</code> prints, names <code>sig-unexpected-signer</code> and <code>sig-missing-expected</code> at the HIGH they already emit, and leaves the other nine exactly where the baseline puts them. The weights are on the <a href="rules.html">rules page</a>.</p>
@@ -259,7 +296,7 @@ scripts/roadmap_progress.sh --check ROADMAP.md
 scripts/generate_issues.sh --check</pre>
           </div>
           <p class="small muted">Install the pinned tools with <code>go install honnef.co/go/tools/cmd/staticcheck@v0.8.2</code> and <code>go install golang.org/x/vuln/cmd/govulncheck@v1.9.0</code>. The fuzz targets run one at a time, because <code>-fuzz</code> refuses multiple packages: <code>go test ./internal/strkey -run '^$' -fuzz=FuzzClassify -fuzztime=10s</code>, then the same against <code>FuzzText</code> and <code>FuzzFenced</code> in <code>internal/sanitize</code>. They are smoke runs a contributor makes locally, not CI jobs.</p>
-          <p>Adding a rule means a new pure function in <code>internal/rules</code>, a registration entry, a positive and a negative fixture, updated golden files, and matching updates to <code>PRD.md</code> 6.1 and <code>ARCHITECTURE_ESSENTIALS.md</code> 8. The roadmap rule applies to every change, including documentation: <code>ROADMAP.md</code> is updated in the same pull request.</p>
+          <p>Adding a rule means a new pure function in <code>internal/rules</code>, a registration entry, a positive and a negative fixture, updated golden files, and matching updates to <code>PRD.md</code> 6.1 and <code>ARCHITECTURE_ESSENTIALS.md</code> 8. The roadmap rule applies to every change, including documentation: <code>ROADMAP.md</code> is updated in the same pull request. The package map, test commands and golden regeneration steps are on <a href="developers.html">the developer guide</a>, and the branch, review and protected-path rules are on <a href="contributing.html">the contributing guide</a>.</p>
         </section>
 
         <section class="section">

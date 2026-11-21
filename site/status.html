@@ -58,10 +58,12 @@
         <a href="rules.html">Rules <span>16</span></a>
         <a href="policy.html">Policy <span>toml</span></a>
         <a href="guides.html">Guides <span>run</span></a>
+        <a href="developers.html">Developers <span>code</span></a>
+        <a href="contributing.html">Contributing <span>pr</span></a>
         <a href="status.html" aria-current="page">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-05<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-18<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -95,7 +97,7 @@
                 <tr><td>role severities</td><td><span class="chip chip--live">Shipped</span></td><td>A declared role raises a finding to the severity Appendix A names and never lowers one. Task 3.4.</td></tr>
                 <tr><td>SEP-1 identity checks</td><td><span class="chip chip--live">Shipped</span></td><td>The home domain an account publishes is fetched through a dial-time address guard, and an identity Gauge could not verify is a warning rather than a pass. Read twice against a live domain, on 2026-11-03 and again on 2026-11-05; the address classes it refuses are proven by tests, not by runs.</td></tr>
                 <tr><td>tagged release</td><td><span class="chip chip--warn">None</span></td><td>No version is tagged and no artifact is signed. Build from source.</td></tr>
-                <tr><td>this documentation site</td><td><span class="chip chip--live">Live</span></td><td>Static pages deployed from the repository by GitHub Actions. Task 5.9.</td></tr>
+                <tr><td>this documentation site</td><td><span class="chip chip--live">Live</span></td><td>Eight pages plus a 404, deployed from the repository by GitHub Actions. Tasks 5.9, 5.10, 5.11 and 5.8: overview, mechanics, rules, policy, guides, developers, contributing and status.</td></tr>
               </tbody>
             </table>
           </div>
@@ -209,14 +211,14 @@
           <h2>Roadmap position</h2>
           <div class="rail">
             <div class="rail-item">
-              <span class="rail-code">70%</span>
+              <span class="rail-code">84%</span>
               <span class="rail-label">Readiness</span>
-              <p class="rail-copy">55 of 78 tasks across Phases 0 to 6 are done.</p>
+              <p class="rail-copy">67 of 79 tasks across Phases 0 to 6 are done.</p>
             </div>
             <div class="rail-item">
-              <span class="rail-code">3/10</span>
+              <span class="rail-code">8/10</span>
               <span class="rail-label">Gates</span>
-              <p class="rail-copy">G1, a passing test for every P0 requirement, G2, every Appendix B scenario with a fixture and a golden report, and G3, fail-closed tests, are green. The rest are open.</p>
+              <p class="rail-copy">G1, G2, G3, G4, G7, G8, G9, and G10 are green. G5 and G6 are open.</p>
             </div>
             <div class="rail-item">
               <span class="rail-code">16/16</span>
@@ -229,7 +231,7 @@
               <p class="rail-copy">No tag, no signed artifact, no attestation yet.</p>
             </div>
           </div>
-          <p>Phase 3 is 7 of 7 as of 2026-11-05. Task 3.1 registered the nine signer and threshold rules on 2026-11-04, on top of the threshold math 2.3 built from the semantics 0.7 closed by reading the protocol code that enforces them, so a run now reports an unreachable tier, an account with no standing signing weight and a signer your policy did not declare. Task 3.4 landed behind it the same day and weights each of those findings by the account's declared role, which is the report an issuer, a treasury and a merchant each get. Task 3.6 landed on 2026-11-05 and closes gate G2: every Appendix B scenario has a fixture and a golden text and JSON report behind it, seven of the twelve fixtures built here and labelled as built rather than captured, so a severity, an evidence wording, a fingerprint or an exit code that moves fails a test instead of changing what an operator reads. Task 3.7 landed the same day and is the last one in the phase: a run prints the facts it read before it prints any judgement, so the report names the minimum number of signatures each tier needs, which expectations the policy carried and which it left out, and what the home-domain fetch returned, including a document it could not read. A fact line is not a finding and cannot fail a run, which is why an unreachable <code>stellar.toml</code> prints as a fact and its warning separately. That covers the last P0 requirement gate G1 was waiting on, so every requirement in <code>PRD.md</code> FR-01 to FR-13 now has a passing test. Phase 4 is 2 of 9: the usage docs (4.2) and the README (4.3) landed on 2026-11-05, which is every documentation task in the phase, so what v0.1.0 now waits on is the rest of it, dogfood on real operator accounts, a CI matrix that builds on macOS and Windows, the release artifacts and a Scorecard score this repository cannot reach alone. The guarded SEP-1 fetcher and its three identity rules landed on 2026-11-03. <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Read the full roadmap</a>.</p>
+          <p>Phase 3 is 7 of 7 as of 2026-11-05. Task 3.1 registered the nine signer and threshold rules on 2026-11-04, on top of the threshold math 2.3 built from the semantics 0.7 closed by reading the protocol code that enforces them, so a run now reports an unreachable tier, an account with no standing signing weight and a signer your policy did not declare. Task 3.4 landed behind it the same day and weights each of those findings by the account's declared role, which is the report an issuer, a treasury and a merchant each get. Task 3.6 landed on 2026-11-05 and closes gate G2: every Appendix B scenario has a fixture and a golden text and JSON report behind it, seven of the twelve fixtures built here and labelled as built rather than captured, so a severity, an evidence wording, a fingerprint or an exit code that moves fails a test instead of changing what an operator reads. Task 3.7 landed the same day and is the last one in the phase: a run prints the facts it read before it prints any judgement, so the report names the minimum number of signatures each tier needs, which expectations the policy carried and which it left out, and what the home-domain fetch returned, including a document it could not read. A fact line is not a finding and cannot fail a run, which is why an unreachable <code>stellar.toml</code> prints as a fact and its warning separately. That covers the last P0 requirement gate G1 was waiting on, so every requirement in <code>PRD.md</code> FR-01 to FR-13 now has a passing test. Phase 4 is 2 of 9: the usage docs (4.2) and the README (4.3) landed on 2026-11-05, which is every documentation task in the phase, so what v0.1.0 now waits on is the rest of it, dogfood on real operator accounts, a CI matrix that builds on macOS and Windows, the release artifacts and a Scorecard score this repository cannot reach alone. The guarded SEP-1 fetcher and its three identity rules landed on 2026-11-03. Phase 5 is 9 of 11: documentation site v1 (5.9), ink-and-paper theme audit (5.10), motion layer (5.11), snapshots and diffs (5.2), markdown reports (5.3), trustline facts (5.5), SEP-29 merchant memo check (5.6), performance tests (5.7) and complete documentation site (5.8) are shipped. Gate G7 closed on 2026-11-21 after an audit brought every document and site page into agreement with the code. <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Read the full roadmap</a>.</p>
         </section>
 
         <section class="section">

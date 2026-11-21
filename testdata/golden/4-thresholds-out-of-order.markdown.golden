@@ -1,0 +1,57 @@
+# Gauge posture report
+
+- tool: Gauge test
+- network: Test SDF Network ; September 2015
+- ledger: 5466897
+
+## Account GAGCZPLXXENDIGTXUJC4MG7N3NVW5TA37PFEBDQK64KREAGD2HM2LD6C
+
+- endpoint: https://horizon-testnet.stellar.org
+- as of ledger 5466903, sequence 23472095056887812
+- thresholds: low 5, medium 1, high 2
+- minimum signers to authorize: low 2, medium 1, high 1
+- flags: auth\_required=false auth\_revocable=false auth\_immutable=false clawback=false
+- home domain: (none)
+- sponsor: (none)
+
+### Signers (2)
+
+| key | type | weight | sponsor |
+| --- | --- | ---: | --- |
+| GAGCZPLXXENDIGTXUJC4MG7N3NVW5TA37PFEBDQK64KREAGD2HM2LD6C | ed25519 | 3 | (none) |
+| GARN755D6RAGHRXKGREQGMEQLHCO7TXTZMNXDGG6HUW5SQVRCKFSE3RA | ed25519 | 3 | (none) |
+
+### Declared
+
+Nothing: this run read no policy file, so only the universal rules ran.
+
+### Findings: 2 (0 accepted)
+
+#### \[warn\] sig-threshold-order
+
+- message: the thresholds are out of the recommended order, so a lower tier can demand more than a higher one
+- fingerprint: f5b940cffdf03517c6708f75e55a115b609c84b861718a0dd69a3c82f115b669
+
+Evidence:
+
+```
+low 5, medium 1, high 2
+```
+
+#### \[info\] sig-single-key-high
+
+- message: one signer alone reaches the high threshold, so a single key holds the account
+- fingerprint: 61dc896e8611a51a524e70d35d546ca5640f0fced47794f9922ed0d4591f5122
+
+Evidence:
+
+```
+GAGCZP...LD6C ed25519 at weight 3 reaches 2; GARN75...E3RA ed25519 at weight 3 reaches 2
+```
+
+## Result
+
+- findings: 2 (0 high, 1 warn, 1 info), 0 accepted
+- exit code: 1
+
+**Limits.** Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised.

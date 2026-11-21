@@ -1,6 +1,8 @@
 package rules
 
 import (
+	"sort"
+
 	"github.com/posture-sec/guage/internal/model"
 	"github.com/posture-sec/guage/internal/policy"
 	"github.com/posture-sec/guage/internal/sep1"
@@ -34,8 +36,47 @@ func Facts(c Context) model.AccountFacts {
 	// three zeros.
 	if !c.Missing && !c.Mismatch {
 		facts.Reachability = reachability(c.Snapshot)
+		facts.Trustlines = trustlines(c.Snapshot.Balances, c.Issuers)
 	}
 	return facts
+}
+
+func trustlines(balances []model.Balance, issuers map[string]IssuerObservation) []model.TrustlineFact {
+	var list []model.TrustlineFact
+	for _, b := range balances {
+		if b.AssetCode == "" {
+			continue // native balance
+		}
+		fact := model.TrustlineFact{
+			AssetCode:   b.AssetCode,
+			AssetIssuer: b.AssetIssuer,
+			Authorized:  b.IsAuthorized,
+			Clawback:    b.ClawbackEnabled,
+		}
+		if obs, ok := issuers[b.AssetIssuer]; ok {
+			if obs.Flags != nil {
+				f := *obs.Flags
+				fact.IssuerFlags = &f
+			} else if obs.NotFound {
+				fact.IssuerStatus = "not found"
+			} else if obs.Failed {
+				fact.IssuerStatus = "fetch failed"
+			}
+		} else if len(issuers) > 0 {
+			fact.IssuerStatus = "unfetched"
+		}
+		list = append(list, fact)
+	}
+	if len(list) == 0 {
+		return nil
+	}
+	sort.SliceStable(list, func(i, j int) bool {
+		if list[i].AssetCode != list[j].AssetCode {
+			return list[i].AssetCode < list[j].AssetCode
+		}
+		return list[i].AssetIssuer < list[j].AssetIssuer
+	})
+	return list
 }
 
 // reachability reports the minimum participating signatures for the three tiers
@@ -61,7 +102,7 @@ func reachability(snapshot model.AccountSnapshot) *model.Reachability {
 func declaredFacts(account policy.Account) *model.DeclaredFacts {
 	facts := &model.DeclaredFacts{
 		Name: account.Name,
-		Role: string(account.Role),
+		Role: account.Role,
 	}
 	if signers := account.ExpectedSigners; signers != nil {
 		count := len(*signers)

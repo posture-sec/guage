@@ -31,6 +31,10 @@ expect_locked = false
 # [[accept]]
 # rule = "flag-undeclared-clawback"
 # account = "G..."
+# An empty or omitted network covers any network; naming one pins the entry to that
+# network, which matters because the same G address and the same evidence can occur
+# on both mainnet and testnet.
+# network = "mainnet"
 # reason = "..."
 # expires = "2027-04-27"
 

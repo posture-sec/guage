@@ -13,6 +13,11 @@ const (
 	SevHigh
 )
 
+// Valid reports whether the value is one of the three defined severities.
+func (s Severity) Valid() bool {
+	return s == SevInfo || s == SevWarn || s == SevHigh
+}
+
 // String returns the stable lowercase name used in output and sorting.
 func (s Severity) String() string {
 	switch s {
@@ -28,9 +33,20 @@ func (s Severity) String() string {
 }
 
 // MarshalJSON writes the severity name, not its numeric value, so the report
-// schema stays readable and stable if the constants are ever reordered.
+// schema stays readable and stable if the constants are ever reordered. An
+// undefined value is refused rather than written as a name.
 func (s Severity) MarshalJSON() ([]byte, error) {
+	if !s.Valid() {
+		return nil, fmt.Errorf("model: severity %d is outside the defined range", int(s))
+	}
 	return json.Marshal(s.String())
+}
+
+func (s Severity) rank() int {
+	if !s.Valid() {
+		return -1
+	}
+	return int(s)
 }
 
 // UnmarshalJSON accepts only the three defined names.

@@ -5,7 +5,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/posture-sec/guage/internal/model"
 	"github.com/posture-sec/guage/internal/strkey"
@@ -43,7 +42,9 @@ func (c *Config) validate() error {
 		if err := c.Accepts[i].validate(i); err != nil {
 			return err
 		}
-		key := c.Accepts[i].Rule + "\x00" + c.Accepts[i].Account
+		// The network is part of the key, so one account may pin the same rule on
+		// both networks; the same triple twice is still a duplicate.
+		key := c.Accepts[i].Rule + "\x00" + c.Accepts[i].Account + "\x00" + c.Accepts[i].Network
 		if accepted[key] {
 			return withDetail(ErrDuplicateAccept, "accept["+strconv.Itoa(i)+"]")
 		}
@@ -188,7 +189,41 @@ func validHomeDomain(domain string) bool {
 	if strings.ContainsAny(domain, " \t\r\n/@:?#[]") {
 		return false
 	}
-	return net.ParseIP(domain) == nil
+	if net.ParseIP(domain) != nil {
+		return false
+	}
+	for _, r := range domain {
+		if r > 0x7f {
+			return false
+		}
+		if r <= 0x20 || r == 0x7f {
+			return false
+		}
+		if !validHostRune(r) {
+			return false
+		}
+	}
+	labels := strings.Split(domain, ".")
+	if len(labels) < 2 {
+		return false
+	}
+	for _, label := range labels {
+		if len(label) == 0 || len(label) > 63 || label[0] == '-' || label[len(label)-1] == '-' {
+			return false
+		}
+	}
+	return true
+}
+
+func validHostRune(r rune) bool {
+	switch {
+	case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9':
+		return true
+	case r == '-' || r == '.':
+		return true
+	default:
+		return false
+	}
 }
 
 func (a *Acceptance) validate(index int) error {
@@ -199,13 +234,14 @@ func (a *Acceptance) validate(index int) error {
 	if kind, err := strkey.Classify(a.Account); err != nil || kind != strkey.AccountID {
 		return withDetail(ErrAccept, field+".account")
 	}
+	if a.Network != "" && !validNetwork(a.Network) {
+		return withDetail(ErrNetwork, field+".network")
+	}
 	if strings.TrimSpace(a.Reason) == "" {
 		return withDetail(ErrAccept, field+".reason")
 	}
-	if a.Expires != nil {
-		if _, err := time.Parse("2006-01-02", *a.Expires); err != nil {
-			return withDetail(ErrAccept, field+".expires")
-		}
+	if a.Expires != nil && !a.Expires.Valid() {
+		return withDetail(ErrAccept, field+".expires")
 	}
 	return nil
 }

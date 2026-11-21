@@ -84,7 +84,7 @@ func prepareFacts(facts *model.AccountFacts) *model.AccountFacts {
 	if declared := facts.Declared; declared != nil {
 		copied := *declared
 		copied.Name = sanitize.Text(copied.Name)
-		copied.Role = sanitize.Text(copied.Role)
+		copied.Role = model.Role(sanitize.Text(string(copied.Role)))
 		copied.HomeDomain = sanitizePointer(copied.HomeDomain)
 		out.Declared = &copied
 	}
@@ -103,6 +103,16 @@ func prepareFacts(facts *model.AccountFacts) *model.AccountFacts {
 		}
 		copied.Accounts = accounts
 		out.Identity = &copied
+	}
+	if len(facts.Trustlines) > 0 {
+		trustlines := make([]model.TrustlineFact, len(facts.Trustlines))
+		for i, tl := range facts.Trustlines {
+			tl.AssetCode = sanitize.Text(tl.AssetCode)
+			tl.AssetIssuer = sanitize.Text(tl.AssetIssuer)
+			tl.IssuerStatus = sanitize.Text(tl.IssuerStatus)
+			trustlines[i] = tl
+		}
+		out.Trustlines = trustlines
 	}
 	return &out
 }

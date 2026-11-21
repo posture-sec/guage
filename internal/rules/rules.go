@@ -20,10 +20,18 @@ type Context struct {
 	Account  policy.Account
 	Snapshot model.AccountSnapshot
 	Identity *sep1.Result
+	Issuers  map[string]IssuerObservation
 	Missing  bool
 	Mismatch bool
 	Network  string
 	Expected string
+}
+
+// IssuerObservation carries the observed state or failure for an asset issuer.
+type IssuerObservation struct {
+	Flags    *model.Flags
+	NotFound bool
+	Failed   bool
 }
 
 // Rule is one check. Its findings carry their own severity because a rule can
@@ -52,6 +60,7 @@ var registry = []Rule{
 	{ID: "id-no-home-domain", Check: idNoHomeDomain},
 	{ID: "id-toml-unreachable", Check: idTomlUnreachable},
 	{ID: "id-toml-account-unlisted", Check: idTomlAccountUnlisted},
+	{ID: "id-sep29-memo-required", Check: idSep29MemoRequired},
 }
 
 // All returns the registered rules in evaluation order.

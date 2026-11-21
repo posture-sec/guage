@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Developer guide · Gauge docs</title>
+  <meta name="description" content="The Gauge codebase: package map, import direction, the tests that pin behavior, adding a rule or a policy field, and the limits that are not changed casually.">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Developer guide · Gauge docs">
+  <meta property="og:description" content="Where the code lives, which way imports point, and how a change is proven before it ships.">
+  <meta property="og:url" content="https://posture-sec.github.io/guage/developers.html">
+  <meta property="og:image" content="https://posture-sec.github.io/guage/assets/og.png">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#080b10">
+  <script>
+    // Choose the theme before first paint so neither mode flashes the other.
+    (() => {
+      let stored = null;
+      try { stored = localStorage.getItem("gauge-theme"); } catch {}
+      const light = stored ? stored === "light" : matchMedia("(prefers-color-scheme: light)").matches;
+      document.documentElement.dataset.theme = light ? "light" : "dark";
+      document.documentElement.dataset.themeReady = "";
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/site.css">
+  <link rel="stylesheet" href="assets/motion.css">
+  <script src="assets/site.js" defer></script>
+  <script src="assets/motion.js" defer></script>
+</head>
+<body data-page="developers">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="site">
+    <header class="topbar">
+      <a class="brand" href="index.html"><span class="brand-mark"></span>Gauge<span class="brand-sub">docs</span></a>
+      <div class="topbar-right">
+        <span class="status-pill">Functional alpha</span>
+        <span class="version-pill">v0.1.0-dev</span>
+        <button class="theme-toggle" type="button" aria-label="Switch to light theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5" fill="currentColor"/><path fill="none" stroke="currentColor" stroke-width="2" d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.4 4.4l2.1 2.1M17.5 17.5l2.1 2.1M19.6 4.4l-2.1 2.1M6.5 17.5l-2.1 2.1"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z"/></svg>
+          <span>Light</span>
+        </button>
+        <a class="icon-link" href="https://github.com/posture-sec/guage">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.2-1.7-1.2-1.7-1-.7.1-.7.1-.7 1.1.1 1.7 1.2 1.7 1.2 1 1.7 2.6 1.2 3.2.9.1-.7.4-1.2.7-1.5-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0C17.1 4.2 18.1 4.5 18.1 4.5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </header>
+
+    <aside class="sidebar">
+      <p class="side-label">Documentation</p>
+      <nav class="side-nav" aria-label="Documentation">
+        <a href="index.html">Overview <span>start</span></a>
+        <a href="mechanics.html">Mechanics <span>how</span></a>
+        <a href="rules.html">Rules <span>16</span></a>
+        <a href="policy.html">Policy <span>toml</span></a>
+        <a href="guides.html">Guides <span>run</span></a>
+        <a href="developers.html" aria-current="page">Developers <span>code</span></a>
+        <a href="contributing.html">Contributing <span>pr</span></a>
+        <a href="status.html">Status <span>now</span></a>
+      </nav>
+      <div class="side-meta">
+        <p>Docs updated 2026-11-18<br>Gauge 0.1.0-dev</p>
+        <a href="https://github.com/posture-sec/guage">Repository</a>
+        <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
+        <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
+      </div>
+    </aside>
+
+    <main class="main" id="main">
+      <div class="content">
+        <p class="eyebrow">Developers</p>
+        <h1>The code is the specification.</h1>
+        <p class="lede">Gauge is one Go module, the standard library and one TOML parser. There is no framework, no plugin loader and no rule language. This page is the map: which package does what, which way imports point, the tests that pin behavior, and what a change has to prove before it merges.</p>
+
+        <section class="section">
+          <h2>Build and run from source</h2>
+          <p>Go 1.27.3, which is what <code>go.mod</code> declares. No wallet, no credentials and no Stellar SDK.</p>
+          <div class="code" data-copy>
+            <div class="code-label"><span>Shell</span></div>
+            <pre>git clone https://github.com/posture-sec/guage
+cd guage
+go build -o stellar-gauge ./cmd/stellar-gauge
+./stellar-gauge version</pre>
+          </div>
+          <p class="table-caption">The binary has three subcommands, <code>check</code>, <code>audit</code> and <code>version</code>, plus <code>help</code>. Their flags and exit codes are on <a href="guides.html">Guides</a>.</p>
+        </section>
+
+        <section class="section">
+          <h2>Package map</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Package</th><th>Responsibility</th><th>Boundary</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>internal/model</code></td><td>Snapshots, findings, severities, roles, the fact shapes and the exit-code enum.</td><td>Imports nothing else in this module.</td></tr>
+                <tr><td><code>internal/strkey</code></td><td>SEP-23 address classification and secret-seed detection.</td><td>Pure; carries a fuzz target.</td></tr>
+                <tr><td><code>internal/threshold</code></td><td>Reachability and the minimum signer count for each tier.</td><td>The only place participating weights are summed.</td></tr>
+                <tr><td><code>internal/sanitize</code></td><td>Strips control, bidi and zero-width characters, handles IDN labels.</td><td>Pure; carries two fuzz targets.</td></tr>
+                <tr><td><code>internal/policy</code></td><td>Strict TOML decode, expectations, accepts and the Appendix A role floors.</td><td>No network, no rules; it does not validate that an accepted rule ID exists.</td></tr>
+                <tr><td><code>internal/source</code></td><td>The Horizon client behind the <code>Source</code> interface.</td><td>One of the two packages that dial.</td></tr>
+                <tr><td><code>internal/sep1</code></td><td>The guarded <code>stellar.toml</code> fetch and parse.</td><td>The other package that dials; the address guard lives at the dial.</td></tr>
+                <tr><td><code>internal/rules</code></td><td>The sixteen pure rules, the registry and the <code>Facts</code> function.</td><td>No I/O, no time, no globals, no source client.</td></tr>
+                <tr><td><code>internal/report</code></td><td>Text and JSON renderers, facts ahead of findings, exit mapping.</td><td>Imports only <code>model</code> and <code>sanitize</code>.</td></tr>
+                <tr><td><code>internal/run</code></td><td>Orchestration: passphrase, bounded fetch, identity, role severity, accepts.</td><td>No rendering.</td></tr>
+                <tr><td><code>cmd/stellar-gauge</code></td><td>Flag parsing, dispatch, error mapping and the client seam tests replace.</td><td>No business logic.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Imports point one way</h2>
+          <p>This direction is a hard rule, not a convention. A reversal is a design change and needs the owner.</p>
+          <div class="code" data-copy>
+            <div class="code-label"><span>Dependency direction</span></div>
+            <pre>model &lt;- strkey, threshold, sanitize
+      &lt;- policy, source, sep1
+      &lt;- rules
+      &lt;- report
+      &lt;- run
+      &lt;- cmd/stellar-gauge</pre>
+          </div>
+          <ul class="flow-list">
+            <li><code>rules</code> reads a <code>sep1.Result</code> value; it never fetches one. Its direct imports are <code>model</code>, <code>policy</code>, <code>sep1</code>, <code>threshold</code>, <code>fmt</code>, <code>sort</code> and <code>strings</code>. Check that on imports (<code>go list -f '{{.Imports}}' ./internal/rules</code>), not on <code>-deps</code>, which shows <code>net/http</code> transitively because <code>sep1</code>'s result types and its client share a package.</li>
+            <li>Only <code>source</code> and <code>sep1</code> perform network I/O. Only <code>cmd</code>, <code>run</code> and <code>report</code> write to stdout, stderr or a file, and the shipped commands write nothing but stdout and stderr.</li>
+            <li>No <code>os/exec</code>, no <code>unsafe</code>, no <code>init()</code> side effects and no package-level mutable state.</li>
+            <li>The only third-party import is <code>github.com/BurntSushi/toml</code>, and only inside <code>policy</code> and <code>sep1</code>.</li>
+          </ul>
+        </section>
+
+        <section class="section">
+          <h2>Shipped code and placeholders</h2>
+          <p>A file in the tree is not a feature. These are the differences a reader has to keep straight today:</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Surface</th><th>State</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>check</code>, <code>audit</code>, <code>version</code>, <code>help</code></td><td>Shipped. Flags, exit codes and JSON fields are documented on <a href="guides.html">Guides</a>.</td></tr>
+                <tr><td><code>cmd/stellar-gauge/snapshot.go</code> and <code>diff.go</code></td><td>Empty files holding only a package clause. Tasks 5.2 is open, and no subcommand is registered for either.</td></tr>
+                <tr><td><code>internal/report/markdown.go</code></td><td>Placeholder for task 5.3. <code>--format markdown</code> exits 2 with "markdown output is not implemented yet" rather than falling back to text.</td></tr>
+                <tr><td><code>--out</code></td><td>A reserved name, not a flag. No shipped subcommand accepts it; it arrives with the P1 <code>snapshot</code> command.</td></tr>
+                <tr><td><code>livenet</code> build tag</td><td>The documented opt-in for a test that needs a public endpoint. No test in the tree carries it today, and every test runs offline against fake servers.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Adding a rule</h2>
+          <ol class="status-list">
+            <li><b>Write the function</b><span>A pure function in <code>internal/rules/&lt;family&gt;.go</code> that reads only its <code>Context</code> and returns findings. It must not sum weights, apply the 20-signature cap or filter zero-weight signers itself; those come from <code>internal/threshold</code>.</span></li>
+            <li><b>Register it</b><span>One entry in the registry in <code>internal/rules/rules.go</code>, with the rule ID and the function. <code>rules.All</code> returns them in evaluation order.</span></li>
+            <li><b>Prove both sides</b><span>A positive and a negative fixture, or the same fixture under two declarations where the rule is a comparison. The test should fail for the right reason before the rule exists.</span></li>
+            <li><b>Regenerate the goldens</b><span>Only with <code>-update</code>, then read the diff as code.</span></li>
+            <li><b>Weight it if the catalog does</b><span>A rule the catalog phrases "by role" gets its cells in <code>internal/policy/roles.go</code> and in <code>PRD.md</code> Appendix A. A role raises a severity and never lowers one.</span></li>
+            <li><b>Tell the reader</b><span><code>PRD.md</code> 6.1, <code>ARCHITECTURE_ESSENTIALS.md</code> 8, and the article on <a href="rules.html">the rule catalog</a>. A rule that ships without its article makes the site stale.</span></li>
+          </ol>
+          <p>The two golden commands, run from the repository root:</p>
+          <div class="code" data-copy>
+            <div class="code-label"><span>Shell</span></div>
+            <pre>go test ./internal/run -run TestAppendixBScenarios -update
+go test ./internal/report -run 'TestTextGolden|TestJSONGolden' -update</pre>
+          </div>
+          <p class="table-caption">The first rewrites the Appendix B pairs under <code>testdata/golden/</code>; the second rewrites the two <code>sample.*</code> goldens. A new scenario needs the first run once, and the diff is where a wording or severity change becomes visible.</p>
+        </section>
+
+        <section class="section">
+          <h2>Adding a policy field</h2>
+          <ul class="flow-list">
+            <li><code>internal/policy/config.go</code> for the declaration, then the expectation or accept logic beside it. Omitted expectations stay pointers, because "not declared" is not zero or false.</li>
+            <li>Strict-decode tests: an unknown key is an error, a duplicate is an error, and the raw file is scanned for a seed-shaped token including in comments.</li>
+            <li><code>gauge.example.toml</code>, which a test loads through the real parser so the example cannot rot.</li>
+            <li><code>ARCHITECTURE.md</code> 7 for the model, and a <code>version</code> bump if the change is breaking. The loader accepts version 1 only.</li>
+          </ul>
+        </section>
+
+        <section class="section">
+          <h2>Tests that pin behavior</h2>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Layer</th><th>How it is tested</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Rules and threshold math</td><td>Table tests, plus a randomized subset search for reachability and the minimum signer count. The math is not restated in a rule.</td></tr>
+                <tr><td>Source failures</td><td>A fake Horizon over <code>net/http/httptest</code> for 200, 404, 429, 5xx, slow, oversize, malformed, a wrong passphrase and redirects.</td></tr>
+                <tr><td>Identity guard</td><td>Fourteen blocked address classes, a DNS answer that changes between resolutions, and a redirect target that resolves private. The assertions are on the address the dial received.</td></tr>
+                <tr><td>Reports</td><td>Golden text and JSON files, sanitization of hostile strings and determinism.</td></tr>
+                <tr><td>Scenarios</td><td><code>internal/run/scenarios_test.go</code> runs the Appendix B numbers as cases over the production source client, in both formats.</td></tr>
+                <tr><td>CLI</td><td>In-process runs for flags, usage errors, exit codes, the gate G3 failure modes and the zero-config fact block.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Fuzz targets exist for the two parser-adjacent packages. They are local smoke runs, not CI jobs, and each command names one package because <code>-fuzz</code> refuses more than one:</p>
+          <div class="code" data-copy>
+            <div class="code-label"><span>Shell</span></div>
+            <pre>go test ./internal/strkey -run '^$' -fuzz=FuzzClassify -fuzztime=10s
+go test ./internal/sanitize -run '^$' -fuzz=FuzzText -fuzztime=10s
+go test ./internal/sanitize -run '^$' -fuzz=FuzzFenced -fuzztime=10s</pre>
+          </div>
+          <p class="table-caption">Fixtures under <code>testdata/horizon/</code> carry their provenance in the sidecar <code>README.md</code>: captured from testnet, or built here and labelled as built. A built fixture proves the decoder and the rules, not that the chain ever served the shape.</p>
+        </section>
+
+        <section class="section">
+          <h2>Limits that are not changed casually</h2>
+          <p>These numbers are the reason a hostile or slow endpoint cannot turn into a hung job or an unbounded read. They live in protected packages and change only with owner review.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Client</th><th>Bound</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Horizon</td><td>10 second timeout, 1 MiB body cap, 3 retries with capped backoff, at most 8 concurrent requests, redirects refused.</td></tr>
+                <tr><td><code>stellar.toml</code></td><td>10 second timeout, 100 KiB cap, 3 hops, 2 retries, and the dial-time address guard. The path is fixed at <code>/.well-known/stellar.toml</code>; Gauge never fetches a path a chain value supplied.</td></tr>
+                <tr><td>Policy file</td><td>1 MiB, strict decode, rejected before any request when it does not parse.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="note">
+            <p><strong>No response body is logged.</strong> A report quotes an identity document only through the fields SEP-1 defines that the parser recognized, sanitized like every other chain-derived string, plus the fetch facts: status, hops, bytes and whether CORS was present.</p>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Where the design lives</h2>
+          <ul class="flow-list">
+            <li><code>ARCHITECTURE.md</code>: the design, the data models, the protocol citations and the red-team review. Section 6.3 holds the threshold semantics; section 6.5 the identity fetch; section 11 the CI surface.</li>
+            <li><code>ARCHITECTURE_ESSENTIALS.md</code>: the hard rules, short enough to read before every change.</li>
+            <li><code>PRD.md</code>: scope, requirements and Appendix A, the role table the severity floors come from.</li>
+            <li><code>project_structure.md</code>: the annotated tree, protected paths and naming.</li>
+            <li><code>ROADMAP.md</code>: what is left, what is blocked and why.</li>
+          </ul>
+          <p>If a document contradicts the code, the code is the source of truth for behavior and the document is fixed in the same pull request that found it. If two documents disagree about a rule, that is a question for the owner rather than a choice to make quietly.</p>
+        </section>
+
+        <section class="section">
+          <p class="eyebrow">The boundary</p>
+          <blockquote class="limits">
+            A green test suite proves the code does what the tests say. It does not prove the rules are right about your account.
+            <cite>Gauge documentation</cite>
+          </blockquote>
+          <p class="lede">No third party has reviewed this code. The sixteen rules are tested against fixtures and captured shapes, and no operator outside this repository has reviewed a finding from it yet, which is task 4.1 and gate G4.</p>
+        </section>
+
+        <footer class="footer">
+          <p>Functional alpha, unaudited. Package names, commands, test commands and limits on this page were re-read against the tree on 2026-11-18, locally.</p>
+          <div class="footer-links">
+            <a href="contributing.html">Next: contributing</a>
+            <a href="rules.html">Rule catalog</a>
+            <a href="https://github.com/posture-sec/guage/blob/main/ARCHITECTURE_ESSENTIALS.md">Architecture essentials</a>
+          </div>
+        </footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

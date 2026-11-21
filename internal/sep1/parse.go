@@ -103,6 +103,13 @@ func Parse(body []byte) (Identity, Step, string) {
 		HorizonURL:        clean(d.HorizonURL),
 		Version:           clean(d.Version),
 	}
+	// A present ACCOUNTS key, even an empty one, is a recognized identity field:
+	// keep the nil (absent) versus non-nil (present) distinction the TOML decoder
+	// gives us, so one malformed entry cannot empty the slice and flip a
+	// configured document into StepNoKeys.
+	if d.Accounts != nil {
+		id.Accounts = []string{}
+	}
 	for _, entry := range d.Accounts {
 		value, ok := entry.(string)
 		if !ok {

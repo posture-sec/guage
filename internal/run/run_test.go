@@ -224,8 +224,8 @@ func TestRunEndToEnd(t *testing.T) {
 func TestRunAccepts(t *testing.T) {
 	t.Parallel()
 	now := time.Date(2026, 10, 30, 12, 0, 0, 0, time.UTC)
-	future := "2027-01-01"
-	past := "2026-01-01"
+	future := policy.Date("2027-01-01")
+	past := policy.Date("2026-01-01")
 
 	cases := []struct {
 		name       string
@@ -303,16 +303,16 @@ func TestRunAccepts(t *testing.T) {
 // answer follows the UTC one.
 func TestAcceptExpiryIsJudgedInUTC(t *testing.T) {
 	t.Parallel()
-	expiry := "2026-11-04"
+	expiry := policy.Date("2026-11-04")
 	// A value Load refuses, carried here because the orchestrator's own guard is
 	// what must not treat an unreadable expiry as no expiry.
-	unreadable := "the 4th of November"
+	unreadable := policy.Date("the 4th of November")
 	east := time.FixedZone("UTC+8", 8*60*60)
 	west := time.FixedZone("UTC-5", -5*60*60)
 	for _, tc := range []struct {
 		name    string
 		now     time.Time
-		expires *string
+		expires *policy.Date
 		want    bool
 	}{
 		{
@@ -629,7 +629,7 @@ func TestAuditUsesPolicyNetworkAndAccepts(t *testing.T) {
 		snapshots: map[string]model.AccountSnapshot{accountOne: snapshot(accountOne, 1)},
 	}
 	weight := 2
-	expiry := "2027-01-01"
+	expiry := policy.Date("2027-01-01")
 	cfg := &policy.Config{
 		Version:   1,
 		Network:   "testnet",
@@ -1154,7 +1154,7 @@ func TestAuditPrintsWhatThePolicyDeclared(t *testing.T) {
 	if declared == nil {
 		t.Fatal("a run behind a policy file printed no declaration")
 	}
-	if declared.Role != string(model.RoleTreasury) || declared.Name != "treasury" {
+	if declared.Role != model.RoleTreasury || declared.Name != "treasury" {
 		t.Errorf("declared role and name = %q, %q", declared.Role, declared.Name)
 	}
 	if declared.ExpectedSigners == nil || *declared.ExpectedSigners != 1 {
@@ -1163,5 +1163,65 @@ func TestAuditPrintsWhatThePolicyDeclared(t *testing.T) {
 	if declared.ExpectedThresholds != nil || declared.ExpectedFlags != nil ||
 		declared.HomeDomain != nil || declared.ExpectLocked != nil {
 		t.Errorf("an undeclared expectation printed as declared: %+v", declared)
+	}
+}
+
+func TestTrustlineExposureFactsInRun(t *testing.T) {
+	t.Parallel()
+
+	holderAccount := accountOne
+	issuerAccount := accountTwo
+
+	holderSnapshot := snapshot(holderAccount, 1)
+	holderSnapshot.Balances = []model.Balance{
+		{AssetCode: "", AssetIssuer: "", IsAuthorized: true},
+		{AssetCode: "USDC", AssetIssuer: issuerAccount, IsAuthorized: true, ClawbackEnabled: false},
+	}
+
+	issuerSnapshot := snapshot(issuerAccount, 1)
+	issuerSnapshot.Flags = model.Flags{
+		AuthRequired:    true,
+		AuthRevocable:   true,
+		AuthImmutable:   false,
+		ClawbackEnabled: true,
+	}
+
+	fs := &fakeSource{
+		info: model.NetworkInfo{Passphrase: testnet, Ledger: 1},
+		snapshots: map[string]model.AccountSnapshot{
+			holderAccount: holderSnapshot,
+			issuerAccount: issuerSnapshot,
+		},
+	}
+
+	result, err := Check(context.Background(), CheckRequest{
+		ToolVersion: "test",
+		Network:     "testnet",
+		Endpoints:   []string{"https://horizon-testnet.example"},
+		Accounts:    []string{holderAccount},
+		FailOn:      model.SevHigh,
+		NewSource:   stubFactory(fs),
+	})
+	if err != nil {
+		t.Fatalf("Check: %v", err)
+	}
+
+	facts := result.Accounts[0].Facts
+	if facts == nil || len(facts.Trustlines) != 1 {
+		t.Fatalf("expected 1 trustline fact, got %+v", facts)
+	}
+
+	tl := facts.Trustlines[0]
+	if tl.AssetCode != "USDC" || tl.AssetIssuer != issuerAccount {
+		t.Errorf("asset mismatch: %+v", tl)
+	}
+	if !tl.Authorized || tl.Clawback {
+		t.Errorf("holder trustline flags mismatch: %+v", tl)
+	}
+	if tl.IssuerFlags == nil {
+		t.Fatalf("expected issuer flags populated")
+	}
+	if !tl.IssuerFlags.AuthRequired || !tl.IssuerFlags.AuthRevocable || !tl.IssuerFlags.ClawbackEnabled || tl.IssuerFlags.AuthImmutable {
+		t.Errorf("issuer flags mismatch: %+v", tl.IssuerFlags)
 	}
 }

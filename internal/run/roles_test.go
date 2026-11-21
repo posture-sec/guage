@@ -176,6 +176,7 @@ func TestAuditAppliesRoleSeverities(t *testing.T) {
 				"thr-drift":                model.SevWarn,
 				"sig-missing-expected":     model.SevHigh,
 				"flag-undeclared-clawback": model.SevWarn,
+				"id-sep29-memo-required":   model.SevWarn,
 			},
 		},
 		{
@@ -237,9 +238,9 @@ func TestAuditAppliesRoleSeverities(t *testing.T) {
 			if len(got) != len(tc.want) {
 				t.Errorf("findings = %v, want exactly %v", got, tc.want)
 			}
-			// The non-acceptable rule is HIGH for every role. The only other finding
-			// this account may carry is the role trigger, which the issuer row alone
-			// asks for.
+			// The non-acceptable rule is HIGH for every role. The only other findings
+			// this account may carry are the role triggers, which the issuer row alone
+			// asks for (id-no-home-domain) or merchant role (id-sep29-memo-required).
 			tier := result.Accounts[1].Findings
 			var unreachable bool
 			for _, finding := range tier {
@@ -252,6 +253,10 @@ func TestAuditAppliesRoleSeverities(t *testing.T) {
 				case "id-no-home-domain":
 					if tc.role != model.RoleIssuer {
 						t.Errorf("the home-domain role trigger fired for role %s: %+v", tc.role, finding)
+					}
+				case "id-sep29-memo-required":
+					if tc.role != model.RoleMerchant {
+						t.Errorf("the sep29 role trigger fired for role %s: %+v", tc.role, finding)
 					}
 				default:
 					t.Errorf("unexpected finding on the unreachable account: %+v", finding)

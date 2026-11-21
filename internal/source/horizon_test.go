@@ -5,6 +5,7 @@ import (
 	"encoding/base32"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -711,6 +712,35 @@ func TestAccountShapeStrictness(t *testing.T) {
 				}
 			},
 		},
+		{
+			name: "account data entry populated",
+			edit: func(m map[string]any) {
+				m["data"] = map[string]any{
+					"config.memo_required": "MQ==",
+					"custom_key":           "dmFsdWU=",
+				}
+			},
+			check: func(t *testing.T, s model.AccountSnapshot) {
+				if len(s.Data) != 2 {
+					t.Fatalf("len(s.Data) = %d, want 2", len(s.Data))
+				}
+				if s.Data["config.memo_required"] != "MQ==" {
+					t.Errorf("s.Data[config.memo_required] = %q, want \"MQ==\"", s.Data["config.memo_required"])
+				}
+				if s.Data["custom_key"] != "dmFsdWU=" {
+					t.Errorf("s.Data[custom_key] = %q, want \"dmFsdWU=\"", s.Data["custom_key"])
+				}
+			},
+		},
+		{
+			name: "account data entry with non-string value",
+			edit: func(m map[string]any) {
+				m["data"] = map[string]any{
+					"config.memo_required": 123,
+				}
+			},
+			wantErr: ErrDecode,
+		},
 	}
 
 	for _, tt := range cases {
@@ -917,4 +947,309 @@ func mustJSON(t *testing.T, value any) []byte {
 		t.Fatalf("marshalling the test body: %v", err)
 	}
 	return body
+}
+
+func testAccountID(i int) string {
+	body := make([]byte, 32)
+	body[0] = byte(i >> 8)
+	body[1] = byte(i)
+	for j := 2; j < 32; j++ {
+		body[j] = 0x42
+	}
+	return testStrkeyBody(6, body) // 6 is VersionByteAccountID (prefix 'G')
+}
+
+func TestManyAccountBoundedConcurrency(t *testing.T) {
+	t.Parallel()
+	const accountCount = 50
+	const maxConcurrent = 4
+
+	var inflight, peak int32
+	srv := startServer(t, func(w http.ResponseWriter, r *http.Request) {
+		current := atomic.AddInt32(&inflight, 1)
+		for {
+			seen := atomic.LoadInt32(&peak)
+			if current <= seen || atomic.CompareAndSwapInt32(&peak, seen, current) {
+				break
+			}
+		}
+		// Brief delay to give concurrent goroutines opportunities to overlap.
+		time.Sleep(5 * time.Millisecond)
+		atomic.AddInt32(&inflight, -1)
+
+		id := strings.TrimPrefix(r.URL.Path, "/accounts/")
+		serve(w, http.StatusOK, mustJSON(t, accountMap(id)))
+	})
+
+	h := clientFor(t, srv, Options{MaxConcurrent: maxConcurrent})
+
+	var wg sync.WaitGroup
+	errs := make(chan error, accountCount)
+	for i := 0; i < accountCount; i++ {
+		wg.Add(1)
+		id := testAccountID(i)
+		go func(accID string) {
+			defer wg.Done()
+			snap, err := h.Account(context.Background(), accID)
+			if err != nil {
+				errs <- err
+				return
+			}
+			if snap.ID != accID {
+				errs <- fmt.Errorf("unexpected id: got %s, want %s", snap.ID, accID)
+			}
+		}(id)
+	}
+
+	wg.Wait()
+	close(errs)
+
+	for err := range errs {
+		t.Fatalf("unexpected error fetching account: %v", err)
+	}
+
+	observedPeak := atomic.LoadInt32(&peak)
+	if observedPeak > maxConcurrent {
+		t.Fatalf("peak concurrency = %d, exceeded cap of %d", observedPeak, maxConcurrent)
+	}
+	if observedPeak < 2 {
+		t.Fatalf("peak concurrency = %d, expected multiple concurrent requests", observedPeak)
+	}
+}
+
+func TestManyAccountRateLimitingAndBackoff(t *testing.T) {
+	t.Parallel()
+	const accountCount = 50
+
+	// Simulating rate limiting: first attempt for each account returns 429 with Retry-After: 1s.
+	// Second attempt succeeds.
+	var attempts sync.Map
+	var total429s int32
+	var sleepCalls int32
+	var sleepWaits sync.Map
+
+	srv := startServer(t, func(w http.ResponseWriter, r *http.Request) {
+		id := strings.TrimPrefix(r.URL.Path, "/accounts/")
+		val, _ := attempts.LoadOrStore(id, new(int32))
+		countPtr := val.(*int32)
+		attemptNum := atomic.AddInt32(countPtr, 1)
+
+		if attemptNum == 1 {
+			atomic.AddInt32(&total429s, 1)
+			w.Header().Set("Retry-After", "1")
+			serve(w, http.StatusTooManyRequests, []byte(`{"type":"https://stellar.org/horizon-errors/too_many_requests","title":"Timeout"}`))
+			return
+		}
+		serve(w, http.StatusOK, mustJSON(t, accountMap(id)))
+	})
+
+	h := clientFor(t, srv, Options{MaxRetries: 2, Backoff: 10 * time.Millisecond})
+	h.sleep = func(ctx context.Context, d time.Duration) error {
+		atomic.AddInt32(&sleepCalls, 1)
+		sleepWaits.Store(d, true)
+		return nil
+	}
+
+	var wg sync.WaitGroup
+	errs := make(chan error, accountCount)
+	for i := 0; i < accountCount; i++ {
+		wg.Add(1)
+		id := testAccountID(i)
+		go func(accID string) {
+			defer wg.Done()
+			snap, err := h.Account(context.Background(), accID)
+			if err != nil {
+				errs <- fmt.Errorf("account %s failed: %w", accID, err)
+				return
+			}
+			if snap.ID != accID {
+				errs <- fmt.Errorf("id mismatch: got %s, want %s", snap.ID, accID)
+			}
+		}(id)
+	}
+
+	wg.Wait()
+	close(errs)
+
+	for err := range errs {
+		t.Fatalf("unexpected error during rate-limit test: %v", err)
+	}
+
+	if got429 := atomic.LoadInt32(&total429s); got429 != accountCount {
+		t.Fatalf("total 429 responses = %d, want %d", got429, accountCount)
+	}
+	if gotSleeps := atomic.LoadInt32(&sleepCalls); gotSleeps != accountCount {
+		t.Fatalf("total sleep calls = %d, want %d", gotSleeps, accountCount)
+	}
+	// Verify that the 1s Retry-After header was honored.
+	if _, ok := sleepWaits.Load(1 * time.Second); !ok {
+		t.Fatal("expected sleep duration of 1s from Retry-After was not observed")
+	}
+}
+
+func TestManyAccountRateLimitExhaustionFailsClosed(t *testing.T) {
+	t.Parallel()
+	const accountCount = 20
+	const maxRetries = 2
+
+	var totalRequests int32
+	srv := startServer(t, func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&totalRequests, 1)
+		serve(w, http.StatusTooManyRequests, []byte(`{"title":"rate limit exceeded"}`))
+	})
+
+	h := clientFor(t, srv, Options{MaxRetries: maxRetries})
+	var sleepCalls int32
+	h.sleep = func(ctx context.Context, d time.Duration) error {
+		atomic.AddInt32(&sleepCalls, 1)
+		return nil
+	}
+
+	var wg sync.WaitGroup
+	errs := make(chan error, accountCount)
+	for i := 0; i < accountCount; i++ {
+		wg.Add(1)
+		id := testAccountID(i)
+		go func(accID string) {
+			defer wg.Done()
+			_, err := h.Account(context.Background(), accID)
+			errs <- err
+		}(id)
+	}
+
+	wg.Wait()
+	close(errs)
+
+	for err := range errs {
+		if !errors.Is(err, ErrStatus) {
+			t.Fatalf("got err %v, want ErrStatus", err)
+		}
+		if strings.Contains(err.Error(), "rate limit exceeded") {
+			t.Fatalf("error echoed response body: %v", err)
+		}
+	}
+
+	expectedAttempts := int32(accountCount * (maxRetries + 1))
+	if got := atomic.LoadInt32(&totalRequests); got != expectedAttempts {
+		t.Fatalf("total requests = %d, want %d", got, expectedAttempts)
+	}
+	expectedSleeps := int32(accountCount * maxRetries)
+	if got := atomic.LoadInt32(&sleepCalls); got != expectedSleeps {
+		t.Fatalf("total sleeps = %d, want %d", got, expectedSleeps)
+	}
+}
+
+func TestManyAccountTimeoutsAndSizeCapsUnderLoad(t *testing.T) {
+	t.Parallel()
+	const accountCount = 60
+
+	// 20 normal accounts, 20 oversized accounts, 20 slow accounts (timing out)
+	srv := startServer(t, func(w http.ResponseWriter, r *http.Request) {
+		id := strings.TrimPrefix(r.URL.Path, "/accounts/")
+		// Use index encoding in id body: body[0]<<8 | body[1]
+		var idx int
+		for i := 0; i < accountCount; i++ {
+			if testAccountID(i) == id {
+				idx = i
+				break
+			}
+		}
+
+		switch {
+		case idx < 20: // Normal
+			serve(w, http.StatusOK, mustJSON(t, accountMap(id)))
+		case idx < 40: // Oversized
+			serve(w, http.StatusOK, []byte(strings.Repeat(" ", 2000)+string(mustJSON(t, accountMap(id)))))
+		default: // Slow
+			time.Sleep(100 * time.Millisecond)
+			serve(w, http.StatusOK, mustJSON(t, accountMap(id)))
+		}
+	})
+
+	h := clientFor(t, srv, Options{
+		MaxBody:    1000, // normal is ~500 bytes; oversized is >2500 bytes to trigger ErrTooLarge
+		Timeout:    20 * time.Millisecond,
+		MaxRetries: 0, // no retries so timeout fails quickly
+	})
+
+	var wg sync.WaitGroup
+	type result struct {
+		idx int
+		err error
+	}
+	results := make(chan result, accountCount)
+
+	for i := 0; i < accountCount; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			_, err := h.Account(context.Background(), testAccountID(idx))
+			results <- result{idx: idx, err: err}
+		}(i)
+	}
+
+	wg.Wait()
+	close(results)
+
+	for res := range results {
+		switch {
+		case res.idx < 20:
+			if res.err != nil {
+				t.Fatalf("normal account %d failed: %v", res.idx, res.err)
+			}
+		case res.idx < 40:
+			if !errors.Is(res.err, ErrTooLarge) {
+				t.Fatalf("account %d: err = %v, want ErrTooLarge", res.idx, res.err)
+			}
+		default:
+			if !errors.Is(res.err, context.DeadlineExceeded) {
+				t.Fatalf("account %d: err = %v, want context.DeadlineExceeded", res.idx, res.err)
+			}
+		}
+	}
+}
+
+func TestDefaultOptionsAlignWithDocumentedTargets(t *testing.T) {
+	t.Parallel()
+	srv := startServer(t, func(w http.ResponseWriter, r *http.Request) {
+		serve(w, http.StatusOK, fixture(t, "1-default.json"))
+	})
+	h, err := NewHorizon(Options{Endpoint: srv.URL})
+	if err != nil {
+		t.Fatalf("NewHorizon: %v", err)
+	}
+
+	// Verify the 0.12 and PRD 6.4/7 documented defaults:
+	// - Concurrency cap: 8 (defaultMaxConcurrent)
+	// - Timeout: 10s (defaultTimeout)
+	// - MaxBody: 1 MiB (defaultMaxBody)
+	// - MaxRetries: 3 (defaultMaxRetries)
+	// - Backoff: 200ms (defaultBackoff)
+	if cap(h.sem) != 8 {
+		t.Fatalf("default max concurrency = %d, want 8", cap(h.sem))
+	}
+	if h.timeout != 10*time.Second {
+		t.Fatalf("default timeout = %v, want 10s", h.timeout)
+	}
+	if h.maxBody != 1<<20 {
+		t.Fatalf("default max body = %d, want 1048576 (1 MiB)", h.maxBody)
+	}
+	if h.maxRetries != 3 {
+		t.Fatalf("default max retries = %d, want 3", h.maxRetries)
+	}
+	if h.backoff != 200*time.Millisecond {
+		t.Fatalf("default backoff = %v, want 200ms", h.backoff)
+	}
+
+	// Backoff calculation caps at maxBackoff (5s)
+	if b := backoffFor(h.backoff, 10); b != 5*time.Second {
+		t.Fatalf("backoffFor(10) = %v, want 5s cap", b)
+	}
+
+	// Retry-After caps at maxRetryAfter (5s)
+	hreq := http.Header{}
+	hreq.Set("Retry-After", "120")
+	if d := retryAfter(hreq); d != 5*time.Second {
+		t.Fatalf("retryAfter(120) = %v, want 5s cap", d)
+	}
 }

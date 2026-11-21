@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/posture-sec/guage/internal/model"
@@ -37,6 +38,10 @@ func runCLI(args []string, stdout, stderr io.Writer, d deps) int {
 		return checkCommand(args[1:], stdout, stderr, d)
 	case "audit":
 		return auditCommand(args[1:], stdout, stderr, d)
+	case "snapshot":
+		return snapshotCommand(args[1:], stdout, stderr, d)
+	case "diff":
+		return diffCommand(args[1:], stdout, stderr, d)
 	case "version":
 		fmt.Fprintf(stdout, "stellar-gauge %s\n", version)
 		return int(model.ExitPass)
@@ -56,9 +61,11 @@ func usage(w io.Writer) {
 commands:
   check     audit accounts named on the command line, with no policy file
   audit     audit the accounts declared in a policy file
+  snapshot  record current account state to a baseline file
+  diff      compare current account state against a saved baseline
   version   print the version
 
-run "stellar-gauge check -h" or "stellar-gauge audit -h" for the options.
+run "stellar-gauge check -h", "stellar-gauge audit -h", "stellar-gauge snapshot -h" or "stellar-gauge diff -h" for the options.
 `)
 }
 
@@ -88,8 +95,17 @@ func parseFailOn(value string) (model.Severity, bool) {
 	}
 }
 
+// parseConcurrency accepts the bounded worker count exposed by the check CLI.
+func parseConcurrency(value string) (int, bool) {
+	n, err := strconv.Atoi(value)
+	if err != nil || n < 1 || n > 32 {
+		return 0, false
+	}
+	return n, true
+}
+
 func validFormat(value string) bool {
-	return value == "text" || value == "json"
+	return value == "text" || value == "json" || value == "markdown"
 }
 
 // reportError prints an orchestrator error and maps it to an exit code. Usage
@@ -131,9 +147,12 @@ func usageError(stderr io.Writer, message string) int {
 
 func render(stdout, stderr io.Writer, result model.Report, format string) int {
 	var err error
-	if format == "json" {
+	switch format {
+	case "json":
 		err = report.JSON(stdout, result)
-	} else {
+	case "markdown":
+		err = report.Markdown(stdout, result)
+	default:
 		err = report.Text(stdout, result)
 	}
 	if err != nil {

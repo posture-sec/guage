@@ -80,6 +80,7 @@ func writeAccount(b *strings.Builder, ar model.AccountReport) {
 
 	writeDeclared(b, ar.Facts)
 	writeIdentity(b, s, ar.Facts)
+	writeTrustlines(b, ar.Facts)
 
 	accepted := 0
 	for _, f := range ar.Findings {
@@ -170,7 +171,7 @@ func writeDeclared(b *strings.Builder, facts *model.AccountFacts) {
 		b.WriteString("  declared: nothing; this run read no policy file, so only the universal rules ran\n")
 		return
 	}
-	header := "  declared: role " + declared.Role
+	header := "  declared: role " + string(declared.Role)
 	if name := declared.Name; name != "" {
 		header += fmt.Sprintf(", name %q", name)
 	}
@@ -291,6 +292,39 @@ func writeIdentity(b *strings.Builder, s model.AccountSnapshot, facts *model.Acc
 		return
 	}
 	fmt.Fprintf(b, "    accounts: %d listed\n", len(identity.Accounts))
+}
+
+func writeTrustlines(b *strings.Builder, facts *model.AccountFacts) {
+	if facts == nil || len(facts.Trustlines) == 0 {
+		return
+	}
+	count := len(facts.Trustlines)
+	if count == 1 {
+		b.WriteString("  trustlines: 1 held\n")
+	} else {
+		fmt.Fprintf(b, "  trustlines: %d held\n", count)
+	}
+	for _, tl := range facts.Trustlines {
+		auth := ""
+		if !tl.Authorized {
+			auth = " (unauthorized)"
+		}
+		claw := ""
+		if tl.Clawback {
+			claw = " (clawback enabled)"
+		}
+		if tl.IssuerFlags != nil {
+			fmt.Fprintf(b, "    %s (issuer %s%s%s): auth_required=%t auth_revocable=%t auth_immutable=%t clawback=%t\n",
+				tl.AssetCode, tl.AssetIssuer, auth, claw,
+				tl.IssuerFlags.AuthRequired, tl.IssuerFlags.AuthRevocable,
+				tl.IssuerFlags.AuthImmutable, tl.IssuerFlags.ClawbackEnabled)
+		} else if tl.IssuerStatus != "" {
+			fmt.Fprintf(b, "    %s (issuer %s%s%s): issuer %s\n",
+				tl.AssetCode, tl.AssetIssuer, auth, claw, tl.IssuerStatus)
+		} else {
+			fmt.Fprintf(b, "    %s (issuer %s%s%s)\n", tl.AssetCode, tl.AssetIssuer, auth, claw)
+		}
+	}
 }
 
 // quotedText prints a value an operator or a document supplied, or why it is
