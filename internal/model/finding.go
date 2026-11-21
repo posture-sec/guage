@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"sort"
 	"strings"
+	"unicode"
 )
 
 type Finding struct {
@@ -52,6 +53,19 @@ func fingerprint(ruleID, account, evidence string) string {
 	return hex.EncodeToString(sum[:])
 }
 
+// normalize collapses whitespace and drops Unicode format characters (category
+// Cf). NewFinding hashes this form, and sanitize.Text removes the same class
+// before any renderer prints evidence, so evidence that prints the same hashes
+// the same. sanitize.Text drops more than Cf, including whole escape sequences,
+// C0 and C1 controls and the line and paragraph separators; that wider set is
+// not repeated here, because model may not import sanitize and a second copy of
+// its drop list would be one more rule to keep in step.
 func normalize(s string) string {
+	s = strings.Map(func(r rune) rune {
+		if unicode.Is(unicode.Cf, r) {
+			return -1
+		}
+		return r
+	}, s)
 	return strings.Join(strings.Fields(s), " ")
 }
