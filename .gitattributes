@@ -1,0 +1,10 @@
+# Line endings are pinned rather than guessed, because two tests compare a
+# report against a file byte for byte: internal/run/scenarios_test.go and
+# internal/report/report_test.go. Windows runners check out with
+# core.autocrlf=true by default, which would rewrite 38 goldens and 12 fixtures
+# into CRLF and read as every rule in the catalog failing at once, with no
+# behavior changed. og.png is the one tracked file that must not be normalized.
+* text=auto eol=lf
+*.golden text eol=lf
+*.json text eol=lf
+*.png binary

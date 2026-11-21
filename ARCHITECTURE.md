@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Draft v0.1 target (includes a red-team pass, section 14); functional alpha through Phase 2 plus the account, flag and identity rules as of 2026-11-03, with threshold math and signer rules still pending |
+| Status | Draft v0.2 target (includes a red-team pass, section 14); functional alpha through Phase 2 plus the account, flag and identity rules as of 2026-11-03, with threshold math and signer rules still pending |
 | Date | 2026-10-28 |
 | Companion docs | `PRD.md`, `ARCHITECTURE_ESSENTIALS.md`, `ROADMAP.md`, `project_structure.md`, `AGENTS.md`, `CLAUDE.md` |
 | Tags | **[Verified]** checked against a source; **[Unverified]** believed or designed but untested |
@@ -30,7 +30,7 @@ Hard constraints:
 | Language | Go, current stable release at project start; version pinned in `go.mod` and CI (`go-version-file`) | Single static binary, strong standard library for HTTP and JSON, native fuzzing and race detector. Horizon and the Stellar Go SDK are Go [Likely] |
 | HTTP, JSON, hashing, flags | Standard library (`net/http`, `encoding/json`, `crypto/sha256`, `flag`) | No framework; `flag` with hand-rolled subcommands instead of a CLI framework |
 | TOML | `github.com/BurntSushi/toml` (the only third-party dependency) | Go has no TOML in the standard library. Check license and transitive dependencies in task 0.13 |
-| Strkey (address) validation | Own small package in v0.1, tested against reference vectors; revisit importing the Stellar Go SDK package | The SDK module is large; a 60-line checksum routine avoids its dependency tree (ADR-003) |
+| Strkey (address) validation | Own small package in v0.2, tested against reference vectors; revisit importing the Stellar Go SDK package | The SDK module is large; a 60-line checksum routine avoids its dependency tree (ADR-003) |
 | Stellar data | Horizon account endpoint behind a `Source` interface; Stellar RPC later | Horizon's long-term status is uncertain [Unverified] |
 | Testing | `go test -race`, `net/http/httptest` fake Horizon, captured JSON fixtures, golden files, native fuzzing | Offline, deterministic |
 | Static checks | `gofmt`, `go vet`, `staticcheck`, `govulncheck` | Dev-time and CI |
@@ -267,6 +267,8 @@ Implemented 2026-11-04 (task 3.4): the stage list above is now the order, with `
 
 Implemented 2026-11-05 (task 3.7): the assembly loop builds one `rules.Context` per account, hands it to the evaluator and then to `rules.Facts`, and attaches the result to the `AccountReport`. Assembling the context once rather than twice is the point: a fact and a finding about the same account must be read from the same snapshot, the same identity result and the same declaration, or the report describes two runs. `Job.HasPolicy` is the new field and the only one that carries no value from a file or the chain, because it records which builder ran. `Audit` sets it and `Check` does not, and when it is false the run drops the declaration block that `policy.Load` would otherwise have synthesized, since `check` hands the same `policy.Account` shape to the rules with an ID and a default role and nothing else. The alternative, letting the renderer decide, would have needed the renderer to know how the report was built, which is the one thing `internal/report` is deliberately not told. Facts are assembled after adjustment and accepts, so they are unaffected by either: `applyRoles` walks findings, `applyAccepts` walks findings, and `report.Exit` reads findings, which is the whole mechanism by which a fact cannot fail a run. Nothing in `Run` had to change to make that true, and that is the claim `TestFactsCannotFailARun` and the `9-stellar-toml-network-differs` golden exist to keep honest rather than assume.
 
+Implemented 2026-11-20 (tasks 7.34 and 7.35): two gaps in the fail-closed shape above are closed. The account semaphore is now acquired by the spawning loop, in policy order, and the context is checked after a slot is won, so a later account cannot be read ahead of an earlier one and an account that wins a slot freed by a failed worker sees the cancellation and is never read; the first failure, wrapped with its account ID, is the one returned. `TestFirstAccountErrorSurvives` holds this with two channel-ordered failures and a queued third account, and before the change the third account was read first in most runs because the scheduler, not the policy, picked who took a slot. `Run` also checks its context after the observe stage and once more before returning the report, each wrapped with `run:`, because a wrong-network observe and identify read nothing and so never looked at the context: a run cancelled during `Network` used to return a full mismatch report. `TestRunStopsWhenContextEndsBetweenStages` asserts `context.Canceled`, a zero report and an identity factory that is never called.
+
 ### 6.10 `cmd/stellar-gauge`
 
 Argument parsing and dispatch only. No logic.
@@ -423,14 +425,14 @@ Role severity matrix: `PRD.md` Appendix A, applied since 2026-11-04 (task 3.4) a
 
 ## 10. Distribution and CI
 
-- Static binaries per platform attached to a GitHub release with provenance attestations; the README documents the verification command.
+- Static binaries per platform attached to a GitHub release with provenance attestations, built from the tag by `.github/workflows/release.yml` (task 6.2); the README documents the verification command.
 - `go install` also works but builds from source on the user's machine.
 - Scheduled drift checks (P1): a workflow template that runs `audit` on a cron with `permissions: contents: read` (plus `issues: write` only on the job that opens an issue), pinned by SHA, reading the policy from the default branch. The residual risk in section 4 applies.
 - No Docker image in v0.1: an extra unpinned layer and a registry trust hop.
 
 ## 11. Self-protection of the repository
 
-- Every Action pinned by hash; top-level `permissions: contents: read`; write only on the release job.
+- Every Action pinned by hash; top-level `permissions: contents: read`; write only on the release job. That job is `.github/workflows/release.yml` (task 6.2): its build job holds `id-token: write` and `attestations: write` for the provenance signature, and only the separate publish job holds `contents: write`, after re-verifying the checksums and the attestations.
 - Rulesets: no force pushes, no deletion, required status checks; `CODEOWNERS` on `internal/`, `cmd/`, `.github/`, `scripts/` and `go.mod`.
 - Hardware-key 2FA and a protected recovery email for maintainers; org-level 2FA requirement. These matter more than any code.
 - `govulncheck`, `staticcheck` and `go vet` run in CI. Dependabot for `gomod` and Actions, grouped weekly; the TOML dependency is reviewed by hand on every bump.
@@ -490,7 +492,7 @@ Design-review analysis. The scenarios below are not tests, and none of them has 
 | GB10 | Testnet versus mainnet mix-up | Defaults hide the mistake | M / M | Explicit network and passphrase verification | 2.4, 2.7 |
 | GB11 | Horizon is deprecated or reshaped | External dependency | M / M | Mitigated 2026-10-30: Horizon is not marked deprecated in the current docs, and RPC `getLedgerEntries` returns classic account entries, so the interface has a real second implementation. Field-shape drift is caught by the strict decode in 6.4 | 0.9, 7.1 |
 | GB12 | Rate limits on public endpoints | Many accounts, parallel fetch | M / L | Measured 2026-10-30: per-IP, 3600 per hour by default, 429 on exceed, no quota headers. Bounded concurrency, backoff on the 429 itself, and a run of 50 accounts costs about 51 requests (`PRD.md` 6.4) | 0.12, 2.7 |
-| GB13 | Maintainer overload | Third active project | H / H | D-04 was decided on 2026-10-30 to proceed, so this risk is carried openly rather than sequenced away: Phase 7 stays closed until v0.1.0 and the backlog is labelled for contributors | 0.3, D-04 |
+| GB13 | Maintainer overload | Third active project | H / H | D-04 was decided on 2026-10-30 to proceed, so this risk is carried openly rather than sequenced away: Phase 7 stays closed until v0.2.0 and the backlog is labelled for contributors | 0.3, D-04 |
 
 ### 14.2 Edge cases
 
@@ -526,8 +528,8 @@ Design-review analysis. The scenarios below are not tests, and none of them has 
 | GO4 | Web dashboard | Cut | No users yet |
 | GO5 | Asset and address reputation scoring | Cut | Webacy territory and needs a data moat |
 | GO6 | Soroban contract-account auditing | Cut | Other tools cover contracts |
-| GO7 | RPC source in v0.1 | Defer | Horizon first; interface keeps the door open |
-| GO8 | Two-endpoint quorum in v0.1 | Defer | P1; single endpoint with fail-closed first |
+| GO7 | RPC source in v0.2 | Defer | Horizon first; interface keeps the door open |
+| GO8 | Two-endpoint quorum in v0.2 | Defer | P1; single endpoint with fail-closed first |
 | GO9 | Importing the full Stellar SDK | Cut | Own strkey package suffices |
 | GO10 | A CLI framework | Cut | `flag` is enough |
 | GO11 | Trustline exposure scoring | Defer | Facts only, in P1 |

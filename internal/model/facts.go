@@ -19,9 +19,21 @@ package model
 // for a report assembled by hand, and a renderer prints no fact lines for such an
 // account rather than reading a missing block as an answer about the world.
 type AccountFacts struct {
-	Reachability *Reachability  `json:"reachability"`
-	Declared     *DeclaredFacts `json:"declared"`
-	Identity     *IdentityFacts `json:"identity"`
+	Reachability *Reachability   `json:"reachability"`
+	Declared     *DeclaredFacts  `json:"declared"`
+	Identity     *IdentityFacts  `json:"identity"`
+	Trustlines   []TrustlineFact `json:"trustlines,omitempty"`
+}
+
+// TrustlineFact describes exposure to one non-native asset issuer. It contains
+// no balance amounts.
+type TrustlineFact struct {
+	AssetCode    string `json:"asset_code"`
+	AssetIssuer  string `json:"asset_issuer"`
+	Authorized   bool   `json:"authorized"`
+	Clawback     bool   `json:"clawback"`
+	IssuerFlags  *Flags `json:"issuer_flags,omitempty"`
+	IssuerStatus string `json:"issuer_status,omitempty"`
 }
 
 // Reachability is the smallest number of signatures that can authorize each

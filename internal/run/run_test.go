@@ -1165,3 +1165,63 @@ func TestAuditPrintsWhatThePolicyDeclared(t *testing.T) {
 		t.Errorf("an undeclared expectation printed as declared: %+v", declared)
 	}
 }
+
+func TestTrustlineExposureFactsInRun(t *testing.T) {
+	t.Parallel()
+
+	holderAccount := accountOne
+	issuerAccount := accountTwo
+
+	holderSnapshot := snapshot(holderAccount, 1)
+	holderSnapshot.Balances = []model.Balance{
+		{AssetCode: "", AssetIssuer: "", IsAuthorized: true},
+		{AssetCode: "USDC", AssetIssuer: issuerAccount, IsAuthorized: true, ClawbackEnabled: false},
+	}
+
+	issuerSnapshot := snapshot(issuerAccount, 1)
+	issuerSnapshot.Flags = model.Flags{
+		AuthRequired:    true,
+		AuthRevocable:   true,
+		AuthImmutable:   false,
+		ClawbackEnabled: true,
+	}
+
+	fs := &fakeSource{
+		info: model.NetworkInfo{Passphrase: testnet, Ledger: 1},
+		snapshots: map[string]model.AccountSnapshot{
+			holderAccount: holderSnapshot,
+			issuerAccount: issuerSnapshot,
+		},
+	}
+
+	result, err := Check(context.Background(), CheckRequest{
+		ToolVersion: "test",
+		Network:     "testnet",
+		Endpoints:   []string{"https://horizon-testnet.example"},
+		Accounts:    []string{holderAccount},
+		FailOn:      model.SevHigh,
+		NewSource:   stubFactory(fs),
+	})
+	if err != nil {
+		t.Fatalf("Check: %v", err)
+	}
+
+	facts := result.Accounts[0].Facts
+	if facts == nil || len(facts.Trustlines) != 1 {
+		t.Fatalf("expected 1 trustline fact, got %+v", facts)
+	}
+
+	tl := facts.Trustlines[0]
+	if tl.AssetCode != "USDC" || tl.AssetIssuer != issuerAccount {
+		t.Errorf("asset mismatch: %+v", tl)
+	}
+	if !tl.Authorized || tl.Clawback {
+		t.Errorf("holder trustline flags mismatch: %+v", tl)
+	}
+	if tl.IssuerFlags == nil {
+		t.Fatalf("expected issuer flags populated")
+	}
+	if !tl.IssuerFlags.AuthRequired || !tl.IssuerFlags.AuthRevocable || !tl.IssuerFlags.ClawbackEnabled || tl.IssuerFlags.AuthImmutable {
+		t.Errorf("issuer flags mismatch: %+v", tl.IssuerFlags)
+	}
+}

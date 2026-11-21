@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/posture-sec/guage/internal/model"
@@ -92,6 +93,15 @@ func parseFailOn(value string) (model.Severity, bool) {
 	default:
 		return model.SevInfo, false
 	}
+}
+
+// parseConcurrency accepts the bounded worker count exposed by the check CLI.
+func parseConcurrency(value string) (int, bool) {
+	n, err := strconv.Atoi(value)
+	if err != nil || n < 1 || n > 32 {
+		return 0, false
+	}
+	return n, true
 }
 
 func validFormat(value string) bool {

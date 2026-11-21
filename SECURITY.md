@@ -29,7 +29,20 @@ Out of scope:
 
 **Unaudited.** No third party has reviewed Gauge. `govulncheck` and `staticcheck` run in CI on every pull request, and the three fuzz targets over the sanitizer and strkey paths are not CI jobs: they are short local smoke runs a contributor makes before a release-facing change (`AGENTS.md` section 5), last run clean on 2026-11-03 for ten seconds each. Neither the CI checks nor the smokes are a review.
 
+**Releases are attested once a tag exists.** Tagged artifacts are built by `.github/workflows/release.yml` from the tag rather than a laptop, and that workflow verifies both the checksums and the build-provenance attestation before it publishes. No release exists yet: cutting `v0.2.0` is the owner's act (ROADMAP.md task 6.2), so the install path is still the repository.
+
 **Functional alpha, unaudited.** As of the current commit there is a policy loader, a Horizon client with timeouts, size caps and bounded retries, strict decoding, a guarded `stellar.toml` fetcher whose dial-time address check is the only thing between a chain-derived home domain and a socket, report renderers, seven account, flag and identity rules, an orchestrator and a CLI. The signer and threshold rules are not implemented, so a run reports observed state plus those seven and cannot evaluate the rest of the catalog. The code has not been independently reviewed, so nothing here should be relied on to detect anything. See `ROADMAP.md` for what is actually implemented.
+
+## Verifying a release
+
+A download is checked in two steps, and both are run by the release workflow before publishing, so the same commands work on a consumer machine:
+
+```
+sha256sum -c checksums.txt                                                  # macOS: shasum -a 256 -c checksums.txt
+gh attestation verify stellar-gauge-0.2.0-linux-amd64.tar.gz --repo posture-sec/guage
+```
+
+The checksum proves the bytes match the published list. The attestation proves the archive and the list were produced by a run of that workflow at that tag. Neither says the code is safe; see the limits below.
 
 ## What this tool cannot tell you
 
