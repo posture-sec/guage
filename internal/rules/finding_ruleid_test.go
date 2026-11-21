@@ -131,6 +131,10 @@ func ruleIDFiring() map[string]struct {
 			}
 			return c
 		}()},
+		"id-sep29-memo-required": {count: 1, ctx: ruleIDContext(
+			policy.Account{Role: model.RoleMerchant},
+			model.AccountSnapshot{Thresholds: tiers(1, 1, 1), Signers: one},
+		)},
 	}
 }
 

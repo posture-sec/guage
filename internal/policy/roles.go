@@ -113,12 +113,5 @@ func AllowsExpectLocked(role model.Role) bool {
 // endpoint. The two named networks map to their published passphrases; any
 // other value is the passphrase itself.
 func (c *Config) ExpectedPassphrase() string {
-	switch c.Network {
-	case "mainnet":
-		return "Public Global Stellar Network ; September 2015"
-	case "testnet":
-		return "Test SDF Network ; September 2015"
-	default:
-		return c.Network
-	}
+	return ExpectedPassphrase(c.Network)
 }

@@ -47,6 +47,7 @@ func TestAccountSnapshotJSONRoundTrip(t *testing.T) {
 			Flags:      model.Flags{AuthRequired: true, AuthRevocable: true, ClawbackEnabled: true},
 			HomeDomain: "untrusted\u001b[31m.example", Sponsor: "sponsor-reference",
 			Balances: []model.Balance{{AssetCode: "USD", AssetIssuer: "issuer-reference", IsAuthorized: true, ClawbackEnabled: true}},
+			Data:     map[string]string{"config.memo_required": "MQ=="},
 		}},
 		{"explicit empty collections", model.AccountSnapshot{Signers: []model.Signer{}, Balances: []model.Balance{}}},
 	} {

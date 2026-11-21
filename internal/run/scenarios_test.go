@@ -712,6 +712,101 @@ func TestHostileFixtureCarriesRawControlBytes(t *testing.T) {
 	}
 }
 
+func TestTrustlineExposureFixtureScenarios(t *testing.T) {
+	t.Parallel()
+
+	holderID := "GAXDL7XNW3HVQEV2DSGRRN327AZOS63QZBEAKMR3THV2NHPUWR6IMOCN"
+	regulatedIssuerID := "GD4CMQCXWU7QKVK5SW4HYLJ3NVWIFZ353CZQISCO54TYREWNC7UBCQY7"
+	openIssuerID := "GBFZVIKRAZWSNQG6T5TEFAQTKYTZONSDUJN5G6A7W7Z6PTA2K5QETXN6"
+
+	_, holder, err := decodeFixture(t, "13-trustline-holder.json", holderID, http.StatusOK)
+	if err != nil {
+		t.Fatalf("decode holder fixture: %v", err)
+	}
+	_, regIssuer, err := decodeFixture(t, "14-issuer-regulated.json", regulatedIssuerID, http.StatusOK)
+	if err != nil {
+		t.Fatalf("decode regulated issuer fixture: %v", err)
+	}
+	_, openIssuer, err := decodeFixture(t, "15-issuer-open.json", openIssuerID, http.StatusOK)
+	if err != nil {
+		t.Fatalf("decode open issuer fixture: %v", err)
+	}
+
+	fs := &fakeSource{
+		info: model.NetworkInfo{Passphrase: testnet, Ledger: testnetLedger},
+		snapshots: map[string]model.AccountSnapshot{
+			holderID:          holder,
+			regulatedIssuerID: regIssuer,
+			openIssuerID:      openIssuer,
+		},
+		accountErr: map[string]error{},
+	}
+
+	job := Job{
+		ToolVersion: "test",
+		Network:     testnet,
+		Endpoints:   []string{canonicalTestnet},
+		Accounts: []policy.Account{
+			{ID: holderID},
+		},
+		FailOn:    model.SevHigh,
+		NewSource: stubFactory(fs),
+		Evaluate:  rules.Evaluate,
+	}
+
+	result, err := Run(context.Background(), job)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+
+	if len(result.Accounts) != 1 {
+		t.Fatalf("result accounts = %d, want 1", len(result.Accounts))
+	}
+	facts := result.Accounts[0].Facts
+	if facts == nil {
+		t.Fatal("expected facts on report")
+	}
+	if len(facts.Trustlines) != 2 {
+		t.Fatalf("len(facts.Trustlines) = %d, want 2", len(facts.Trustlines))
+	}
+
+	// OPEN, then USDC
+	open := facts.Trustlines[0]
+	if open.AssetCode != "OPEN" || open.AssetIssuer != openIssuerID {
+		t.Errorf("open asset mismatch: %+v", open)
+	}
+	if open.IssuerFlags == nil || open.IssuerFlags.AuthRequired || open.IssuerFlags.ClawbackEnabled {
+		t.Errorf("open issuer flags mismatch: %+v", open.IssuerFlags)
+	}
+
+	usdc := facts.Trustlines[1]
+	if usdc.AssetCode != "USDC" || usdc.AssetIssuer != regulatedIssuerID {
+		t.Errorf("usdc asset mismatch: %+v", usdc)
+	}
+	if usdc.IssuerFlags == nil || !usdc.IssuerFlags.AuthRequired || !usdc.IssuerFlags.AuthRevocable || !usdc.IssuerFlags.ClawbackEnabled {
+		t.Errorf("usdc issuer flags mismatch: %+v", usdc.IssuerFlags)
+	}
+
+	var buf bytes.Buffer
+	if err := report.Text(&buf, result); err != nil {
+		t.Fatalf("report.Text: %v", err)
+	}
+	textOut := buf.String()
+	for _, want := range []string{
+		"trustlines: 2 held",
+		"OPEN (issuer GBFZVIKRAZWSNQG6T5TEFAQTKYTZONSDUJN5G6A7W7Z6PTA2K5QETXN6): auth_required=false auth_revocable=false auth_immutable=false clawback=false",
+		"USDC (issuer GD4CMQCXWU7QKVK5SW4HYLJ3NVWIFZ353CZQISCO54TYREWNC7UBCQY7 (clawback enabled)): auth_required=true auth_revocable=true auth_immutable=false clawback=true",
+	} {
+		if !strings.Contains(textOut, want) {
+			t.Errorf("output missing %q:\n%s", want, textOut)
+		}
+	}
+	// Verify no balances are echoed
+	if strings.Contains(textOut, "100.0000000") || strings.Contains(textOut, "50.0000000") || strings.Contains(textOut, "1000.0000000") {
+		t.Errorf("balance amounts leaked into report text:\n%s", textOut)
+	}
+}
+
 func value[T any](v T) *T { return &v }
 
 // scenarioStrkey builds a valid strkey at test time, the way

@@ -343,11 +343,11 @@ func TestIdentityRulesSkipUnreadAccounts(t *testing.T) {
 	}
 }
 
-// The three identity rules are acceptable risks: unlike a missing account or a
-// network mismatch, an operator may decide a dead home domain is fine.
+// The identity rules are acceptable risks: unlike a missing account or a
+// network mismatch, an operator may decide a dead home domain or missing SEP-29 is fine.
 func TestIdentityRulesAreAcceptable(t *testing.T) {
 	t.Parallel()
-	for _, id := range []string{"id-no-home-domain", "id-toml-unreachable", "id-toml-account-unlisted"} {
+	for _, id := range []string{"id-no-home-domain", "id-toml-unreachable", "id-toml-account-unlisted", "id-sep29-memo-required"} {
 		if !policy.Acceptable(id) {
 			t.Errorf("%s cannot be accepted, so [[accept]] cannot silence it", id)
 		}
@@ -403,4 +403,107 @@ func TestABlankObservedDomainIsNoDomain(t *testing.T) {
 			wantOneFinding(t, idNoHomeDomain(ctx), "id-no-home-domain")
 		})
 	}
+}
+
+func TestSep29MemoRequired(t *testing.T) {
+	t.Parallel()
+
+	t.Run("merchant missing config.memo_required fires warn", func(t *testing.T) {
+		t.Parallel()
+		ctx := Context{
+			Account:  policy.Account{Role: model.RoleMerchant},
+			Snapshot: model.AccountSnapshot{ID: testAccount},
+		}
+		findings := idSep29MemoRequired(ctx)
+		if len(findings) != 1 {
+			t.Fatalf("expected 1 finding, got %d", len(findings))
+		}
+		f := findings[0]
+		if f.RuleID != "id-sep29-memo-required" {
+			t.Errorf("expected rule id id-sep29-memo-required, got %s", f.RuleID)
+		}
+		if f.Severity != model.SevWarn {
+			t.Errorf("expected severity warn, got %s", f.Severity)
+		}
+		if f.Evidence != "config.memo_required expected \"MQ==\", observed none" {
+			t.Errorf("unexpected evidence: %s", f.Evidence)
+		}
+	})
+
+	t.Run("merchant with wrong config.memo_required fires warn", func(t *testing.T) {
+		t.Parallel()
+		ctx := Context{
+			Account: policy.Account{Role: model.RoleMerchant},
+			Snapshot: model.AccountSnapshot{
+				ID:   testAccount,
+				Data: map[string]string{"config.memo_required": "MA=="},
+			},
+		}
+		findings := idSep29MemoRequired(ctx)
+		if len(findings) != 1 {
+			t.Fatalf("expected 1 finding, got %d", len(findings))
+		}
+		f := findings[0]
+		if f.Severity != model.SevWarn {
+			t.Errorf("expected severity warn, got %s", f.Severity)
+		}
+		if f.Evidence != "config.memo_required expected \"MQ==\", observed \"MA==\"" {
+			t.Errorf("unexpected evidence: %s", f.Evidence)
+		}
+	})
+
+	t.Run("merchant with correct config.memo_required produces no finding", func(t *testing.T) {
+		t.Parallel()
+		ctx := Context{
+			Account: policy.Account{Role: model.RoleMerchant},
+			Snapshot: model.AccountSnapshot{
+				ID:   testAccount,
+				Data: map[string]string{"config.memo_required": "MQ=="},
+			},
+		}
+		findings := idSep29MemoRequired(ctx)
+		if len(findings) != 0 {
+			t.Fatalf("expected 0 findings, got %d: %+v", len(findings), findings)
+		}
+	})
+
+	t.Run("non-merchant roles produce no finding even if data is missing", func(t *testing.T) {
+		t.Parallel()
+		roles := []model.Role{
+			model.RoleIssuer,
+			model.RoleDistribution,
+			model.RoleTreasury,
+			model.RoleOther,
+		}
+		for _, role := range roles {
+			ctx := Context{
+				Account:  policy.Account{Role: role},
+				Snapshot: model.AccountSnapshot{ID: testAccount},
+			}
+			if findings := idSep29MemoRequired(ctx); len(findings) != 0 {
+				t.Errorf("role %q produced findings: %+v", role, findings)
+			}
+		}
+	})
+
+	t.Run("missing or mismatch context returns no finding", func(t *testing.T) {
+		t.Parallel()
+		missingCtx := Context{
+			Missing:  true,
+			Account:  policy.Account{Role: model.RoleMerchant},
+			Snapshot: model.AccountSnapshot{ID: testAccount},
+		}
+		if findings := idSep29MemoRequired(missingCtx); len(findings) != 0 {
+			t.Errorf("missing account produced findings: %+v", findings)
+		}
+
+		mismatchCtx := Context{
+			Mismatch: true,
+			Account:  policy.Account{Role: model.RoleMerchant},
+			Snapshot: model.AccountSnapshot{ID: testAccount},
+		}
+		if findings := idSep29MemoRequired(mismatchCtx); len(findings) != 0 {
+			t.Errorf("mismatch account produced findings: %+v", findings)
+		}
+	})
 }

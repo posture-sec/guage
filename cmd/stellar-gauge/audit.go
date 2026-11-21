@@ -28,7 +28,7 @@ func auditCommand(args []string, stdout, stderr io.Writer, d deps) int {
 		return usageError(stderr, "audit takes no positional arguments; declare accounts in the policy file")
 	}
 	if !validFormat(*format) {
-		return usageError(stderr, "--format must be text, json or markdown")
+		return usageError(stderr, formatRejection(*format))
 	}
 	severity, ok := parseFailOn(*failOn)
 	if !ok {

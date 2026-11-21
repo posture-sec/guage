@@ -1,0 +1,42 @@
+{
+  "_links": {
+    "self": {
+      "href": "https://horizon-testnet.stellar.org/accounts/GD4CMQCXWU7QKVK5SW4HYLJ3NVWIFZ353CZQISCO54TYREWNC7UBCQY7"
+    }
+  },
+  "id": "GD4CMQCXWU7QKVK5SW4HYLJ3NVWIFZ353CZQISCO54TYREWNC7UBCQY7",
+  "account_id": "GD4CMQCXWU7QKVK5SW4HYLJ3NVWIFZ353CZQISCO54TYREWNC7UBCQY7",
+  "sequence": "1",
+  "subentry_count": 0,
+  "last_modified_ledger": 5466909,
+  "thresholds": {
+    "low_threshold": 0,
+    "med_threshold": 0,
+    "high_threshold": 0
+  },
+  "flags": {
+    "auth_required": true,
+    "auth_revocable": true,
+    "auth_immutable": false,
+    "auth_clawback_enabled": true
+  },
+  "balances": [
+    {
+      "balance": "1000.0000000",
+      "buying_liabilities": "0.0000000",
+      "selling_liabilities": "0.0000000",
+      "asset_type": "native"
+    }
+  ],
+  "signers": [
+    {
+      "weight": 1,
+      "key": "GD4CMQCXWU7QKVK5SW4HYLJ3NVWIFZ353CZQISCO54TYREWNC7UBCQY7",
+      "type": "ed25519_public_key"
+    }
+  ],
+  "data": {},
+  "num_sponsoring": 0,
+  "num_sponsored": 0,
+  "paging_token": "GD4CMQCXWU7QKVK5SW4HYLJ3NVWIFZ353CZQISCO54TYREWNC7UBCQY7"
+}

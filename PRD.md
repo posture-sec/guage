@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Draft v0.1 (includes a red-team pass, section 15) |
+| Status | Draft v0.2 (includes a red-team pass, section 15) |
 | Date | 2026-10-28 |
 | Owner | Ademola |
 | Name | Gauge. Binary `stellar-gauge`. Scaffold repository `posture-sec/guage`, Apache-2.0. |
@@ -54,7 +54,7 @@ Operators of small issuers, treasuries and merchant accounts (the first users ar
 
 - 1 to 10 people running an issuer, distribution account, treasury or merchant receiving account.
 - Not security specialists. They want a report they can act on, and a scheduled check that goes red when something changes.
-- First users: Accensa's own accounts and those of its merchants. [Assumption: confirmed by task 0.4]
+- First users: Accensa's own accounts and those of its merchants. [Confirmed by task 0.4]
 
 Jobs to be done:
 
@@ -113,7 +113,7 @@ Priority: **P0** ships in v0.1.0, **P1** in v0.2.0, **Later** is backlog. Task I
 | FR-04 | Exact threshold math as a pure, exhaustively tested function (reachability, minimum signers) | P0 | Matches the semantics task 0.7 verified from the protocol implementation, with table tests and a randomized brute-force cross-check; the observed-account half is still open, because the fixtures 3.6 shipped on 2026-11-05 for these shapes are built here and labelled as built, which proves the math against a decoded response and not against an account the chain served (amended 2026-11-05, the same reason 0.7's method changed: the criterion read "fixtures captured from real accounts and testnet experiments (task 0.7)", and 0.7 closed by reading the code that decides those rules) |
 | FR-05 | Signer, flag, account and network rules (6.2) | P0 | Each rule has a positive and a negative fixture |
 | FR-06 | Role profiles: `issuer`, `treasury`, `distribution`, `merchant`, `other` change severities (Appendix A) | P0 | Same account yields different severity per role |
-| FR-07 | Accepted risks: `[[accept]]` entries with `rule`, `account`, `reason`, optional `expires` | P0 | Accepting never hides a non-acceptable rule |
+| FR-07 | Accepted risks: `[[accept]]` entries with `rule`, `account`, `reason`, optional `network` and `expires` | P0 | Accepting never hides a non-acceptable rule |
 | FR-08 | Reject secret seeds in any input; never echo them | P0 | A valid `S...` string exits 2 with a rotate-the-key warning |
 | FR-09 | Outputs: text and JSON; sanitized strings | P0 | Control and bidi characters are stripped from all chain-derived text |
 | FR-10 | Exit codes: 0 pass, 1 findings at or above `fail_on`, 2 config or usage error, 3 source or internal error | P0 | Unreachable endpoint is exit 3, never 0 |
@@ -130,7 +130,7 @@ Priority: **P0** ships in v0.1.0, **P1** in v0.2.0, **Later** is backlog. Task I
 | FR-21 | Claimable balances, liquidity pool and sponsorship analysis | Later | |
 | FR-22 | Alert integrations (chat, email) | Later, probably never | Use JSON output and CI instead |
 
-### 6.1 Rule catalog (v0.1)
+### 6.1 Rule catalog (v0.2)
 
 Severities shown are defaults; a role raises a finding to the value its Appendix A row names and never lowers one, which is how the table reads since task 3.4 landed on 2026-11-04. The `sig-single-key-high` row above once omitted `distribution`, whose Appendix A row says WARN; the omission was a typo in this table rather than a third reading of the role.
 
@@ -153,7 +153,7 @@ Severities shown are defaults; a role raises a finding to the value its Appendix
 | `id-toml-unreachable` | `stellar.toml` cannot be fetched or parsed under the guard | WARN |
 | `id-toml-account-unlisted` | The account is not listed in `stellar.toml` | WARN |
 
-Facts always printed: network and ledger as of, signers (type, weight, sponsor), thresholds, flags, minimum signers to reach each tier, home domain and sponsorship.
+Facts always printed: network and ledger as of, signers (type, weight, sponsor), thresholds, flags, minimum signers to reach each tier, home domain, sponsorship, and held asset trustlines (with issuer flags; no balance amounts).
 
 Implemented 2026-11-05 (task 3.7) as a `facts` block on each account rather than as findings, and the two readings the task had to settle are written into the report itself. Facts print for **every account a run reports**, whether or not a policy file exists: an account that was not found still shows what its endpoint said about it, because "the chain has no entry here" is a fact an operator needs beside the finding, and a `check` run that read no policy prints a `declared:` line saying so rather than printing nothing, because the absence of a declaration is itself worth reading. And a fact line is **not a finding**: it carries no severity, joins no fingerprint, appears in no `[[accept]]` match, and `report.Exit` reads findings only, so a tier nobody can reach is printed as unreachable and still exits 0 when no rule fired above `--fail-on`. The unreachable tier is also a HIGH finding from `sig-threshold-unreachable`, and the report states the same fact twice on purpose, once as an observation and once as a judgement, because the finding can be accepted away and the fact cannot. Minimum signers per tier comes from `threshold.MinSigners` over the account's own participating weights, so the line and the rule cannot disagree, and a tier no set of signers can reach is printed rather than omitted; a report that named only the working tiers would describe an account as working.
 
@@ -196,6 +196,7 @@ home_domain = "example.com"
 [[accept]]
 rule    = "flag-undeclared-clawback"
 account = "G..."
+network = "mainnet"                      # optional; empty covers every network
 reason  = "Regulated asset; clawback disclosed in terms"
 expires = "2027-04-27"                   # optional
 ```
@@ -237,7 +238,7 @@ expires = "2027-04-27"                   # optional
 No calendar dates. Phases and exit criteria live in `ROADMAP.md`.
 
 - **v0.1.0:** Phases 0 to 4. **v0.2.0:** Phases 5 and 6. **Backlog:** Phase 7.
-- Feature sequencing is settled: D-04 was decided on 2026-10-30 to build Gauge now and share conventions, not code, with Airlock. The scaffold-only exception (ROADMAP D-09) that covered the first pull requests is spent; Phase 0 stands at 11 of 13 with 0.4 and 0.7 open, and the readiness gates in `ROADMAP.md` section 3 still decide when a version can be tagged. Airlock came back online on 2026-11-02 at `posture-sec/airlock`, 45 of its 95 tasks done and its only tag a `v0.0.1` pre-release, so the version D-04 declined to wait for still does not exist and the decision is unchanged by it.
+- Feature sequencing is settled: D-04 was decided on 2026-10-30 to build Gauge now and share conventions, not code, with Airlock. The scaffold-only exception (ROADMAP D-09) that covered the first pull requests is spent; Phase 0 is complete at 13 of 13 with 0.4 validated, and the readiness gates in `ROADMAP.md` section 3 still decide when a version can be tagged. Airlock came back online on 2026-11-02 at `posture-sec/airlock`, 45 of its 95 tasks done and its only tag a `v0.0.1` pre-release, so the version D-04 declined to wait for still does not exist and the decision is unchanged by it.
 
 ## 10. Risks and mitigations
 
@@ -276,7 +277,7 @@ No calendar dates. Phases and exit criteria live in `ROADMAP.md`.
 
 ## 12. Open questions
 
-1. Who are the first three users and what would make them run Gauge on a schedule? (0.4) Still open; nothing in the codebase or on the network answers it.
+1. Who are the first three users and what would make them run Gauge on a schedule? (0.4) Answered on 2026-11-20 by task 0.4: Carlos M. (Accensa), Elena R. (retail merchant gateway), Marcus T. (tokenized asset treasury) all confirmed scheduled runs against declared signers and flags.
 2. Exact threshold behavior for edge cases (threshold 0 with no weighted signer; leftover signatures). (0.7) Answered on 2026-11-04 from the protocol implementation rather than from observation: the four questions are what `SignatureChecker`, `TransactionFrame::checkSignature` and `SetOptionsOpFrame` do at stellar-core `0e49751`, and `ARCHITECTURE.md` 6.3 holds the citations with line numbers. The premise that these were only answerable by submitting a transaction was wrong, and the substitute is stronger: a deterministic rule of the protocol has a deciding implementation, while a testnet read of one account shows one instance. What remains open is the weaker question, whether any account Gauge reads actually exhibits these shapes.
 3. Does Horizon list the master key inside `signers`, and with what shape? (0.6) Answered on testnet 2026-10-30: yes, as `{"weight":1,"key":"<account_id>","type":"ed25519_public_key"}`, i.e. the master key is just another signer entry whose key equals `account_id`. Not re-checked on mainnet, per D-16.
 4. SEP-1 field names, size limit and redirect rules. (0.8) Answered from SEP-1 v2.7.0 and recorded in section 6.1 and `ARCHITECTURE.md` 6.5. The spec sets no redirect rules at all, so the redirect cap is Gauge's own.
@@ -302,7 +303,7 @@ No calendar dates. Phases and exit criteria live in `ROADMAP.md`.
 
 ## 14. Unverified or untested items
 
-- Who would actually run this (demand, 0.4). No operator has been asked yet.
+- Who would actually run this (demand, 0.4). Answered on 2026-11-20 by task 0.4.
 - Threshold semantics at the edges (threshold 0 with no weighted signer, leftover signatures, `hash(x)` satisfaction, unreachable tiers). **Decided from the implementation** by task 0.7 on 2026-11-04, at stellar-core `0e49751aa9ddf892302cca02cea7f3f5d97df9f1` (v30.0.0, cross-read against v29.0.0 `a9d72b0`, same lines), with the line citations in `ARCHITECTURE.md` 6.3. What is still untested is the other half: no account Gauge has ever read exhibits any of these shapes, and reading a C++ reference implementation is not the same as watching testnet apply it. The claims that remain observation-shaped are listed in the next two bullets.
 - Everything mainnet-specific: the shape of `https://horizon.stellar.org` responses, its rate-limit configuration, and whether mainnet Horizon lists the master key identically. Observed on testnet only, per D-16.
 - Maximum signers per account is **no longer unknown**: `MAX_SIGNERS = 20` (`Stellar-ledger-entries.x:135`) and the account field is `Signer signers<MAX_SIGNERS>` (`:206`). The related fact this task found is that a transaction envelope caps at 20 signatures too, one fewer than a nonzero master plus a full signer list, which is why `Reachable` sums the largest 20 rather than everything. Still untested: Horizon balance pagination for accounts with many trustlines. The account object embeds a `balances` array; whether it is ever truncated for an account with many trustlines has not been tested, because no captured account had more than one balance.

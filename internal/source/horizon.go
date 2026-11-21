@@ -93,6 +93,18 @@ func (h *Horizon) snapshot(id string, wire accountWire) (model.AccountSnapshot, 
 	}
 	snapshot.Balances = balances
 
+	if len(wire.Data) > 0 {
+		data := make(map[string]string, len(wire.Data))
+		for k, v := range wire.Data {
+			str, ok := v.(string)
+			if !ok {
+				return fail("data value is not a string")
+			}
+			data[k] = str
+		}
+		snapshot.Data = data
+	}
+
 	return snapshot, nil
 }
 
@@ -273,6 +285,7 @@ type accountWire struct {
 	Flags      json.RawMessage `json:"flags"`
 	Signers    *[]signerWire   `json:"signers"`
 	Balances   *[]balanceWire  `json:"balances"`
+	Data       map[string]any  `json:"data"`
 	HomeDomain string          `json:"home_domain"`
 	Sponsor    string          `json:"sponsor"`
 }

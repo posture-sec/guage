@@ -104,6 +104,16 @@ func prepareFacts(facts *model.AccountFacts) *model.AccountFacts {
 		copied.Accounts = accounts
 		out.Identity = &copied
 	}
+	if len(facts.Trustlines) > 0 {
+		trustlines := make([]model.TrustlineFact, len(facts.Trustlines))
+		for i, tl := range facts.Trustlines {
+			tl.AssetCode = sanitize.Text(tl.AssetCode)
+			tl.AssetIssuer = sanitize.Text(tl.AssetIssuer)
+			tl.IssuerStatus = sanitize.Text(tl.IssuerStatus)
+			trustlines[i] = tl
+		}
+		out.Trustlines = trustlines
+	}
 	return &out
 }
 

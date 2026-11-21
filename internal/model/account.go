@@ -49,17 +49,18 @@ func (f Flags) Equal(other Flags) bool {
 }
 
 type AccountSnapshot struct {
-	ID         string     `json:"id"`
-	Network    string     `json:"network"`
-	Endpoint   string     `json:"endpoint"`
-	Ledger     int64      `json:"ledger"`
-	Sequence   string     `json:"sequence"`
-	Thresholds Thresholds `json:"thresholds"`
-	Signers    []Signer   `json:"signers"`
-	Flags      Flags      `json:"flags"`
-	HomeDomain string     `json:"home_domain"`
-	Sponsor    string     `json:"sponsor"`
-	Balances   []Balance  `json:"balances"`
+	ID         string            `json:"id"`
+	Network    string            `json:"network"`
+	Endpoint   string            `json:"endpoint"`
+	Ledger     int64             `json:"ledger"`
+	Sequence   string            `json:"sequence"`
+	Thresholds Thresholds        `json:"thresholds"`
+	Signers    []Signer          `json:"signers"`
+	Flags      Flags             `json:"flags"`
+	HomeDomain string            `json:"home_domain"`
+	Sponsor    string            `json:"sponsor"`
+	Balances   []Balance         `json:"balances"`
+	Data       map[string]string `json:"data,omitempty"`
 }
 
 // HasHomeDomain reports whether the account publishes a home domain. Horizon returns
