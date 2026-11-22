@@ -131,6 +131,36 @@ backlog() {
     '6.3	type: research	area: rules	docs(triage): review external false-positive reports' \
     '6.4	type: research	area: docs	docs(decisions): decide funding and applications (D-07)' \
     '6.5	type: docs	area: docs	docs(outreach): contact issuers, anchors and treasury teams' \
+    '7.36	type: test	area: rules	test(rules): reject duplicate or malformed rule IDs' \
+    '7.37	type: test	area: rules	test(rules): pin registry evaluation order before reports sort' \
+    '7.38	type: test	area: run	test(run): prove network mismatch skips identity fetches' \
+    '7.39	type: feature	area: cli	feat(cli): expose bounded concurrency on check' \
+    '7.40	type: bug	area: cli	fix(cli): share format rejection diagnostics' \
+    '7.41	type: security	area: model	security(model): hash evidence after format-character stripping' \
+    '7.42	type: feature	area: policy	feat(policy): scope accepted risks to one network' \
+    '7.43	type: test	area: sanitize	test(sanitize): consume OSC 8 hyperlinks whole, URL included' \
+    '7.46	type: test	area: sanitize	test(sanitize): table the bidi overrides and isolate controls' \
+    '7.47	type: test	area: sanitize	test(sanitize): flag IDN home domains and their punycode form' \
+    '7.48	type: test	area: sep1	test(sep1): prove redirect refusals stop before a request leaves' \
+    '7.49	type: test	area: sep1	test(sep1): count malformed ACCOUNTS without dropping the document' \
+    '7.50	type: test	area: sep1	test(sep1): treat a whitespace home domain as absent' \
+    '7.51	type: test	area: threshold	test(threshold): pre-auth tx exclusion in standing weight sum' \
+    '7.52	type: test	area: threshold	test(threshold): early returns in MinSigners against boundary signers' \
+    '7.53	type: test	area: threshold	test(threshold): weight filter at every tier against lone and mixed signers' \
+    '7.54	type: test	area: policy	test(policy): role severity catalog matrix and raised-rule counts' \
+    '7.55	type: test	area: policy	test(policy): acceptance expiry date type with UTC cutover' \
+    '7.56	type: test	area: policy	test(policy): immutable role floors per call' \
+    '7.57	type: bug	area: model	fix(model): refuse a network verdict with no passphrase' \
+    '7.58	type: feature	area: model	feat(model): type DeclaredFacts.Role as model.Role' \
+    '7.59	type: bug	area: run	fix(run): build the identity fetcher only when a domain needs it' \
+    '7.60	type: test	area: run	test(run): one panicking rule produces one src-rule-panic finding' \
+    '7.61	type: test	area: run	test(run): cap in-flight account reads at the concurrency limit' \
+    '7.62	type: test	area: model	test(model): pin exact seven Finding JSON keys without omitempty' \
+    '7.63	type: security	area: policy	security(policy): validate policy home_domain against SEP-1 hostname label rules' \
+    '7.64	type: security	area: policy	security(policy): reject 56-char base32 seed shape regardless of checksum' \
+    '7.65	type: bug	area: policy	bug(policy): endpoint validation accepts a path and an out-of-range port' \
+    '7.66	type: feature	area: policy	feature(policy): keep the TOML parser line and column in the syntax error' \
+    '7.67	type: bug	area: policy	bug(policy): empty policy with no accounts accepted at load time' \
     'G1	type: test	area: rules	gate: every P0 requirement has passing tests' \
     'G2	type: test	area: rules	gate: every scenario has a fixture and expected findings' \
     'G3	type: test	area: cli	gate: fail-closed paths all exit non-zero' \
@@ -185,6 +215,22 @@ G10	gate	ROADMAP.md is current in the merge that most recently touched it.	The r
 PROSE
 }
 
+# Read the curated table once. The main loop consumes this copy, and the
+# duplicate check runs before any mode can turn a repeated id into a second
+# issue with the same marker.
+backlog_file="$(mktemp)"
+trap 'rm -f "${backlog_file}"' EXIT
+backlog >"${backlog_file}"
+
+duplicates="$(cut -f1 "${backlog_file}" | sort | uniq -d)"
+if [ -n "${duplicates}" ]; then
+  while IFS= read -r id; do
+    [ -n "${id}" ] || continue
+    echo "generate_issues: duplicate backlog row for ${id}" >&2
+  done <<<"${duplicates}"
+  exit 1
+fi
+
 strip_backticks() {
   tr -d '`'
 }
@@ -200,6 +246,7 @@ verb_for() {
     "type: test") printf 'test' ;;
     "type: tooling") printf 'ci' ;;
     "type: security") printf 'chore' ;;
+    "type: bug") printf 'fix' ;;
     *) printf 'docs' ;;
   esac
 }
@@ -807,7 +854,7 @@ while IFS=$'\t' read -r id ttype tarea title; do
   fi
   rm -f "${body}"
   planned=$((planned + 1))
-done < <(backlog)
+done <"${backlog_file}"
 
 if [ "${check}" -eq 1 ]; then
   missing="$(awk '/^- \[[ ]\] \*\*(G[0-9]+|[0-6]\.[0-9]+)\*\*/ {

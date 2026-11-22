@@ -116,6 +116,33 @@ func idTomlAccountUnlisted(c Context) []model.Finding {
 	)}
 }
 
+// idSep29MemoRequired warns when an account with the merchant role does not
+// have the SEP-29 config.memo_required account data entry set to "1" (base64 "MQ==").
+// SEP-29 is client-enforced by sending applications and Gauge checks the account's
+// declared posture rather than attempting transaction builds or submissions.
+func idSep29MemoRequired(c Context) []model.Finding {
+	if c.Missing || c.Mismatch {
+		return nil
+	}
+	if c.Account.Role != model.RoleMerchant {
+		return nil
+	}
+	if val, ok := c.Snapshot.Data["config.memo_required"]; ok && val == "MQ==" {
+		return nil
+	}
+	observed := "none"
+	if val, ok := c.Snapshot.Data["config.memo_required"]; ok {
+		observed = fmt.Sprintf("%q", val)
+	}
+	return []model.Finding{model.NewFinding(
+		"id-sep29-memo-required",
+		model.SevWarn,
+		c.Snapshot.ID,
+		"merchant receiving account does not enforce SEP-29 memo requirements",
+		fmt.Sprintf("config.memo_required expected \"MQ==\", observed %s", observed),
+	)}
+}
+
 func plural(count int, one, many string) string {
 	if count == 1 {
 		return one

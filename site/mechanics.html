@@ -26,7 +26,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/site.css">
+  <link rel="stylesheet" href="assets/motion.css">
   <script src="assets/site.js" defer></script>
+  <script src="assets/motion.js" defer></script>
 </head>
 <body data-page="mechanics">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -56,10 +58,12 @@
         <a href="rules.html">Rules <span>16</span></a>
         <a href="policy.html">Policy <span>toml</span></a>
         <a href="guides.html">Guides <span>run</span></a>
+        <a href="developers.html">Developers <span>code</span></a>
+        <a href="contributing.html">Contributing <span>pr</span></a>
         <a href="status.html">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-05<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-18<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -137,10 +141,10 @@
         <section class="section">
           <h2>What one run does, in order</h2>
           <ol class="status-list">
-            <li><b>Validate</b><span>The request is checked: network present, exactly one endpoint at v0.1, at least one account, a known failure threshold.</span></li>
-            <li><b>Read network</b><span>The endpoint's root document supplies its network passphrase and latest ledger.</span></li>
-            <li><b>Compare passphrase</b><span>A mismatch is recorded before any account read. Nothing is fetched from the wrong network.</span></li>
-            <li><b>Fetch accounts</b><span>Accounts are read in policy order through a pool of at most eight requests. The first non-404 failure cancels the rest.</span></li>
+            <li><b>Validate</b><span>The request is checked: network present, one to five distinct endpoints, at least one account, a known failure threshold.</span></li>
+            <li><b>Read network</b><span>Each endpoint's root document supplies its network passphrase and latest ledger. An endpoint that cannot be read ends the run with exit 3.</span></li>
+            <li><b>Compare passphrase</b><span>A mismatch on any endpoint is recorded before any account read. Nothing is fetched from any endpoint when one is on the wrong network.</span></li>
+            <li><b>Fetch accounts</b><span>Accounts are read in policy order through a pool of at most eight requests. The first non-404 failure cancels the rest. With several endpoints, each is read in turn through the same pool, and every account is compared with the first endpoint's reading; a difference is a HIGH <code>src-disagreement</code>.</span></li>
             <li><b>Fetch identity</b><span>Each account that published a home domain is asked about it, under the same bound of eight, through the dial-time guard. A domain that was not published is not fetched, and the whole stage is skipped when the endpoint is on the wrong network.</span></li>
             <li><b>Evaluate rules</b><span>Pure functions read the snapshot, the policy and the identity result, and each emits its baseline severity. A rule panic becomes an internal finding and exit 3.</span></li>
             <li><b>Weight by role</b><span>The account's declared role raises a finding to the severity Appendix A names for it and never lowers one, so a role cannot soften a missing account or an unreachable tier. <code>check</code> declares <code>other</code>, which changes nothing.</span></li>
@@ -167,7 +171,7 @@
         </section>
 
         <footer class="footer">
-          <p>Functional alpha, unaudited. Every page reflects the shipped code as of 2026-11-02.</p>
+          <p>Functional alpha, unaudited. Every page reflects the shipped code as of 2026-11-09.</p>
           <div class="footer-links">
             <a href="rules.html">Next: rule catalog</a>
             <a href="status.html">Status and limits</a>

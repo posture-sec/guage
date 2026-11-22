@@ -13,6 +13,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/posture-sec/guage/internal/report"
 	"github.com/posture-sec/guage/internal/sep1"
 )
 
@@ -182,12 +183,22 @@ func TestCheckRejectsBadArguments(t *testing.T) {
 		{
 			name:    "no endpoint",
 			args:    []string{"check", "--network", testNetwork, accountOne},
-			wantMsg: "exactly one --endpoint is required",
+			wantMsg: "--endpoint is required",
 		},
 		{
-			name:    "two endpoints",
-			args:    []string{"check", "--network", testNetwork, "--endpoint", "https://a.invalid", "--endpoint", "https://b.invalid", accountOne},
-			wantMsg: "exactly one --endpoint is required",
+			// Two to five endpoints are a comparison since task 5.1; a sixth is
+			// refused before any of them is dialled.
+			name: "six endpoints",
+			args: []string{"check", "--network", testNetwork,
+				"--endpoint", "https://a.invalid", "--endpoint", "https://b.invalid",
+				"--endpoint", "https://c.invalid", "--endpoint", "https://d.invalid",
+				"--endpoint", "https://e.invalid", "--endpoint", "https://f.invalid", accountOne},
+			wantMsg: "at most 5 endpoints",
+		},
+		{
+			name:    "an endpoint passed twice",
+			args:    []string{"check", "--network", testNetwork, "--endpoint", "https://a.invalid", "--endpoint", "https://a.invalid", accountOne},
+			wantMsg: "listed twice",
 		},
 		{
 			name:    "no accounts",
@@ -202,7 +213,7 @@ func TestCheckRejectsBadArguments(t *testing.T) {
 		{
 			name:    "bad format",
 			args:    []string{"check", "--network", testNetwork, "--endpoint", "https://example.invalid", "--format", "yaml", accountOne},
-			wantMsg: "--format must be text or json",
+			wantMsg: "--format must be text, json or markdown",
 		},
 	}
 	for _, tc := range cases {
@@ -597,6 +608,8 @@ func TestIdentityFindingsReachBothCommandsAndFormats(t *testing.T) {
 		{"check json", "json", false},
 		{"audit text", "text", true},
 		{"audit json", "json", true},
+		{"check markdown", "markdown", false},
+		{"audit markdown", "markdown", true},
 	}
 	for _, tt := range cases {
 		tt := tt
@@ -663,6 +676,12 @@ func TestAuditFailsClosed(t *testing.T) {
 			wantMsg:  "does not define",
 		},
 		{
+			name:     "three unknown keys in one run",
+			body:     policyFor(srv.URL) + "\nzendpoints = []\nexpectedflags = {}\nowners = []\n",
+			wantCode: 2,
+			wantMsg:  "does not define (account.expectedflags, account.owners, account.zendpoints)",
+		},
+		{
 			name:     "secret seed",
 			body:     policyFor(srv.URL) + "\n[[accept]]\nrule = \"flag-drift\"\naccount = \"" + seed + "\"\nreason = \"x\"\n",
 			wantCode: 2,
@@ -670,10 +689,16 @@ func TestAuditFailsClosed(t *testing.T) {
 			never:    seed,
 		},
 		{
-			name:     "two endpoints",
-			body:     strings.Replace(policyFor(srv.URL), "endpoints = [\"", "endpoints = [\"https://second.invalid\", \"", 1),
+			name:     "six endpoints",
+			body:     strings.Replace(policyFor(srv.URL), "endpoints = [\"", "endpoints = [\"https://a.invalid\", \"https://b.invalid\", \"https://c.invalid\", \"https://d.invalid\", \"https://e.invalid\", \"", 1),
 			wantCode: 2,
-			wantMsg:  "multi-endpoint",
+			wantMsg:  "at most 5 endpoints",
+		},
+		{
+			name:     "an accepted disagreement",
+			body:     policyFor(srv.URL) + "\n[[accept]]\nrule = \"src-disagreement\"\naccount = \"" + accountOne + "\"\nreason = \"lagging replica\"\n",
+			wantCode: 2,
+			wantMsg:  "may be accepted",
 		},
 		{
 			name:     "no accounts",
@@ -709,11 +734,41 @@ func TestAuditRejectsAPositionalArgument(t *testing.T) {
 	}
 }
 
-func TestAuditRejectsMarkdownUntilItExists(t *testing.T) {
+// TestMarkdownFormatIsAccepted replaces the test that pinned the refusal while
+// task 5.3 was open: the flag now passes validation on both commands, so the run
+// goes on to the next check (here, the missing policy file) instead of stopping
+// at the format.
+func TestMarkdownFormatIsAccepted(t *testing.T) {
 	t.Parallel()
-	code, _, stderr := execCLI(t, "audit", "--format", "markdown")
-	if code != 2 || !strings.Contains(stderr, "markdown output is not implemented yet") {
+	missing := filepath.Join(t.TempDir(), "absent.toml")
+	code, _, stderr := execCLI(t, "audit", "--config", missing, "--format", "markdown")
+	if code != 2 || strings.Contains(stderr, "--format") || strings.Contains(stderr, "not implemented") {
 		t.Fatalf("exit code = %d, stderr %q", code, stderr)
+	}
+}
+
+// TestMarkdownReportKeepsTheExitCodeAndTheFooter drives the whole CLI to the
+// markdown renderer and checks that the format changes the bytes and nothing
+// else: the exit code still comes from the findings, and the page ends with the
+// limits footer.
+func TestMarkdownReportKeepsTheExitCodeAndTheFooter(t *testing.T) {
+	t.Parallel()
+	srv := startEndpoint(t, endpoint{balance: readFixture(t, fixtureClawback)})
+	fetches := &offlineIdentity{}
+	code, stdout, stderr := execCLIWith(t, offlineDeps(fetches),
+		"check", "--network", testNetwork, "--endpoint", srv.URL,
+		"--format", "markdown", "--fail-on", "warn", accountMissing)
+	if code != 1 {
+		t.Fatalf("exit code = %d, want 1 (stderr %q)", code, stderr)
+	}
+	if !strings.HasPrefix(stdout, "# Gauge posture report\n") {
+		t.Errorf("stdout is not a markdown report:\n%s", stdout)
+	}
+	if !strings.Contains(stdout, "- exit code: 1\n") {
+		t.Errorf("markdown report does not record exit code 1:\n%s", stdout)
+	}
+	if !strings.HasSuffix(stdout, report.Limits+"\n") {
+		t.Errorf("markdown report does not end with the limits footer:\n%s", stdout)
 	}
 }
 

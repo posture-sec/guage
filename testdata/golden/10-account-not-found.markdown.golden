@@ -1,0 +1,34 @@
+# Gauge posture report
+
+- tool: Gauge test
+- network: Test SDF Network ; September 2015
+- ledger: 5466897
+
+## Account GC2HHIM66CBKJFMYOHECBMKD4NWRGWJ3FEXFDPWPT4TLS7OFR43LO2II
+
+- endpoint: https://horizon-testnet.stellar.org
+- state: not found on this endpoint (never created, or merged)
+
+### Declared
+
+Nothing: this run read no policy file, so only the universal rules ran.
+
+### Findings: 1 (0 accepted)
+
+#### \[high\] acct-missing
+
+- message: the account was not found on this endpoint, so it may never have been created or it was merged
+- fingerprint: b03faa6106f2405560196e0cad9e0bb74cab9c08d798877c0d795019bddd43d6
+
+Evidence:
+
+```
+endpoint https://horizon-testnet.stellar.org returned not found
+```
+
+## Result
+
+- findings: 1 (1 high, 0 warn, 0 info), 0 accepted
+- exit code: 1
+
+**Limits.** Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised.

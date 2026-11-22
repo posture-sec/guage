@@ -85,7 +85,7 @@ func TestLoadAcceptsPlainHTTPForLoopbackOnly(t *testing.T) {
 		endpoint := endpoint
 		t.Run(endpoint, func(t *testing.T) {
 			t.Parallel()
-			body := "version = 1\nnetwork = \"testnet\"\nendpoints = [\"" + endpoint + "\"]"
+			body := "version = 1\nnetwork = \"testnet\"\nendpoints = [\"" + endpoint + "\"]\n[[account]]\nid = \"" + accountOne + "\"\n"
 			if _, err := Load(strings.NewReader(body)); err != nil {
 				t.Fatalf("Load(%q): %v", endpoint, err)
 			}
@@ -173,12 +173,12 @@ func TestLoadRejects(t *testing.T) {
 		{"endpoint without host", "version = 1\nnetwork = \"testnet\"\nendpoints = [\"https:///path\"]", ErrEndpoint},
 		{"home domain with scheme", "version = 1\nnetwork = \"testnet\"\n[[account]]\nid = \"" + accountOne + "\"\nhome_domain = \"https://example.com\"", ErrHomeDomain},
 		{"home domain is an IP", "version = 1\nnetwork = \"testnet\"\n[[account]]\nid = \"" + accountOne + "\"\nhome_domain = \"192.0.2.1\"", ErrHomeDomain},
-		{"accept missing reason", "version = 1\nnetwork = \"testnet\"\n[[accept]]\nrule = \"flag-drift\"\naccount = \"" + accountOne + "\"", ErrAccept},
-		{"accept wildcard rule", "version = 1\nnetwork = \"testnet\"\n[[accept]]\nrule = \"*\"\naccount = \"" + accountOne + "\"\nreason = \"r\"", ErrAcceptRule},
-		{"accept wildcard account", "version = 1\nnetwork = \"testnet\"\n[[accept]]\nrule = \"flag-drift\"\naccount = \"*\"\nreason = \"r\"", ErrAccept},
-		{"accept non-acceptable rule", "version = 1\nnetwork = \"testnet\"\n[[accept]]\nrule = \"acct-missing\"\naccount = \"" + accountOne + "\"\nreason = \"r\"", ErrAcceptRule},
-		{"accept bad expiry", "version = 1\nnetwork = \"testnet\"\n[[accept]]\nrule = \"flag-drift\"\naccount = \"" + accountOne + "\"\nreason = \"r\"\nexpires = \"2027-13-01\"", ErrAccept},
-		{"duplicate accept", "version = 1\nnetwork = \"testnet\"\n[[accept]]\nrule = \"flag-drift\"\naccount = \"" + accountOne + "\"\nreason = \"r\"\n[[accept]]\nrule = \"flag-drift\"\naccount = \"" + accountOne + "\"\nreason = \"s\"", ErrDuplicateAccept},
+		{"accept missing reason", "version = 1\nnetwork = \"testnet\"\n[[account]]\nid = \"" + accountOne + "\"\n[[accept]]\nrule = \"flag-drift\"\naccount = \"" + accountOne + "\"", ErrAccept},
+		{"accept wildcard rule", "version = 1\nnetwork = \"testnet\"\n[[account]]\nid = \"" + accountOne + "\"\n[[accept]]\nrule = \"*\"\naccount = \"" + accountOne + "\"\nreason = \"r\"", ErrAcceptRule},
+		{"accept wildcard account", "version = 1\nnetwork = \"testnet\"\n[[account]]\nid = \"" + accountOne + "\"\n[[accept]]\nrule = \"flag-drift\"\naccount = \"*\"\nreason = \"r\"", ErrAccept},
+		{"accept non-acceptable rule", "version = 1\nnetwork = \"testnet\"\n[[account]]\nid = \"" + accountOne + "\"\n[[accept]]\nrule = \"acct-missing\"\naccount = \"" + accountOne + "\"\nreason = \"r\"", ErrAcceptRule},
+		{"accept bad expiry", "version = 1\nnetwork = \"testnet\"\n[[account]]\nid = \"" + accountOne + "\"\n[[accept]]\nrule = \"flag-drift\"\naccount = \"" + accountOne + "\"\nreason = \"r\"\nexpires = \"2027-13-01\"", ErrAccept},
+		{"duplicate accept", "version = 1\nnetwork = \"testnet\"\n[[account]]\nid = \"" + accountOne + "\"\n[[accept]]\nrule = \"flag-drift\"\naccount = \"" + accountOne + "\"\nreason = \"r\"\n[[accept]]\nrule = \"flag-drift\"\naccount = \"" + accountOne + "\"\nreason = \"s\"", ErrDuplicateAccept},
 		{"syntax error", "version =", ErrSyntax},
 	} {
 		t.Run(tt.name, func(t *testing.T) {

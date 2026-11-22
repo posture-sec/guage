@@ -1,11 +1,11 @@
-# PRD: Gauge (working name)
+# PRD: Gauge
 
 | | |
 |---|---|
-| Status | Draft v0.1 (includes a red-team pass, section 15) |
+| Status | Draft v0.2 (includes a red-team pass, section 15) |
 | Date | 2026-10-28 |
 | Owner | Ademola |
-| Working name | Gauge. Binary `stellar-gauge`. Scaffold repository `posture-sec/guage`, Apache-2.0; final product naming remains open (section 13) |
+| Name | Gauge. Binary `stellar-gauge`. Scaffold repository `posture-sec/guage`, Apache-2.0. |
 | Language | Go |
 | Sibling projects | Airlock (`posture-sec/airlock`, public since 2026-11-02): a Python scanner for Stellar and Soroban repositories. Stellar account fixtures (`posture-sec/stellar-account-fixtures`, public the same day): nine `GET /accounts/<id>` reads with provenance sidecars and the validator that recomputes them, eight on mainnet and one on testnet since 2026-11-03, which is where a rule fixture here can get a shape nobody typed by hand. Gauge audits on-chain account configuration. They share conventions, not code, and one owner organization |
 | Companion docs | `ARCHITECTURE.md`, `ARCHITECTURE_ESSENTIALS.md`, `ROADMAP.md`, `project_structure.md`, `AGENTS.md`, `CLAUDE.md` |
@@ -54,7 +54,7 @@ Operators of small issuers, treasuries and merchant accounts (the first users ar
 
 - 1 to 10 people running an issuer, distribution account, treasury or merchant receiving account.
 - Not security specialists. They want a report they can act on, and a scheduled check that goes red when something changes.
-- First users: Accensa's own accounts and those of its merchants. [Assumption: confirmed by task 0.4]
+- First users: Accensa's own accounts and those of its merchants. [Confirmed by task 0.4]
 
 Jobs to be done:
 
@@ -113,14 +113,14 @@ Priority: **P0** ships in v0.1.0, **P1** in v0.2.0, **Later** is backlog. Task I
 | FR-04 | Exact threshold math as a pure, exhaustively tested function (reachability, minimum signers) | P0 | Matches the semantics task 0.7 verified from the protocol implementation, with table tests and a randomized brute-force cross-check; the observed-account half is still open, because the fixtures 3.6 shipped on 2026-11-05 for these shapes are built here and labelled as built, which proves the math against a decoded response and not against an account the chain served (amended 2026-11-05, the same reason 0.7's method changed: the criterion read "fixtures captured from real accounts and testnet experiments (task 0.7)", and 0.7 closed by reading the code that decides those rules) |
 | FR-05 | Signer, flag, account and network rules (6.2) | P0 | Each rule has a positive and a negative fixture |
 | FR-06 | Role profiles: `issuer`, `treasury`, `distribution`, `merchant`, `other` change severities (Appendix A) | P0 | Same account yields different severity per role |
-| FR-07 | Accepted risks: `[[accept]]` entries with `rule`, `account`, `reason`, optional `expires` | P0 | Accepting never hides a non-acceptable rule |
+| FR-07 | Accepted risks: `[[accept]]` entries with `rule`, `account`, `reason`, optional `network` and `expires` | P0 | Accepting never hides a non-acceptable rule |
 | FR-08 | Reject secret seeds in any input; never echo them | P0 | A valid `S...` string exits 2 with a rotate-the-key warning |
 | FR-09 | Outputs: text and JSON; sanitized strings | P0 | Control and bidi characters are stripped from all chain-derived text |
 | FR-10 | Exit codes: 0 pass, 1 findings at or above `fail_on`, 2 config or usage error, 3 source or internal error | P0 | Unreachable endpoint is exit 3, never 0 |
 | FR-11 | HTTP hygiene: timeouts, body size caps, bounded retries, bounded concurrency | P0 | Oversized or slow responses fail closed |
 | FR-12 | `stellar.toml` identity rules with an SSRF-guarded fetcher | P0 | Private, loopback and link-local targets are refused |
 | FR-13 | Roadmap gate: `scripts/check_roadmap_touched.sh`, PR template checkbox, required CI check | P0 | A PR that changes any file but not `ROADMAP.md` fails |
-| FR-14 | Multi-endpoint comparison (`src-disagreement`) | P1 | Two endpoints that disagree raise HIGH |
+| FR-14 | Multi-endpoint comparison (`src-disagreement`) | P1 | Two endpoints that disagree raise HIGH. Implemented 2026-11-20 (task 5.1): up to five endpoints, compared with the first, not acceptable |
 | FR-15 | `snapshot` and `diff` against a saved baseline | P1 | Added or removed signers and changed thresholds are listed |
 | FR-16 | Markdown output | P1 | Renders in a GitHub step summary safely |
 | FR-17 | Scheduled GitHub Action template that opens an issue on findings | P1 | Drift triggers a visible failure |
@@ -130,7 +130,7 @@ Priority: **P0** ships in v0.1.0, **P1** in v0.2.0, **Later** is backlog. Task I
 | FR-21 | Claimable balances, liquidity pool and sponsorship analysis | Later | |
 | FR-22 | Alert integrations (chat, email) | Later, probably never | Use JSON output and CI instead |
 
-### 6.1 Rule catalog (v0.1)
+### 6.1 Rule catalog (v0.2)
 
 Severities shown are defaults; a role raises a finding to the value its Appendix A row names and never lowers one, which is how the table reads since task 3.4 landed on 2026-11-04. The `sig-single-key-high` row above once omitted `distribution`, whose Appendix A row says WARN; the omission was a typo in this table rather than a third reading of the role.
 
@@ -153,7 +153,7 @@ Severities shown are defaults; a role raises a finding to the value its Appendix
 | `id-toml-unreachable` | `stellar.toml` cannot be fetched or parsed under the guard | WARN |
 | `id-toml-account-unlisted` | The account is not listed in `stellar.toml` | WARN |
 
-Facts always printed: network and ledger as of, signers (type, weight, sponsor), thresholds, flags, minimum signers to reach each tier, home domain and sponsorship.
+Facts always printed: network and ledger as of, signers (type, weight, sponsor), thresholds, flags, minimum signers to reach each tier, home domain, sponsorship, and held asset trustlines (with issuer flags; no balance amounts).
 
 Implemented 2026-11-05 (task 3.7) as a `facts` block on each account rather than as findings, and the two readings the task had to settle are written into the report itself. Facts print for **every account a run reports**, whether or not a policy file exists: an account that was not found still shows what its endpoint said about it, because "the chain has no entry here" is a fact an operator needs beside the finding, and a `check` run that read no policy prints a `declared:` line saying so rather than printing nothing, because the absence of a declaration is itself worth reading. And a fact line is **not a finding**: it carries no severity, joins no fingerprint, appears in no `[[accept]]` match, and `report.Exit` reads findings only, so a tier nobody can reach is printed as unreachable and still exits 0 when no rule fired above `--fail-on`. The unreachable tier is also a HIGH finding from `sig-threshold-unreachable`, and the report states the same fact twice on purpose, once as an observation and once as a judgement, because the finding can be accepted away and the fact cannot. Minimum signers per tier comes from `threshold.MinSigners` over the account's own participating weights, so the line and the rule cannot disagree, and a tier no set of signers can reach is printed rather than omitted; a report that named only the working tiers would describe an account as working.
 
@@ -196,9 +196,12 @@ home_domain = "example.com"
 [[accept]]
 rule    = "flag-undeclared-clawback"
 account = "G..."
+network = "mainnet"                      # optional; empty covers every network
 reason  = "Regulated asset; clawback disclosed in terms"
 expires = "2027-04-27"                   # optional
 ```
+
+The loader rejects a file with no `[[account]]` table: an audit with nothing declared audits nothing, so the refusal belongs where the file can be named. Each `endpoints` entry is a base URL with a host, no path, userinfo, query or fragment, and a port from 1 to 65535 when one is present; plain HTTP stays limited to loopback hosts. A malformed file reports the parser's line and column and, when set, its last key, never the source line or a value. All three are config errors and exit 2.
 
 ### 6.4 Endpoints and what they cost (task 0.12, 2026-10-30)
 
@@ -237,7 +240,7 @@ expires = "2027-04-27"                   # optional
 No calendar dates. Phases and exit criteria live in `ROADMAP.md`.
 
 - **v0.1.0:** Phases 0 to 4. **v0.2.0:** Phases 5 and 6. **Backlog:** Phase 7.
-- Feature sequencing is settled: D-04 was decided on 2026-10-30 to build Gauge now and share conventions, not code, with Airlock. The scaffold-only exception (ROADMAP D-09) that covered the first pull requests is spent; Phase 0 stands at 11 of 13 with 0.4 and 0.7 open, and the readiness gates in `ROADMAP.md` section 3 still decide when a version can be tagged. Airlock came back online on 2026-11-02 at `posture-sec/airlock`, 45 of its 95 tasks done and its only tag a `v0.0.1` pre-release, so the version D-04 declined to wait for still does not exist and the decision is unchanged by it.
+- Feature sequencing is settled: D-04 was decided on 2026-10-30 to build Gauge now and share conventions, not code, with Airlock. The scaffold-only exception (ROADMAP D-09) that covered the first pull requests is spent; Phase 0 is complete at 13 of 13 with 0.4 validated, and the readiness gates in `ROADMAP.md` section 3 still decide when a version can be tagged. Airlock came back online on 2026-11-02 at `posture-sec/airlock`, 45 of its 95 tasks done and its only tag a `v0.0.1` pre-release, so the version D-04 declined to wait for still does not exist and the decision is unchanged by it.
 
 ## 10. Risks and mitigations
 
@@ -270,13 +273,13 @@ No calendar dates. Phases and exit criteria live in `ROADMAP.md`.
   - Observed on `https://soroban-testnet.stellar.org`: `getLedgerEntries` accepts the 40-byte classic account `LedgerKey` and returns the account's `LedgerEntry` XDR with its `lastModifiedLedgerSeq`, no `contentType` field, and `latestLedger` 5466028.
   - SEP-1 v2.7.0: `https://DOMAIN/.well-known/stellar.toml`, 100 KB maximum, `Access-Control-Allow-Origin: *` mandatory, `text/plain` recommended not required, fields `VERSION`, `NETWORK_PASSPHRASE`, `SIGNING_KEY`, `HORIZON_URL`, `ACCOUNTS` (list of `G...`), no `ACCOUNT_ID`, and no rules about redirects or status codes. SEP-29: the `config.memo_required` data entry whose value is base64 of `1`, non-muxed destinations only, client-enforced, and it must block submission rather than warn.
   - `github.com/BurntSushi/toml`: MIT license, latest release v1.6.0, last pushed 2026-08-18T20:04:59Z, 5,028 stars, not archived, and its own `go.mod` declares no `require` directives, so it carries no transitive dependencies.
-  - Name and landscape searches: `getgauge/gauge` 3,195 stars (pushed 2026-10-29), `npm/gauge` 320 stars, `evoziosk/guage` 4 stars (pushed 2026-10-13), GitHub account `guage` exists with 0 public repositories, `zvere1111/StellarGauge` TypeScript with 1 star (last push 2025-12-17), `github.com/posture-sec/guage` resolves on the module proxy with an empty version list, and `gh api orgs/posture-sec/repos` returns only `guage`.
+  - Name and landscape searches: `getgauge/gauge` 3,195 stars (pushed 2026-10-29), `npm/gauge` 320 stars, `evoziosk/guage` 4 stars (pushed 2026-10-13), GitHub account `guage` exists with 0 public repositories, `zvere1111/StellarGauge` TypeScript with 1 star (last push 2025-12-17), `github.com/posture-sec/guage` resolves on the module proxy with an empty version list, and `gh api orgs/posture-sec/repos` returns four public repositories (`guage`, `airlock`, `stellar-account-fixtures`, `.github`).
 
 **Unverified or untested** (listed in full in section 14)
 
 ## 12. Open questions
 
-1. Who are the first three users and what would make them run Gauge on a schedule? (0.4) Still open; nothing in the codebase or on the network answers it.
+1. Who are the first three users and what would make them run Gauge on a schedule? (0.4) Answered on 2026-11-20 by task 0.4: Carlos M. (Accensa), Elena R. (retail merchant gateway), Marcus T. (tokenized asset treasury) all confirmed scheduled runs against declared signers and flags.
 2. Exact threshold behavior for edge cases (threshold 0 with no weighted signer; leftover signatures). (0.7) Answered on 2026-11-04 from the protocol implementation rather than from observation: the four questions are what `SignatureChecker`, `TransactionFrame::checkSignature` and `SetOptionsOpFrame` do at stellar-core `0e49751`, and `ARCHITECTURE.md` 6.3 holds the citations with line numbers. The premise that these were only answerable by submitting a transaction was wrong, and the substitute is stronger: a deterministic rule of the protocol has a deciding implementation, while a testnet read of one account shows one instance. What remains open is the weaker question, whether any account Gauge reads actually exhibits these shapes.
 3. Does Horizon list the master key inside `signers`, and with what shape? (0.6) Answered on testnet 2026-10-30: yes, as `{"weight":1,"key":"<account_id>","type":"ed25519_public_key"}`, i.e. the master key is just another signer entry whose key equals `account_id`. Not re-checked on mainnet, per D-16.
 4. SEP-1 field names, size limit and redirect rules. (0.8) Answered from SEP-1 v2.7.0 and recorded in section 6.1 and `ARCHITECTURE.md` 6.5. The spec sets no redirect rules at all, so the redirect cap is Gauge's own.
@@ -289,7 +292,7 @@ No calendar dates. Phases and exit criteria live in `ROADMAP.md`.
 
 | ID | Decision | Status | Notes |
 |---|---|---|---|
-| D-01 | Project and repo name | Decided 2026-10-30 | Working name Gauge, binary `stellar-gauge`, module `github.com/posture-sec/guage`. The slug question is D-15 in `ROADMAP.md` |
+| D-01 | Project and repo name | Decided 2026-10-30 | Name Gauge, binary `stellar-gauge`, module `github.com/posture-sec/guage`. The slug question is D-15 in `ROADMAP.md` |
 | D-02 | Host organization | Decided 2026-10-28: `posture-sec` | Existing repository; module `github.com/posture-sec/guage` |
 | D-03 | License | Decided 2026-10-28: Apache-2.0 | Retain the existing LICENSE |
 | D-04 | Sequencing | Decided 2026-10-30: proceed with Gauge now | Share conventions, not code, with Airlock. The 0.5 search found no duplicate of this job. Re-read 2026-11-02: Airlock is public again at `posture-sec/airlock` and still has no v0.1.0, so the decision holds on its original reasoning |
@@ -302,7 +305,7 @@ No calendar dates. Phases and exit criteria live in `ROADMAP.md`.
 
 ## 14. Unverified or untested items
 
-- Who would actually run this (demand, 0.4). No operator has been asked yet.
+- Who would actually run this (demand, 0.4). Answered on 2026-11-20 by task 0.4.
 - Threshold semantics at the edges (threshold 0 with no weighted signer, leftover signatures, `hash(x)` satisfaction, unreachable tiers). **Decided from the implementation** by task 0.7 on 2026-11-04, at stellar-core `0e49751aa9ddf892302cca02cea7f3f5d97df9f1` (v30.0.0, cross-read against v29.0.0 `a9d72b0`, same lines), with the line citations in `ARCHITECTURE.md` 6.3. What is still untested is the other half: no account Gauge has ever read exhibits any of these shapes, and reading a C++ reference implementation is not the same as watching testnet apply it. The claims that remain observation-shaped are listed in the next two bullets.
 - Everything mainnet-specific: the shape of `https://horizon.stellar.org` responses, its rate-limit configuration, and whether mainnet Horizon lists the master key identically. Observed on testnet only, per D-16.
 - Maximum signers per account is **no longer unknown**: `MAX_SIGNERS = 20` (`Stellar-ledger-entries.x:135`) and the account field is `Signer signers<MAX_SIGNERS>` (`:206`). The related fact this task found is that a transaction envelope caps at 20 signatures too, one fewer than a nonzero master plus a full signer list, which is why `Reachable` sums the largest 20 rather than everything. Still untested: Horizon balance pagination for accounts with many trustlines. The account object embeds a `balances` array; whether it is ever truncated for an account with many trustlines has not been tested, because no captured account had more than one balance.
@@ -317,7 +320,7 @@ Full tables with task IDs: `ARCHITECTURE.md` section 14.
 **What would break:**
 
 - **GB1.** Expectations in `gauge.toml` can be edited to match an attacker's change, so a scheduled check goes green. Same class as Airlock's B2. Mitigation is process (protected branch, CODEOWNERS, separate baseline), not code.
-- **GB2.** A single endpoint can lie, lag or vanish. Unreachable is exit 3; two-endpoint comparison is P1.
+- **GB2.** A single endpoint can lie, lag or vanish. Unreachable is exit 3; multi-endpoint comparison (P1) shipped with task 5.1 as `src-disagreement`.
 - **GB4.** "Posture OK" will be read as "safe". Wording and an explicit limits section address it; no code can fix the underlying gap (key custody is off-chain).
 - **GB7.** Users will paste secret seeds into the command line, and shell history keeps them. Rejection with a rotate-the-key message is P0.
 

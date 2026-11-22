@@ -1,0 +1,57 @@
+# Gauge posture report
+
+- tool: Gauge test
+- network: Test SDF Network ; September 2015
+- ledger: 5466897
+
+## Account GBKDXQ7LCO3X23K4HUKSHCA3KMM3364M4UK3526XYMBWTDD4NJCSRNAI
+
+- endpoint: https://horizon-testnet.stellar.org
+- as of ledger 5466906, sequence 23472095056887815
+- thresholds: low 2, medium 2, high 2
+- minimum signers to authorize: low 2, medium 2, high 2
+- flags: auth\_required=false auth\_revocable=false auth\_immutable=false clawback=false
+- home domain: gauge.example.invalid
+- sponsor: (none)
+
+### Signers (2)
+
+| key | type | weight | sponsor |
+| --- | --- | ---: | --- |
+| GBKDXQ7LCO3X23K4HUKSHCA3KMM3364M4UK3526XYMBWTDD4NJCSRNAI | ed25519 | 1 | (none) |
+| GD4FV55YUFEJWS5Z3VDFDSFFQVHNX2TCUANW24FKKA4XFSHVISQI35G2 | ed25519 | 1 | (none) |
+
+### Declared
+
+Nothing: this run read no policy file, so only the universal rules ran.
+
+### Identity document
+
+- result: gauge.example.invalid served a readable file
+- step: ok
+- fetch: status 200, 0 redirect hops, 128 bytes, CORS absent
+- network\_passphrase: (not named)
+- signing\_key: (not named)
+- horizon\_url: (not named)
+- version: (not named)
+- accounts: 1 listed
+
+### Findings: 1 (0 accepted)
+
+#### \[warn\] id-toml-account-unlisted
+
+- message: the account is not listed in its home domain's stellar.toml
+- fingerprint: 7434896ece4f4eb90abb27e99d1cb34ede1b3f58bb462ee6697c6dc62a598474
+
+Evidence:
+
+```
+home domain gauge.example.invalid lists 1 account; this account is not among them
+```
+
+## Result
+
+- findings: 1 (0 high, 1 warn, 0 info), 0 accepted
+- exit code: 1
+
+**Limits.** Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised.

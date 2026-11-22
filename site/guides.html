@@ -26,7 +26,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/site.css">
+  <link rel="stylesheet" href="assets/motion.css">
   <script src="assets/site.js" defer></script>
+  <script src="assets/motion.js" defer></script>
 </head>
 <body data-page="guides">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -56,10 +58,12 @@
         <a href="rules.html">Rules <span>16</span></a>
         <a href="policy.html">Policy <span>toml</span></a>
         <a href="guides.html" aria-current="page">Guides <span>run</span></a>
+        <a href="developers.html">Developers <span>code</span></a>
+        <a href="contributing.html">Contributing <span>pr</span></a>
         <a href="status.html">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-05<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-18<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -74,7 +78,7 @@
 
         <section class="section">
           <h2>Prerequisites</h2>
-          <p>Go 1.27.3 or newer. No credentials, no wallet, no Stellar SDK and no configuration beyond the command. Gauge reads public Horizon data over HTTPS, so a network that reaches <code>horizon-testnet.stellar.org</code> is enough for the first run.</p>
+          <p>Go 1.27.4 or newer. No credentials, no wallet, no Stellar SDK and no configuration beyond the command. Gauge reads public Horizon data over HTTPS, so a network that reaches <code>horizon-testnet.stellar.org</code> is enough for the first run.</p>
           <div class="code" data-copy>
             <div class="code-label"><span>Shell</span></div>
             <pre>git clone https://github.com/posture-sec/guage
@@ -87,7 +91,7 @@ go build -o stellar-gauge ./cmd/stellar-gauge
 
         <section class="section">
           <h2>check: one account, no policy file</h2>
-          <p><code>check</code> takes the network, one endpoint and one or more G addresses. It applies the live rules that need no declaration and prints a report. Ten of the sixteen can fire here; <code>flag-drift</code>, <code>id-no-home-domain</code>, <code>sig-unexpected-signer</code>, <code>sig-missing-expected</code>, <code>sig-weight-drift</code> and <code>thr-drift</code> compare a declared expectation, so only <code>audit</code> can raise them. Since task 3.7 the report is not thinner for want of a file: every account it read prints its facts, thresholds as stored, the minimum signatures each tier needs, flags, home domain, sponsor, signers, and what the identity fetch returned, followed by a <code>declared:</code> line saying this run read no policy file. Those lines are not findings and cannot fail a run.</p>
+          <p><code>check</code> takes the network, at least one endpoint and one or more G addresses. Repeat <code>--endpoint</code>, up to five times, and every account is read from each one: an account they disagree about gets a HIGH <code>src-disagreement</code>, which no acceptance can hide. It applies the live rules that need no declaration and prints a report. Ten of the sixteen can fire here; <code>flag-drift</code>, <code>id-no-home-domain</code>, <code>sig-unexpected-signer</code>, <code>sig-missing-expected</code>, <code>sig-weight-drift</code> and <code>thr-drift</code> compare a declared expectation, so only <code>audit</code> can raise them. Since task 3.7 the report is not thinner for want of a file: every account it read prints its facts, thresholds as stored, the minimum signatures each tier needs, flags, home domain, sponsor, signers, and what the identity fetch returned, followed by a <code>declared:</code> line saying this run read no policy file. Those lines are not findings and cannot fail a run.</p>
           <div class="code" data-copy>
             <div class="code-label"><span>Shell</span></div>
             <pre>./stellar-gauge check \
@@ -104,7 +108,7 @@ go build -o stellar-gauge ./cmd/stellar-gauge
               <tbody>
                 <tr><td>--network</td><td>(required)</td><td><code>mainnet</code>, <code>testnet</code> or a full passphrase. There is no default and no discovery.</td></tr>
                 <tr><td>--endpoint</td><td>(required)</td><td>May be repeated by the parser, but exactly one is accepted at v0.1. Must be HTTPS, except loopback.</td></tr>
-                <tr><td>--format</td><td>text</td><td><code>text</code> or <code>json</code>. Any other value exits 2.</td></tr>
+                <tr><td>--format</td><td>text</td><td><code>text</code>, <code>json</code> or <code>markdown</code>. Any other value exits 2.</td></tr>
                 <tr><td>--fail-on</td><td>high</td><td><code>high</code> or <code>warn</code>. Sets the severity at which a finding produces exit 1.</td></tr>
               </tbody>
             </table>
@@ -127,7 +131,7 @@ go build -o stellar-gauge ./cmd/stellar-gauge
               </thead>
               <tbody>
                 <tr><td>--config</td><td>gauge.toml</td><td>Path to the policy. A missing or rejected file exits 2 before any request.</td></tr>
-                <tr><td>--format</td><td>text</td><td><code>text</code> or <code>json</code>. <code>markdown</code> is refused with "not implemented yet".</td></tr>
+                <tr><td>--format</td><td>text</td><td><code>text</code>, <code>json</code> or <code>markdown</code>. Any other value exits 2.</td></tr>
                 <tr><td>--fail-on</td><td>high</td><td><code>high</code> or <code>warn</code>.</td></tr>
               </tbody>
             </table>
@@ -186,7 +190,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
         with:
-          go-version: "1.27.3"
+          go-version: "1.27.4"
       - run: go build -o stellar-gauge ./cmd/stellar-gauge
       - name: Audit the declared accounts
         run: ./stellar-gauge audit --config gauge.toml --format json &gt; report.json
@@ -201,16 +205,53 @@ jobs:
         </section>
 
         <section class="section">
+          <h2>Markdown output</h2>
+          <p><code>--format markdown</code> prints the same facts, findings, exit code and limits footer as the text report, as GitHub-flavoured markdown for a step summary or an issue body, for example <code>./stellar-gauge audit --config gauge.toml --format markdown &gt;&gt; "$GITHUB_STEP_SUMMARY"</code>. The exit code does not change with the format.</p>
+          <p>Every string that comes from the chain, a <code>stellar.toml</code> or the policy file is escaped and printed after a label, so a link, an image or a tag in an account label shows up as the characters it is made of and cannot start a list or a heading. Finding evidence sits in a code fence longer than any run of backticks inside it, so it cannot close its own block. One thing escaping does not change: a bare URL is still a URL, and GitHub may render it as a link whose visible text is the URL itself.</p>
+        </section>
+
+        <section class="section">
           <h2>Working with JSON</h2>
-          <p><code>--format json</code> prints one object with <code>tool_version</code>, <code>network</code>, <code>ledger</code>, <code>accounts</code>, <code>exit_code</code> and <code>limits</code>. Each account carries a <code>snapshot</code> and a <code>findings</code> array; findings carry <code>rule_id</code>, <code>severity</code>, <code>account</code>, <code>message</code>, <code>evidence</code>, <code>fingerprint</code> and <code>accepted</code>. The output is indented, stable and HTML-escaped off.</p>
+          <p><code>--format json</code> prints one object with <code>tool_version</code>, <code>network</code>, <code>ledger</code>, <code>accounts</code>, <code>exit_code</code> and <code>limits</code>. Each account carries a <code>snapshot</code>, a <code>facts</code> block and a <code>findings</code> array, in that order. Findings carry <code>rule_id</code>, <code>severity</code>, <code>account</code>, <code>message</code>, <code>evidence</code>, <code>fingerprint</code> and <code>accepted</code>. The output is indented, stable and HTML-escaped off.</p>
+          <p><code>facts</code> is the same block the text report prints above its findings, and it holds <code>reachability</code>, <code>declared</code> and <code>identity</code>. Each of the three can be <code>null</code>, and the three kinds of null mean different things: <code>reachability</code> is null when no account was read at all, which is a missing account or an endpoint on the wrong network; <code>identity</code> is null when nothing was fetched, which covers an account that publishes no home domain and an observed domain the run never reached; and <code>declared</code> is null when the run read no policy file, which is every <code>check</code>. A null <code>declared</code> and a <code>declared</code> whose fields are null are different statements, the same difference the text report draws between <code>declared: nothing</code> and <code>(not declared)</code>. Nothing in <code>facts</code> has a <code>severity</code> field, so a script that decides anything from the JSON should read <code>findings</code> and treat <code>facts</code> as context.</p>
           <div class="code" data-copy>
             <div class="code-label"><span>Shell</span></div>
             <pre>./stellar-gauge check --network testnet \
   --endpoint https://horizon-testnet.stellar.org \
   --format json G... \
-  | jq '{ledger, exit_code, rules: [.accounts[].findings[].rule_id]}'</pre>
+  | jq '{ledger, exit_code, rules: [.accounts[].findings[].rule_id]}'
+
+./stellar-gauge audit --config gauge.toml --format json \
+  | jq '.accounts[] | {account: .snapshot.id,
+                       high: .facts.reachability.high,
+                       role: .facts.declared.role}'</pre>
           </div>
-          <p class="table-caption">The report header includes the ledger the endpoint reported at read time, so an archived report can be tied to a point in chain history. The limits footer is part of the JSON, not only the text output.</p>
+          <p class="table-caption">The report header includes the ledger the endpoint reported at read time, so an archived report can be tied to a point in chain history. The limits footer is part of the JSON, not only the text output. A null <code>.facts.reachability.high</code> is the JSON shape of the finding <code>sig-threshold-unreachable</code> raises at HIGH: the tier no combination of this account's signers can reach.</p>
+        </section>
+
+        <section class="section">
+          <h2>snapshot and diff: baseline tracking</h2>
+          <p><code>snapshot</code> records the current state of accounts declared in a policy file into a baseline JSON file, with schema version 1 and the review banner: <em>"A baseline is a record of state, not an approval of it. Review every threshold and signer before adopting this baseline."</em> <code>diff</code> compares live chain observations against that saved baseline and reports added or removed signers, weight changes, threshold shifts, flag drift and domain changes.</p>
+          <div class="code" data-copy>
+            <div class="code-label"><span>Shell</span></div>
+            <pre>./stellar-gauge snapshot --config gauge.toml --out /secure/baselines/gauge-baseline.json
+./stellar-gauge diff --config gauge.toml --baseline /secure/baselines/gauge-baseline.json
+./stellar-gauge diff --config gauge.toml --baseline /secure/baselines/gauge-baseline.json --format markdown</pre>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Flag</th><th>Command</th><th>Notes</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>--out</td><td>snapshot</td><td>(required) Path to write the baseline JSON file. This is the only file write Gauge performs.</td></tr>
+                <tr><td>--baseline</td><td>diff</td><td>(required) Path to read the saved baseline file. Exits 2 if missing or invalid.</td></tr>
+                <tr><td>--config</td><td>both</td><td>Path to the policy file (default: <code>gauge.toml</code>).</td></tr>
+                <tr><td>--format</td><td>diff</td><td><code>text</code> (default), <code>json</code> or <code>markdown</code>.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-caption"><strong>Security guidance: Store baselines outside the audited repository.</strong> Keeping baseline files inside the same repository as the audited code allows an attacker who compromises the repository or PR workflow to simultaneously modify both <code>gauge.toml</code> and the baseline file, hiding malicious changes (threat GB1). Store baselines in a separate restricted repository, private cloud storage (e.g. S3/GCS with strict IAM), or an offline vault.</p>
         </section>
 
         <section class="section">
@@ -218,7 +259,7 @@ jobs:
           <dl class="ledger">
             <div class="ledger-row">
               <dt>Issuer</dt>
-              <dd><strong>Declare all four flags explicitly.</strong> An issuer's flags decide what it can do to holders. Leaving clawback undeclared is what <code>flag-undeclared-clawback</code> exists to catch.</dd>
+              <dd><strong>Declare all four flags explicitly.</strong> An issuer's flags decide what it can do to holders. Leaving clawback undeclared is what <code>flag-undeclared-clawback</code> exists to catch, and for this role both it and <code>flag-drift</code> are HIGH, so they fail the default <code>--fail-on high</code> rather than waiting for a stricter gate. The issuer row is also the only one that expects a home domain, so an issuer that publishes nothing is a finding with no declaration involved.</dd>
             </div>
             <div class="ledger-row">
               <dt>Treasury</dt>
@@ -226,14 +267,18 @@ jobs:
             </div>
             <div class="ledger-row">
               <dt>Distribution</dt>
-              <dd><strong>Declare the signers and the tiers you expect, not only the flags.</strong> Since task 3.1 the comparison rules run: an undeclared signer, a declared signer the chain no longer shows and a weight or threshold that moved are all findings, and a distribution role keeps them at WARN rather than raising them.</dd>
+              <dd><strong>Declare the signers and the tiers you expect, not only the flags.</strong> Since task 3.1 the comparison rules run: an undeclared signer, a declared signer the chain no longer shows and a weight or threshold that moved are all findings. The distribution row holds weight and threshold drift at WARN, which is where they already sit, lifts single-key control from the INFO a <code>check</code> prints to a WARN, and does not reach an absent signer: a declared key the chain no longer shows stays HIGH for this role too, because putting a key back is a high-tier operation.</dd>
             </div>
             <div class="ledger-row">
               <dt>Merchant</dt>
-              <dd><strong>Use <code>check</code> for a quick read and a policy once the set of accounts is stable.</strong> A merchant account is usually the simplest to describe, so drift stands out.</dd>
+              <dd><strong>Use <code>check</code> for a quick read and a policy once the set of accounts is stable.</strong> A merchant account is usually the simplest to describe, so drift stands out. Be clear about what the merchant role does not buy yet: its weighting is the distribution row, and the check a receiving account actually asks for is SEP-29, task 5.6, still unshipped. That is the <code>config.memo_required</code> data entry, the one a sending client reads before it will pay you without a memo, and Gauge reports no account data today. A merchant report answers who controls the account and at what weight, not whether the payments it expects to receive will arrive attributable.</dd>
+            </div>
+            <div class="ledger-row">
+              <dt>Other</dt>
+              <dd><strong>Declare the role you actually have, even when it is <code>other</code>.</strong> <code>check</code> runs at this row, so single-key control is INFO and every drift rule stays at its baseline severity. Writing <code>role = "other"</code> in a policy still buys the comparison half: an undeclared signer, a declared key the chain no longer shows, a weight or threshold that moved and a declared flag that drifted all become findings at the baseline severity. What this row does not do is raise anything, which is the honest reading for an account whose purpose the policy does not state.</dd>
             </div>
           </dl>
-          <p class="table-caption">These are authoring recommendations, not severity profiles. The profiles themselves are <code>PRD.md</code> Appendix A, applied since task 3.4: a declared role raises a finding to the severity its row names and never lowers one. The weights are on the <a href="rules.html">rules page</a>.</p>
+          <p class="table-caption">These are authoring recommendations, not severity profiles. The profiles themselves are <code>PRD.md</code> Appendix A, applied since task 3.4: a declared role raises a finding to the severity its row names and never lowers one. Only seven rules appear in a row at all, so a role moves <code>sig-single-key-high</code>, <code>flag-drift</code>, <code>flag-undeclared-clawback</code>, <code>sig-weight-drift</code> and <code>thr-drift</code> above the severity <code>check</code> prints, names <code>sig-unexpected-signer</code> and <code>sig-missing-expected</code> at the HIGH they already emit, and leaves the other nine exactly where the baseline puts them. The weights are on the <a href="rules.html">rules page</a>.</p>
         </section>
 
         <section class="section">
@@ -251,7 +296,7 @@ scripts/roadmap_progress.sh --check ROADMAP.md
 scripts/generate_issues.sh --check</pre>
           </div>
           <p class="small muted">Install the pinned tools with <code>go install honnef.co/go/tools/cmd/staticcheck@v0.8.2</code> and <code>go install golang.org/x/vuln/cmd/govulncheck@v1.9.0</code>. The fuzz targets run one at a time, because <code>-fuzz</code> refuses multiple packages: <code>go test ./internal/strkey -run '^$' -fuzz=FuzzClassify -fuzztime=10s</code>, then the same against <code>FuzzText</code> and <code>FuzzFenced</code> in <code>internal/sanitize</code>. They are smoke runs a contributor makes locally, not CI jobs.</p>
-          <p>Adding a rule means a new pure function in <code>internal/rules</code>, a registration entry, a positive and a negative fixture, updated golden files, and matching updates to <code>PRD.md</code> 6.1 and <code>ARCHITECTURE_ESSENTIALS.md</code> 8. The roadmap rule applies to every change, including documentation: <code>ROADMAP.md</code> is updated in the same pull request.</p>
+          <p>Adding a rule means a new pure function in <code>internal/rules</code>, a registration entry, a positive and a negative fixture, updated golden files, and matching updates to <code>PRD.md</code> 6.1 and <code>ARCHITECTURE_ESSENTIALS.md</code> 8. The roadmap rule applies to every change, including documentation: <code>ROADMAP.md</code> is updated in the same pull request. The package map, test commands and golden regeneration steps are on <a href="developers.html">the developer guide</a>, and the branch, review and protected-path rules are on <a href="contributing.html">the contributing guide</a>.</p>
         </section>
 
         <section class="section">
@@ -264,7 +309,7 @@ scripts/generate_issues.sh --check</pre>
         </section>
 
         <footer class="footer">
-          <p>Functional alpha, unaudited. Commands and flags on this page match the v0.1 CLI as of 2026-11-02.</p>
+          <p>Functional alpha, unaudited. Commands, flags and JSON fields on this page were re-read against the shipped CLI and renderers on 2026-11-05.</p>
           <div class="footer-links">
             <a href="status.html">Next: status and evidence</a>
             <a href="policy.html">Policy reference</a>

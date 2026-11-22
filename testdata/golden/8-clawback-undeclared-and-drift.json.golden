@@ -54,7 +54,7 @@
             "auth_required": false,
             "auth_revocable": null,
             "auth_immutable": null,
-            "clawback": null
+            "clawback_enabled": null
           },
           "home_domain": null,
           "expect_locked": null

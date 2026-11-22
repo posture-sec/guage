@@ -1,0 +1,72 @@
+# Gauge posture report
+
+- tool: Gauge test
+- network: Test SDF Network ; September 2015
+- ledger: 5466897
+
+## Account GBIY5RL644R6YRLYDZD5Y6VZXOWR3ZO2MTK4TSVTD4MAORSBKMKKO4RP
+
+- endpoint: https://horizon-testnet.stellar.org
+- as of ledger 5466901, sequence 23472095056887810
+- thresholds: low 0, medium 0, high 0
+- minimum signers to authorize: low (unreachable), medium (unreachable), high (unreachable)
+- flags: auth\_required=false auth\_revocable=false auth\_immutable=false clawback=false
+- home domain: (none)
+- sponsor: (none)
+
+### Signers (1)
+
+| key | type | weight | sponsor |
+| --- | --- | ---: | --- |
+| GBIY5RL644R6YRLYDZD5Y6VZXOWR3ZO2MTK4TSVTD4MAORSBKMKKO4RP | ed25519 | 0 | (none) |
+
+### Declared
+
+- role: issuer
+- expected\_signers: (not declared)
+- expected\_thresholds: (not declared)
+- expected\_flags: (not declared)
+- home\_domain: (not declared)
+- expect\_locked: true
+
+### Findings: 3 (0 accepted)
+
+#### \[high\] sig-threshold-unreachable
+
+- message: a threshold tier cannot be authorized by the signers this account has
+- fingerprint: 7749b6fc7d156b5d2927be6806230e5e4d4a120ef7acf29aac1645e61eeb13a6
+
+Evidence:
+
+```
+low threshold 0 and medium threshold 0 and high threshold 0 cannot be reached; signers: GBIY5R...O4RP ed25519 at weight 0
+```
+
+#### \[warn\] id-no-home-domain
+
+- message: the account's role expects a home domain and the account publishes none
+- fingerprint: 4a96cfb00193036e1f03a36ecfcf29c51b309e4ed70fb132769bc21620e6d3c3
+
+Evidence:
+
+```
+role "issuer" expects a home_domain, observed none
+```
+
+#### \[info\] sig-no-signing-weight
+
+- message: no signer can authorize an operation, so this account cannot sign anything again
+- fingerprint: b9ad419aa5bb879c4efd28e68be5814cdd942df426a97265db54851e04976c86
+
+Evidence:
+
+```
+GBIY5R...O4RP ed25519 at weight 0
+```
+
+## Result
+
+- findings: 3 (1 high, 1 warn, 1 info), 0 accepted
+- exit code: 1
+
+**Limits.** Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised.

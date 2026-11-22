@@ -170,8 +170,8 @@ func TestSeverityForIsAppendixA(t *testing.T) {
 // declared role from talking a HIGH down into something a run passes on.
 func TestSeverityForNeverLowers(t *testing.T) {
 	t.Parallel()
-	for role, rows := range roleSeverities {
-		for rule, floor := range rows {
+	for _, role := range catalogRoles() {
+		for rule, floor := range roleFloors(role) {
 			for _, emitted := range []model.Severity{model.SevInfo, model.SevWarn, model.SevHigh} {
 				got := SeverityFor(role, rule, emitted)
 				if got < emitted {

@@ -26,7 +26,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/site.css">
+  <link rel="stylesheet" href="assets/motion.css">
   <script src="assets/site.js" defer></script>
+  <script src="assets/motion.js" defer></script>
 </head>
 <body data-page="overview">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -56,10 +58,12 @@
         <a href="rules.html">Rules <span>16</span></a>
         <a href="policy.html">Policy <span>toml</span></a>
         <a href="guides.html">Guides <span>run</span></a>
+        <a href="developers.html">Developers <span>code</span></a>
+        <a href="contributing.html">Contributing <span>pr</span></a>
         <a href="status.html">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-05<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-18<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -78,7 +82,7 @@
               <a class="button button--ghost" href="rules.html">Read the rules</a>
             </div>
             <ul class="hero-meta">
-              <li>Go 1.27.3</li>
+              <li>Go 1.27.4</li>
               <li>Apache-2.0</li>
               <li>Testnet verified 2026-11-02</li>
             </ul>
@@ -270,7 +274,7 @@ go run ./cmd/stellar-gauge check \
   --endpoint https://horizon-testnet.stellar.org \
   G...</pre>
           </div>
-          <p class="small muted">Requires Go 1.27.3. The first command reads one account and exits 0, 1, 2 or 3. <a href="guides.html">Guides for check, audit and CI</a>.</p>
+          <p class="small muted">Requires Go 1.27.4. The first command reads one account and exits 0, 1, 2 or 3. <a href="guides.html">Guides for check, audit and CI</a>.</p>
         </section>
 
         <footer class="footer">

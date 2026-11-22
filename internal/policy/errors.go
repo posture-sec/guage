@@ -11,6 +11,7 @@ const (
 	kindSyntax          ErrorKind = "syntax"
 	kindUnknownKey      ErrorKind = "unknown-key"
 	kindVersion         ErrorKind = "version"
+	kindNoAccounts      ErrorKind = "no-accounts"
 	kindNetwork         ErrorKind = "network"
 	kindEndpoint        ErrorKind = "endpoint"
 	kindNotAccount      ErrorKind = "not-account"
@@ -27,8 +28,8 @@ const (
 	kindSecretSeed      ErrorKind = "secret-seed"
 )
 
-// Error is a policy rejection. Detail names a field path or an unknown key and
-// never contains a value read from the file.
+// Error is a policy rejection. Detail names a field path, an unknown key or a
+// parse position and never contains a value read from the file.
 type Error struct {
 	Kind    ErrorKind
 	Message string
@@ -53,8 +54,9 @@ var (
 	ErrSyntax           = &Error{Kind: kindSyntax, Message: "the policy file is not valid TOML"}
 	ErrUnknownKey       = &Error{Kind: kindUnknownKey, Message: "the policy contains a key this version does not define"}
 	ErrVersion          = &Error{Kind: kindVersion, Message: "version must be 1"}
+	ErrNoAccounts       = &Error{Kind: kindNoAccounts, Message: "the policy declares no accounts; add at least one [[account]] table"}
 	ErrNetwork          = &Error{Kind: kindNetwork, Message: "network must be mainnet, testnet or a full network passphrase"}
-	ErrEndpoint         = &Error{Kind: kindEndpoint, Message: "each endpoint must be an https URL with a host and no userinfo, query or fragment"}
+	ErrEndpoint         = &Error{Kind: kindEndpoint, Message: "each endpoint must be an https base URL with a host, no path, userinfo, query or fragment, and a port from 1 to 65535"}
 	ErrNotAccount       = &Error{Kind: kindNotAccount, Message: "account IDs must be canonical G addresses; multiplexed and contract addresses are not accepted"}
 	ErrRole             = &Error{Kind: kindRole, Message: "role must be issuer, treasury, distribution, merchant or other"}
 	ErrSignerKey        = &Error{Kind: kindSignerKey, Message: "expected signer keys must be G, T, X or P strkeys"}
@@ -65,7 +67,7 @@ var (
 	ErrHomeDomain       = &Error{Kind: kindHomeDomain, Message: "home_domain must be a bare host name, not a URL or an IP address"}
 	ErrAccept           = &Error{Kind: kindAccept, Message: "each accept entry needs a rule, a G account and a reason, and an optional YYYY-MM-DD expiry"}
 	ErrAcceptRule       = &Error{Kind: kindAcceptRule, Message: "the accept rule must be a concrete rule ID that may be accepted"}
-	ErrDuplicateAccept  = &Error{Kind: kindDuplicateAccept, Message: "the same rule is accepted twice for one account"}
+	ErrDuplicateAccept  = &Error{Kind: kindDuplicateAccept, Message: "the same rule and network are accepted twice for one account"}
 	ErrSecretSeed       = &Error{Kind: kindSecretSeed, Message: "a secret seed is present in the policy; remove it and rotate the key"}
 )
 

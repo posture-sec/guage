@@ -76,6 +76,7 @@ func TestAllListsEveryRuleInOrder(t *testing.T) {
 		"id-no-home-domain",
 		"id-toml-unreachable",
 		"id-toml-account-unlisted",
+		"id-sep29-memo-required",
 	}
 	all := All()
 	if len(all) != len(want) {

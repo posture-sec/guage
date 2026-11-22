@@ -56,8 +56,9 @@ type Job struct {
 	Now         func() time.Time
 }
 
-// Run verifies the endpoint's network, fetches every account with a bounded
-// worker pool, reads the stellar.toml of every account that publishes a home
+// Run verifies every endpoint's network, fetches every account with a bounded
+// worker pool, compares what each further endpoint reports with the first,
+// reads the stellar.toml of every account that publishes a home
 // domain through the guarded fetcher, evaluates rules, applies accepted risks
 // and maps the result to an exit code. It returns an error only when no
 // trustworthy report exists.
@@ -74,30 +75,49 @@ func Run(ctx context.Context, job Job) (model.Report, error) {
 		factory = horizonFactory(job.ToolVersion)
 	}
 
-	src, err := factory(job.Endpoints[0])
+	endpoints, err := connect(ctx, factory, job.Endpoints)
 	if err != nil {
-		return model.Report{}, fmt.Errorf("run: building the source: %w", err)
-	}
-	info, err := src.Network(ctx)
-	if err != nil {
-		return model.Report{}, fmt.Errorf("run: reading the network: %w", err)
+		return model.Report{}, err
 	}
 	// A mismatch is a finding about the endpoint, not a transport failure, so
 	// the run reports it per account instead of stopping. Nothing is read from
-	// an endpoint on the wrong network.
+	// any endpoint when one of them is on the wrong network, and the report
+	// names the first endpoint that is, so with one endpoint configured this is
+	// the same check it always was.
+	reporting := endpoints[0]
 	mismatch := false
-	if err := source.CheckPassphrase(info, job.Network); err != nil {
-		if !errors.Is(err, source.ErrPassphraseMismatch) {
-			return model.Report{}, fmt.Errorf("run: %w", err)
+	for _, ep := range endpoints {
+		if err := source.CheckPassphrase(ep.info, job.Network); err != nil {
+			if !errors.Is(err, source.ErrPassphraseMismatch) {
+				return model.Report{}, fmt.Errorf("run: %w", err)
+			}
+			reporting = ep
+			mismatch = true
+			break
 		}
-		mismatch = true
 	}
+	info := reporting.info
 
-	observations, err := observe(ctx, src, job.Endpoints[0], job.Accounts, job.Concurrency, mismatch)
+	observations, err := observe(ctx, reporting.src, reporting.url, job.Accounts, job.Concurrency, mismatch)
 	if err != nil {
 		return model.Report{}, fmt.Errorf("run: %w", err)
 	}
+	disagreed, err := crossRead(ctx, endpoints, job.Accounts, job.Concurrency, observations, mismatch)
+	if err != nil {
+		return model.Report{}, fmt.Errorf("run: %w", err)
+	}
+	// A wrong-network observe reads nothing and so never looks at the context.
+	// Checking here keeps a context that ended during an earlier stage from
+	// carrying the run on into identity and rule evaluation.
+	if err := ctx.Err(); err != nil {
+		return model.Report{}, fmt.Errorf("run: %w", err)
+	}
 	identities, err := identify(ctx, job, observations, mismatch)
+	if err != nil {
+		return model.Report{}, fmt.Errorf("run: %w", err)
+	}
+
+	issuers, err := observeIssuers(ctx, reporting.src, observations, job.Concurrency, mismatch)
 	if err != nil {
 		return model.Report{}, fmt.Errorf("run: %w", err)
 	}
@@ -116,6 +136,7 @@ func Run(ctx context.Context, job Job) (model.Report, error) {
 			Account:  job.Accounts[i],
 			Snapshot: snapshot,
 			Identity: identities[i],
+			Issuers:  issuers,
 			Missing:  obs.missing,
 			Mismatch: mismatch,
 			Network:  info.Passphrase,
@@ -123,8 +144,11 @@ func Run(ctx context.Context, job Job) (model.Report, error) {
 		}
 		findings, recovered := evaluate(job.Evaluate, ruleContext)
 		panicked = panicked || recovered
+		if disagreed != nil {
+			findings = append(findings, disagreed[i]...)
+		}
 		applyRoles(job.Accounts[i].Role, findings)
-		applyAccepts(findings, job.Accepts, now())
+		applyAccepts(findings, job.Accepts, info.Passphrase, now())
 		model.SortFindings(findings)
 		facts := rules.Facts(ruleContext)
 		if !job.HasPolicy {
@@ -149,6 +173,11 @@ func Run(ctx context.Context, job Job) (model.Report, error) {
 	if panicked {
 		result.ExitCode = model.ExitSource
 	}
+	// A run whose context ended has no trustworthy report, even when every stage
+	// that was running returned without an error.
+	if err := ctx.Err(); err != nil {
+		return model.Report{}, fmt.Errorf("run: %w", err)
+	}
 	return result, nil
 }
 
@@ -159,8 +188,15 @@ func (job Job) validate() error {
 	if len(job.Endpoints) == 0 {
 		return fmt.Errorf("%w: no endpoint", ErrUsage)
 	}
-	if len(job.Endpoints) > 1 {
-		return fmt.Errorf("%w: multi-endpoint comparison is not implemented", ErrUsage)
+	if len(job.Endpoints) > maxEndpoints {
+		return fmt.Errorf("%w: at most %d endpoints can be compared", ErrUsage, maxEndpoints)
+	}
+	seen := make(map[string]bool, len(job.Endpoints))
+	for _, endpoint := range job.Endpoints {
+		if seen[endpoint] {
+			return fmt.Errorf("%w: an endpoint is listed twice, so it would only be compared with itself", ErrUsage)
+		}
+		seen[endpoint] = true
 	}
 	if len(job.Accounts) == 0 {
 		return fmt.Errorf("%w: no accounts", ErrUsage)
@@ -241,16 +277,28 @@ func fetchAll(ctx context.Context, src source.Source, endpoint string, accounts 
 		})
 	}
 
+	// Slots are taken here, in policy order, rather than inside each worker, so the
+	// scheduler cannot start a later account ahead of an earlier one. The context is
+	// checked after a slot is won because a worker that failed cancels before it
+	// releases its slot: an account that acquires a freed slot after the first
+	// failure sees the cancellation and is never read.
 	for i := range accounts {
+		acquired := false
+		select {
+		case sem <- struct{}{}:
+			acquired = true
+		case <-fetchCtx.Done():
+		}
+		if err := fetchCtx.Err(); err != nil {
+			if acquired {
+				<-sem
+			}
+			fail(err)
+			break
+		}
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			select {
-			case sem <- struct{}{}:
-			case <-fetchCtx.Done():
-				fail(fetchCtx.Err())
-				return
-			}
 			defer func() { <-sem }()
 			snapshot, err := src.Account(fetchCtx, accounts[i].ID)
 			if errors.Is(err, source.ErrNotFound) {
@@ -289,13 +337,29 @@ func fetchAll(ctx context.Context, src source.Source, endpoint string, accounts 
 // An unreachable document is not an error here: id-toml-unreachable turns it into a
 // warning, the way acct-missing turns a 404 into a finding. Only a run that cannot
 // be trusted fails, which today means a fetcher that will not build or a context
-// that ended mid-stage. The bound is the same one the account reads used, so a run
-// never holds more sockets open than --concurrency allows.
+// that ended mid-stage. The fetcher is built only once an account with a home domain
+// is known, so a run that fetches nothing cannot fail on construction. The bound is
+// the same one the account reads used, so a run never holds more sockets open than
+// --concurrency allows.
 func identify(ctx context.Context, job Job, observations []observation, mismatch bool) ([]*sep1.Result, error) {
 	results := make([]*sep1.Result, len(observations))
 	if mismatch {
 		return results, nil
 	}
+	eligible := make([]int, 0, len(observations))
+	for i, obs := range observations {
+		if obs.missing || !obs.snapshot.HasHomeDomain() {
+			continue
+		}
+		eligible = append(eligible, i)
+	}
+	if len(eligible) == 0 {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		return results, nil
+	}
+
 	newIdentity := job.NewIdentity
 	if newIdentity == nil {
 		newIdentity = defaultIdentity(job.ToolVersion)
@@ -323,10 +387,7 @@ func identify(ctx context.Context, job Job, observations []observation, mismatch
 		})
 	}
 
-	for i, obs := range observations {
-		if obs.missing || !obs.snapshot.HasHomeDomain() {
-			continue
-		}
+	for _, i := range eligible {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
@@ -349,6 +410,70 @@ func identify(ctx context.Context, job Job, observations []observation, mismatch
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
+	return results, nil
+}
+
+// observeIssuers reads the issuer accounts for all held non-native assets.
+// Like identify, an issuer that returns 404 or fails to fetch does not abort
+// the run: it records the status so facts can state it.
+func observeIssuers(ctx context.Context, src source.Source, observations []observation, limit int, mismatch bool) (map[string]rules.IssuerObservation, error) {
+	if mismatch || src == nil {
+		return nil, nil
+	}
+	issuers := make(map[string]struct{})
+	for _, obs := range observations {
+		if obs.missing {
+			continue
+		}
+		for _, b := range obs.snapshot.Balances {
+			if b.AssetIssuer != "" {
+				issuers[b.AssetIssuer] = struct{}{}
+			}
+		}
+	}
+	if len(issuers) == 0 {
+		return nil, nil
+	}
+
+	if limit <= 0 {
+		limit = defaultConcurrency
+	}
+	fetchCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	sem := make(chan struct{}, limit)
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	results := make(map[string]rules.IssuerObservation, len(issuers))
+
+	for id := range issuers {
+		wg.Add(1)
+		go func(issuerID string) {
+			defer wg.Done()
+			select {
+			case sem <- struct{}{}:
+			case <-fetchCtx.Done():
+				mu.Lock()
+				results[issuerID] = rules.IssuerObservation{Failed: true}
+				mu.Unlock()
+				return
+			}
+			defer func() { <-sem }()
+
+			snapshot, err := src.Account(fetchCtx, issuerID)
+			mu.Lock()
+			defer mu.Unlock()
+			if errors.Is(err, source.ErrNotFound) {
+				results[issuerID] = rules.IssuerObservation{NotFound: true}
+			} else if err != nil {
+				results[issuerID] = rules.IssuerObservation{Failed: true}
+			} else {
+				flags := snapshot.Flags
+				results[issuerID] = rules.IssuerObservation{Flags: &flags}
+			}
+		}(id)
+	}
+	wg.Wait()
 	return results, nil
 }
 
@@ -384,13 +509,22 @@ func applyRoles(role model.Role, findings []model.Finding) {
 	}
 }
 
-func applyAccepts(findings []model.Finding, accepts []policy.Acceptance, now time.Time) {
+// applyAccepts marks a finding accepted when an entry names its rule and account,
+// has not expired and either names no network or names the one this run verified.
+// The passphrase is what the endpoint reported and CheckPassphrase accepted; an
+// entry may name an alias instead, so it goes through the same mapping a policy's
+// top-level network does. Without the network check a testnet acceptance silently
+// covers the same G address on mainnet, since the account and the evidence match.
+func applyAccepts(findings []model.Finding, accepts []policy.Acceptance, network string, now time.Time) {
 	for i := range findings {
 		if !policy.Acceptable(findings[i].RuleID) {
 			continue
 		}
 		for _, accept := range accepts {
 			if accept.Rule != findings[i].RuleID || accept.Account != findings[i].Account {
+				continue
+			}
+			if accept.Network != "" && policy.ExpectedPassphrase(accept.Network) != network {
 				continue
 			}
 			if !acceptLive(accept, now) {
@@ -402,13 +536,12 @@ func applyAccepts(findings []model.Finding, accepts []policy.Acceptance, now tim
 	}
 }
 
-// acceptLive treats the expiry date as the last day the acceptance holds.
+// acceptLive treats the expiry date as the last day the acceptance holds. An
+// entry with no expiry holds until it is withdrawn; the date itself decides the
+// rest, including what an unreadable value means.
 func acceptLive(accept policy.Acceptance, now time.Time) bool {
 	if accept.Expires == nil {
 		return true
 	}
-	if _, err := time.Parse("2006-01-02", *accept.Expires); err != nil {
-		return false
-	}
-	return now.UTC().Format("2006-01-02") <= *accept.Expires
+	return !accept.Expires.Expired(now)
 }

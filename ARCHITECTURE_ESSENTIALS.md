@@ -1,6 +1,6 @@
-# ARCHITECTURE_ESSENTIALS: Gauge (working name)
+# ARCHITECTURE_ESSENTIALS: Gauge
 
-Status: design target v0.1; Phase 3 is complete as of 2026-11-05 and v0.1.0 now waits on Phase 4. `internal/model` (types, severity names, finding fingerprints, ordering, the fact shapes a report prints beside its findings), `internal/strkey` (SEP-23 classification and seed detection), `internal/sanitize` (control stripping, IDN flag, markdown escaping), the `internal/policy` loader (strict TOML, seed rejection, network passphrases, the Appendix A role floors), the `internal/report` renderers (text, JSON, limits footer, exit mapping), `internal/source` (Horizon client with caps, retries, strict decode, passphrase comparison), `internal/sep1` (hostname validation, dial-time SSRF guard, redirect and size limits, TOML parse), `internal/threshold` (the protocol's reachability and minimum-signer math), the `internal/run` orchestrator and the `cmd/stellar-gauge` CLI (`check`, `audit`, `version`) are implemented and tested; `internal/rules` carries all sixteen v0.1 rules plus `Facts`, so a run can exit 1 on a missing account, a network mismatch, a control configuration that cannot authorize, signer and threshold drift, flag drift, an undeclared clawback or an unverifiable identity claim, and a declared role raises the severities the catalog weights by role. Every Appendix B scenario has a fixture and a golden pair behind it since 2026-11-05 (3.6), twelve files in `testdata/horizon/`, five captured from testnet and seven built here and labelled as built, and a zero-config `check` prints the facts it read ahead of any judgement since the same day (3.7), which is the last task Phase 3 owed. Not yet: anything in Phase 4, and the P1 rules. Full detail: `ARCHITECTURE.md` (section numbers in brackets). Scope: `PRD.md`. Work queue: `ROADMAP.md`. File locations: `project_structure.md`.
+Status: design target v0.1; Phase 3 is complete as of 2026-11-05 and Phase 4 is in progress with tasks 4.1, 4.2, 4.3 and 4.4 complete, and Phase 5 features live. `internal/model` (types, severity names, finding fingerprints, ordering, the fact shapes a report prints beside its findings), `internal/strkey` (SEP-23 classification and seed detection), `internal/sanitize` (control stripping, IDN flag, markdown escaping), the `internal/policy` loader (strict TOML, seed rejection, network passphrases, the Appendix A role floors), the `internal/report` renderers (text, JSON, limits footer, exit mapping), `internal/source` (Horizon client with caps, retries, strict decode, passphrase comparison), `internal/sep1` (hostname validation, dial-time SSRF guard, redirect and size limits, TOML parse), `internal/threshold` (the protocol's reachability and minimum-signer math), the `internal/run` orchestrator and the `cmd/stellar-gauge` CLI (`check`, `audit`, `version`) are implemented and tested; `internal/rules` carries all sixteen v0.1 rules plus `Facts`, so a run can exit 1 on a missing account, a network mismatch, a control configuration that cannot authorize, signer and threshold drift, flag drift, an undeclared clawback or an unverifiable identity claim, and a declared role raises the severities the catalog weights by role. Every Appendix B scenario has a fixture and a golden pair behind it since 2026-11-05 (3.6), twelve files in `testdata/horizon/`, five captured from testnet and seven built here and labelled as built, and a zero-config `check` prints the facts it read ahead of any judgement since the same day (3.7), which is the last task Phase 3 owed. Full detail: `ARCHITECTURE.md` (section numbers in brackets). Scope: `PRD.md`. Work queue: `ROADMAP.md`. File locations: `project_structure.md`.
 
 ## 0. Roadmap rule (read first)
 
@@ -47,9 +47,9 @@ Status: design target v0.1; Phase 3 is complete as of 2026-11-05 and v0.1.0 now 
 
 `policy loader + Source + sep1 -> snapshots -> rules + facts -> accept filter -> report -> exit code` [3]
 
-- `source`: `Network()`, `Account()`; Horizon first, RPC later. [6.4]
+- `source`: `Network()`, `Account()`; Horizon first, RPC later. `source.Compare` is the pure field-by-field comparison behind `src-disagreement` (5.1): field names only, never values. [6.4]
 - `rules`: pure functions over `AccountSnapshot` plus policy, and one pure `Facts` function over the same context that returns observations rather than findings. [6.7]
-- `report`: text, JSON, markdown (P1); facts printed ahead of findings, then ordering severity, account, rule. Exit reads findings only, so a fact cannot fail a run. [6.8]
+- `report`: text, JSON, markdown (P1, shipped by 5.3); facts printed ahead of findings, then ordering severity, account, rule. Exit reads findings only, so a fact cannot fail a run. [6.8]
 
 ## 5. Packages (import direction) [project_structure.md]
 
@@ -64,7 +64,7 @@ Status: design target v0.1; Phase 3 is complete as of 2026-11-05 and v0.1.0 now 
 - `AccountSnapshot`: ID, Network, Endpoint, Ledger, Sequence, Thresholds, Signers, Flags, HomeDomain, Sponsor, Balances.
 - `Finding`: RuleID, Severity, Account, Message, Evidence, Fingerprint (`sha256(rule|account|evidence)`), Accepted. Severity is outside the hash, which is what lets a role re-weight a finding without moving the key an acceptance matches on.
 - `NetworkInfo`: Passphrase, Ledger. `AccountReport`: Snapshot, Facts (the run's observations: reachability per tier, what the policy declared, what the identity fetch saw; each a pointer because each has a real "no answer" state), Findings. `Report`: ToolVersion, Network, Ledger, Accounts, typed ExitCode.
-- Config `gauge.toml`: `version`, `network`, `endpoints`, `[[account]]` (id, name, role, expected_signers, expected_thresholds, expected_flags, home_domain, expect_locked), `[[accept]]` (rule, account, reason, optional expires). Pointer fields preserve omitted expectations; strict decode, seed rejection, per-entry validation and the role severity floors are all implemented.
+- Config `gauge.toml`: `version`, `network`, `endpoints`, one or more `[[account]]` tables (id, name, role, expected_signers, expected_thresholds, expected_flags, home_domain, expect_locked), `[[accept]]` (rule, account, reason, optional expires). Pointer fields preserve omitted expectations; strict decode, seed rejection, per-entry validation, endpoint base-URL checks, parse positions without source lines and the role severity floors are all implemented. [7.20 to 7.22]
 
 ## 7. Threshold math [6.3]
 
@@ -79,11 +79,13 @@ Verified from the protocol implementation by task 0.7 on 2026-11-04, at stellar-
 - Unused signatures are an error, not a spare: `txBAD_AUTH_EXTRA`.
 - An unreachable or out-of-order tier is a legal stored state, because `SetOptions` validates ranges and nothing else. That is what `sig-threshold-unreachable` and `sig-threshold-order` are for.
 
-## 8. Rules (v0.1) [9]
+## 8. Rules (v0.2)
 
 `acct-missing`, `acct-network-mismatch`, `sig-no-signing-weight`, `sig-threshold-unreachable`, `sig-threshold-order`, `sig-single-key-high`, `sig-hashx`, `sig-unexpected-signer`, `sig-missing-expected`, `sig-weight-drift`, `thr-drift`, `flag-drift`, `flag-undeclared-clawback`, `id-no-home-domain`, `id-toml-unreachable`, `id-toml-account-unlisted`.
 
-- Role profiles raise severity to the Appendix A floor and never lower it; `policy.SeverityFor` is the only reader of that table and `internal/run` applies it once per account, before accepts. Not acceptable via `[[accept]]`: `acct-missing`, `acct-network-mismatch`, `sig-threshold-unreachable`.
+- Facts report observations ahead of findings: reachability per tier, what the policy declared, identity document state, and trustline exposure facts (held non-native assets and their issuers' flags, without balance amounts). Facts never fail a run.
+
+- Role profiles raise severity to the Appendix A floor and never lower it; `policy.SeverityFor` is the only reader of that table and `internal/run` applies it once per account, before accepts. Not acceptable via `[[accept]]`: `acct-missing`, `acct-network-mismatch`, `sig-threshold-unreachable`, `src-disagreement`.
 - All sixteen are live as of 2026-11-04: task 3.1 landed the nine signer and threshold rules in `internal/rules/signers.go` and `internal/rules/thresholds.go`, and task 3.4 raised the four the catalog phrases by role at the run rather than inside a rule.
 - The signer and threshold rules call `internal/threshold` and never restate the arithmetic. If you find a weight sum, a 20 cap or a zero-weight filter written inside a rule, that is the bug.
 - `sig-single-key-high` emits INFO, which is Appendix A's `other` row and what `check` keeps getting because it declares no role. A role raises it, at the run. Do not move the table into the rule and do not suppress the finding.
@@ -120,7 +122,7 @@ Verified from the protocol implementation by task 0.7 on 2026-11-04, at stellar-
 ## 13. Cut or deferred (do not build without a roadmap decision) [14.3]
 
 - Cut: watch daemon, alert integrations, rules language, dashboard, reputation scoring, contract-account auditing, CLI framework, full Stellar SDK import.
-- Deferred: RPC source, two-endpoint comparison, markdown output, snapshot and diff, trustline exposure, SEP-29 check.
+- Deferred: RPC source, snapshot and diff, trustline exposure, SEP-29 check.
 
 ## 14. Known unknowns (do not assume) [15]
 

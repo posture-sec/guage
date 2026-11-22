@@ -155,15 +155,7 @@ func TestCheckUsageNamesBothPublicEndpoints(t *testing.T) {
 		{
 			name: "network without an endpoint",
 			args: []string{"check", "--network", testNetwork, accountOne},
-			want: []string{"exactly one --endpoint is required", "no default",
-				"https://horizon.stellar.org", "https://horizon-testnet.stellar.org"},
-		},
-		{
-			name: "two endpoints",
-			args: []string{"check", "--network", testNetwork,
-				"--endpoint", "https://horizon-testnet.stellar.org",
-				"--endpoint", "https://horizon.stellar.org", accountOne},
-			want: []string{"exactly one --endpoint is required", "no default",
+			want: []string{"--endpoint is required", "no default",
 				"https://horizon.stellar.org", "https://horizon-testnet.stellar.org"},
 		},
 	}

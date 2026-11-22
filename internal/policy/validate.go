@@ -5,7 +5,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/posture-sec/guage/internal/model"
 	"github.com/posture-sec/guage/internal/strkey"
@@ -22,6 +21,9 @@ func (c *Config) validate() error {
 		if !validEndpoint(endpoint) {
 			return withDetail(ErrEndpoint, "endpoints["+strconv.Itoa(i)+"]")
 		}
+	}
+	if len(c.Accounts) == 0 {
+		return withDetail(ErrNoAccounts, "account")
 	}
 
 	seen := make(map[string]bool, len(c.Accounts))
@@ -40,7 +42,9 @@ func (c *Config) validate() error {
 		if err := c.Accepts[i].validate(i); err != nil {
 			return err
 		}
-		key := c.Accepts[i].Rule + "\x00" + c.Accepts[i].Account
+		// The network is part of the key, so one account may pin the same rule on
+		// both networks; the same triple twice is still a duplicate.
+		key := c.Accepts[i].Rule + "\x00" + c.Accepts[i].Account + "\x00" + c.Accepts[i].Network
 		if accepted[key] {
 			return withDetail(ErrDuplicateAccept, "accept["+strconv.Itoa(i)+"]")
 		}
@@ -73,7 +77,18 @@ func validEndpoint(endpoint string) bool {
 	if err != nil {
 		return false
 	}
-	if u.Host == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
+	if u.Host == "" || u.Opaque != "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
+		return false
+	}
+	if (u.Path != "" && u.Path != "/") || (u.EscapedPath() != "" && u.EscapedPath() != "/") {
+		return false
+	}
+	if port := u.Port(); port != "" {
+		n, err := strconv.Atoi(port)
+		if err != nil || n < 1 || n > 65535 {
+			return false
+		}
+	} else if strings.HasSuffix(u.Host, ":") {
 		return false
 	}
 	switch strings.ToLower(u.Scheme) {
@@ -131,6 +146,10 @@ func (a *Account) validate(index int) error {
 			{"medium", t.Medium},
 			{"high", t.High},
 		} {
+			// Only the range is a config error. Ordering between low, medium and high
+			// is deliberately left to sig-threshold-order, which reports an account
+			// whose stored tiers are out of order; a declaration mirroring such an
+			// account has to stay loadable, so no comparison happens here.
 			if v.value != nil && (*v.value < 0 || *v.value > 255) {
 				return withDetail(ErrThreshold, field+".expected_thresholds."+v.name)
 			}
@@ -170,7 +189,41 @@ func validHomeDomain(domain string) bool {
 	if strings.ContainsAny(domain, " \t\r\n/@:?#[]") {
 		return false
 	}
-	return net.ParseIP(domain) == nil
+	if net.ParseIP(domain) != nil {
+		return false
+	}
+	for _, r := range domain {
+		if r > 0x7f {
+			return false
+		}
+		if r <= 0x20 || r == 0x7f {
+			return false
+		}
+		if !validHostRune(r) {
+			return false
+		}
+	}
+	labels := strings.Split(domain, ".")
+	if len(labels) < 2 {
+		return false
+	}
+	for _, label := range labels {
+		if len(label) == 0 || len(label) > 63 || label[0] == '-' || label[len(label)-1] == '-' {
+			return false
+		}
+	}
+	return true
+}
+
+func validHostRune(r rune) bool {
+	switch {
+	case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9':
+		return true
+	case r == '-' || r == '.':
+		return true
+	default:
+		return false
+	}
 }
 
 func (a *Acceptance) validate(index int) error {
@@ -181,13 +234,14 @@ func (a *Acceptance) validate(index int) error {
 	if kind, err := strkey.Classify(a.Account); err != nil || kind != strkey.AccountID {
 		return withDetail(ErrAccept, field+".account")
 	}
+	if a.Network != "" && !validNetwork(a.Network) {
+		return withDetail(ErrNetwork, field+".network")
+	}
 	if strings.TrimSpace(a.Reason) == "" {
 		return withDetail(ErrAccept, field+".reason")
 	}
-	if a.Expires != nil {
-		if _, err := time.Parse("2006-01-02", *a.Expires); err != nil {
-			return withDetail(ErrAccept, field+".expires")
-		}
+	if a.Expires != nil && !a.Expires.Valid() {
+		return withDetail(ErrAccept, field+".expires")
 	}
 	return nil
 }
@@ -215,10 +269,12 @@ func Acceptable(rule string) bool {
 }
 
 // nonAcceptable lists the rules an accepted-risk entry may never silence, from
-// ROADMAP task 2.4 and ARCHITECTURE.md 6.6.
+// ROADMAP task 2.4 and ARCHITECTURE.md 6.6. src-disagreement joined with task
+// 5.1: when two endpoints disagree the run cannot say which reading is true, so
+// accepting it would resolve the disagreement quietly.
 func nonAcceptable(rule string) bool {
 	switch rule {
-	case "acct-missing", "acct-network-mismatch", "sig-threshold-unreachable":
+	case "acct-missing", "acct-network-mismatch", "sig-threshold-unreachable", "src-disagreement":
 		return true
 	}
 	return false

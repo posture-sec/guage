@@ -26,7 +26,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/site.css">
+  <link rel="stylesheet" href="assets/motion.css">
   <script src="assets/site.js" defer></script>
+  <script src="assets/motion.js" defer></script>
 </head>
 <body data-page="policy">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -56,10 +58,12 @@
         <a href="rules.html">Rules <span>16</span></a>
         <a href="policy.html" aria-current="page">Policy <span>toml</span></a>
         <a href="guides.html">Guides <span>run</span></a>
+        <a href="developers.html">Developers <span>code</span></a>
+        <a href="contributing.html">Contributing <span>pr</span></a>
         <a href="status.html">Status <span>now</span></a>
       </nav>
       <div class="side-meta">
-        <p>Docs updated 2026-11-05<br>Gauge 0.1.0-dev</p>
+        <p>Docs updated 2026-11-18<br>Gauge 0.1.0-dev</p>
         <a href="https://github.com/posture-sec/guage">Repository</a>
         <a href="https://github.com/posture-sec/guage/blob/main/ROADMAP.md">Roadmap</a>
         <a href="https://github.com/posture-sec/guage/blob/main/SECURITY.md">Security</a>
@@ -70,7 +74,7 @@
       <div class="content">
         <p class="eyebrow">Policy</p>
         <h1>Declare what should be true.</h1>
-        <p class="lede">A policy is one TOML file. It names the network, one endpoint and the accounts you audit, then says which values you expect. Gauge compares the file with the chain and reports the difference. Nothing in the file is applied to the chain.</p>
+        <p class="lede">A policy is one TOML file. It names the network, one to five endpoints and the accounts you audit, then says which values you expect. Gauge compares the file with the chain and reports the difference. Nothing in the file is applied to the chain.</p>
 
         <section class="section">
           <h2>A worked file</h2>
@@ -83,7 +87,8 @@ version = 1
 <span class="c"># Required. mainnet, testnet or a full network passphrase.</span>
 network = "testnet"
 
-<span class="c"># Exactly one endpoint is read at v0.1.</span>
+<span class="c"># One to five endpoints. With more than one, every account is read from each</span>
+<span class="c"># and a disagreement is a HIGH src-disagreement. The first one feeds the rules.</span>
 endpoints = ["https://horizon-testnet.stellar.org"]
 
 [[account]]
@@ -106,6 +111,7 @@ expect_locked = false
 # [[accept]]
 # rule = "flag-drift"
 # account = "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
+# network = "mainnet"
 # reason = "Observed change is scheduled for the November rotation."
 # expires = "2027-04-27"</pre>
           </div>
@@ -122,7 +128,7 @@ expect_locked = false
               <tbody>
                 <tr><td>version</td><td>Yes</td><td>The integer <code>1</code>. Any other value is rejected.</td></tr>
                 <tr><td>network</td><td>Yes</td><td><code>mainnet</code>, <code>testnet</code> or a full passphrase such as <code>Test SDF Network ; September 2015</code>.</td></tr>
-                <tr><td>endpoints</td><td>Yes</td><td>An HTTPS URL with a host, no userinfo, query or fragment. More than one entry is rejected because comparison is not implemented.</td></tr>
+                <tr><td>endpoints</td><td>Yes</td><td>An HTTPS base URL with a host, no path, userinfo, query or fragment, and a port from 1 to 65535 when one is present. Plain HTTP is limited to loopback hosts. More than one entry is rejected because comparison is not implemented.</td></tr>
                 <tr><td>account</td><td>1+</td><td>One or more <code>[[account]]</code> tables. The same G address may not appear twice.</td></tr>
                 <tr><td>accept</td><td>No</td><td>Zero or more <code>[[accept]]</code> tables, each covering one rule for one account.</td></tr>
               </tbody>
@@ -145,7 +151,7 @@ expect_locked = false
                 <tr><td>expected_thresholds</td><td>Table</td><td>Any of <code>low</code>, <code>medium</code> and <code>high</code>, each an integer from 0 to 255. Omitted tiers are not compared.</td></tr>
                 <tr><td>expected_flags</td><td>Table</td><td>Any of <code>auth_required</code>, <code>auth_revocable</code>, <code>auth_immutable</code> and <code>clawback</code>, each a boolean. Omitted flags are not compared.</td></tr>
                 <tr><td>home_domain</td><td>String</td><td>A bare host name. URLs, IP addresses, a trailing dot and characters such as <code>/</code>, <code>@</code>, <code>:</code> and <code>?</code> are rejected. Declaring it is what lets <code>id-no-home-domain</code> fire when the chain shows none.</td></tr>
-                <tr><td>expect_locked</td><td>Boolean</td><td>Declares that a zero-weight, nonsigning issuer is intended. <code>sig-no-signing-weight</code> reports INFO when an <code>issuer</code> declares it true, and HIGH for every other role, where the word is stored and read by nothing.</td></tr>
+                <tr><td>expect_locked</td><td>Boolean</td><td>Declares that a zero-weight, nonsigning issuer is intended. <code>sig-no-signing-weight</code> reports INFO when an <code>issuer</code> declares it true, and HIGH for every other role. A true declaration on another role is not refused at load, because a typo in a declaration should not cost more than the declaration is worth: the finding stays HIGH and the <code>declared:</code> block prints that the line was ignored.</td></tr>
               </tbody>
             </table>
           </div>
@@ -175,15 +181,16 @@ expect_locked = false
 
         <section class="section">
           <h2>Accepting a known risk</h2>
-          <p>An acceptance marks one finding as known without hiding it. The report keeps the finding, labels it accepted, and leaves it out of the exit-code decision. Matching is on rule and account, and a role's severity is applied before the match, so giving an account a role never un-accepts a risk you had already recorded.</p>
+          <p>An acceptance marks one finding as known without hiding it. The report keeps the finding, labels it accepted, and leaves it out of the exit-code decision. Matching is on rule and account, plus the network when the entry names one, and a role's severity is applied before the match, so giving an account a role never un-accepts a risk you had already recorded.</p>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr><th>Field</th><th>Rule</th></tr>
               </thead>
               <tbody>
-                <tr><td>rule</td><td>A concrete rule ID. Wildcards, a leading or trailing hyphen and the three structural rules below are refused.</td></tr>
-                <tr><td>account</td><td>The G address the finding belongs to. The match is rule plus account, so one entry covers one finding type for one account.</td></tr>
+                <tr><td>rule</td><td>A concrete rule ID. Wildcards, a leading or trailing hyphen and the three structural rules below are refused. An ID that is well formed but names no shipped rule loads and matches nothing, which the paragraph after the three chips spells out.</td></tr>
+                <tr><td>account</td><td>The G address the finding belongs to. The match is rule plus account plus the network when one is named, so one entry covers one finding type for one account.</td></tr>
+                <tr><td>network</td><td>Optional. <code>mainnet</code>, <code>testnet</code> or a full passphrase. Omitted or empty covers any network; a named value pins the entry to the network the run verified, so one account can hold a testnet acceptance and a mainnet acceptance of the same rule without either one covering the other.</td></tr>
                 <tr><td>reason</td><td>Required and non-empty. It is stored in the policy, not printed in the report footer.</td></tr>
                 <tr><td>expires</td><td>Optional <code>YYYY-MM-DD</code>. The date is inclusive and evaluated in UTC, so an entry expires at the start of the following day.</td></tr>
               </tbody>
@@ -195,6 +202,7 @@ expect_locked = false
             <span class="chip chip--high">acct-network-mismatch</span>
             <span class="chip chip--high">sig-threshold-unreachable</span>
           </div>
+          <p>An ID the loader cannot make sense of is an error: wildcards and brackets, a space, a missing hyphen, a hyphen at either end and anything but lower-case letters and digits make the file exit 2 rather than get ignored. What the loader cannot check is whether the ID names a rule that exists. <code>internal/policy</code> sits below <code>internal/rules</code> in the import direction, so the registry is not reachable from the validator, and an entry for <code>flag-typo-drift</code> loads cleanly and matches nothing. The report is where that shows up: the finding you meant to accept still prints, still unaccepted, and still decides the exit code. Read the rule IDs off <a href="rules.html">the catalog</a> rather than typing them from memory, and treat a finding that should have been labeled accepted as a check on the file before a check on the account.</p>
           <div class="note">
             <p><strong>The owner adds acceptances, not the operator running the check.</strong> An acceptance is a dated statement that a disagreement is understood. If the reason cannot be written down, the finding should be fixed instead.</p>
           </div>
@@ -205,18 +213,19 @@ expect_locked = false
           <p>A policy that cannot be parsed exactly is rejected before any network call, and the run exits 2. The rules are deliberate:</p>
           <ul class="flow-list">
             <li>At most 1 MiB is read. A larger file is rejected, not truncated.</li>
-            <li>Unknown keys are errors. A typo cannot silently drop an expectation.</li>
+            <li>Unknown keys are errors. A typo cannot silently drop an expectation, and one run names every unknown key, sorted, so several typos are fixed in one pass.</li>
             <li>A duplicate account ID or duplicate rule-and-account acceptance is an error.</li>
             <li>Every token in the raw file is scanned for a valid <code>S</code> seed, including comments and keys the schema does not define. A match is rejected and the seed is never printed.</li>
-            <li>Errors name a field path such as <code>account[2].expected_thresholds.high</code>, never a value from the file.</li>
-            <li>Endpoints are checked with the same rule the HTTP client uses, so a file cannot name an endpoint the client would refuse.</li>
+            <li>Errors name a field path such as <code>account[2].expected_thresholds.high</code>, never a value from the file. A syntax error names the parser's line and column and its last key when set, without quoting the bad line.</li>
+            <li>Endpoints are checked with the same base-URL rule the HTTP client uses, so a file cannot name an endpoint the client would refuse. That includes paths, encoded slashes, a trailing colon and ports outside 1 to 65535.</li>
+            <li>A file with no <code>[[account]]</code> table is refused at load. An audit with nothing declared audits nothing.</li>
           </ul>
           <p class="table-caption">A secret seed in a policy file is a key-handling incident. Remove it, rotate the key and check the file's history. The message says to rotate for that reason.</p>
         </section>
 
         <section class="section">
           <h2>Endpoint rules</h2>
-          <p>One endpoint per run. HTTPS is required, with plain HTTP allowed only for <code>localhost</code> and loopback addresses, which exist for local tests. The URL may not carry credentials, a query string or a fragment. Redirects are not followed, so a URL that answers with a redirect is a source failure, not a silent hop to another host.</p>
+          <p>One to five endpoints per run, each listed once. With two or more, every account is read from every endpoint and compared with the first: last modified ledger, sequence, thresholds, flags, signers, home domain, sponsor and balances, plus whether the account exists at all. Any difference is a HIGH <code>src-disagreement</code> naming the endpoints by position and the fields by name, and it cannot be accepted, because Gauge cannot tell a stale endpoint from a filtering one. An endpoint that cannot be read, or that reports another network, fails the whole run rather than dropping out of the comparison. HTTPS is required, with plain HTTP allowed only for <code>localhost</code> and loopback addresses, which exist for local tests. The URL may not carry credentials, a query string or a fragment. Redirects are not followed, so a URL that answers with a redirect is a source failure, not a silent hop to another host.</p>
           <p class="small muted">See <a href="mechanics.html">Mechanics</a> for the network check and the request limits, or <a href="guides.html">Guides</a> for a runnable policy and CI wiring.</p>
         </section>
 
@@ -230,7 +239,7 @@ expect_locked = false
         </section>
 
         <footer class="footer">
-          <p>Functional alpha, unaudited. This page reflects the v0.1 loader and all sixteen registered rules as of 2026-11-04.</p>
+          <p>Functional alpha, unaudited. This page reflects the v0.1 loader and all sixteen registered rules, re-read against <code>internal/policy</code> on 2026-11-05.</p>
           <div class="footer-links">
             <a href="guides.html">Next: guides</a>
             <a href="rules.html">Rule catalog</a>

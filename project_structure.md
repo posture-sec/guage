@@ -1,10 +1,10 @@
-# project_structure.md: Gauge (working name)
+# project_structure.md: Gauge
 
 Where everything lives, who may change it and which way imports may point. Read this before creating or moving a file. Decisions behind the layout: `ARCHITECTURE.md` section 5. Work queue: `ROADMAP.md`.
 
 > **Roadmap rule (every contribution):** any change to this repository, by a human or an agent, must update `ROADMAP.md` in the same pull request: tick or add tasks, add a changelog entry, refresh the progress table and the `Last updated` line. If you add, move or remove a file, also update this document.
 
-Status: Phase 3 complete on 2026-11-05, 7 of 7, with the facts report (3.7) as the last task the phase owed; Phase 2 closed on 2026-11-04 at 11 of 11. The scaffold-only exception D-09 was lifted by the owner on 2026-10-30. Module `github.com/posture-sec/guage`, binary `stellar-gauge`, Go 1.27.3, one approved dependency, existing Apache-2.0 license. Root documents are the maintained source of truth; the untouched `files/` inputs remain local and are not part of the scaffold commit. A file's existence does not mean its feature is implemented.
+Status: Phase 3 complete on 2026-11-05, 7 of 7, with the facts report (3.7) as the last task the phase owed; Phase 2 closed on 2026-11-04 at 11 of 11; Phase 4 in progress with usage docs (4.2) and README (4.3) complete; Phase 5 has the documentation site (5.9), theme audit (5.10) and motion layer (5.11) shipped. The scaffold-only exception D-09 was lifted by the owner on 2026-10-30. Module `github.com/posture-sec/guage`, binary `stellar-gauge`, Go 1.27.3, one approved dependency, existing Apache-2.0 license. Root documents are the maintained source of truth; the untouched `files/` inputs remain local and are not part of the scaffold commit. A file's existence does not mean its feature is implemented.
 
 ## 1. Annotated tree
 
@@ -19,8 +19,9 @@ guage/
   README.md                                # status, limits and roadmap rule (1.10)
   CONTRIBUTING.md, SECURITY.md             # process drafts carrying the roadmap rule (1.8)
   LICENSE                                 # existing Apache-2.0 license
+  .gitattributes                          # line ending normalizations pinned to LF for deterministic golden tests
   .gitignore                              # local policies, outputs, briefings and secrets stay untracked
-  go.mod                                  # module identity, Go 1.27.3 and BurntSushi/toml v1.6.0 (ADR-004)
+  go.mod                                  # module identity, Go 1.27.4 and BurntSushi/toml v1.6.0 (ADR-004)
   go.sum                                  # checksums for the one approved module
   staticcheck.conf                        # enable all checks
   gauge.example.toml                      # the documented starting point: loads through the strict parser, and `audit` with no policy file names it (3.7)
@@ -29,6 +30,9 @@ guage/
     main.go                               # dispatch, exit-code mapping, report rendering and the deps seam (2.9, 3.5)
     {check,audit,version}.go              # P0 commands: flags, account validation, policy load (2.9)
     cli_test.go                           # in-process CLI tests: check, audit, JSON output, failure modes
+    concurrency_flag_test.go              # check concurrency bounds and observed in-flight account reads (7.39)
+    format.go                             # shared format rejection message (7.40)
+    format_flag_test.go                   # shared check and audit format rejection (7.40)
     facts_test.go                         # the zero-config surface: fact lines, the example policy and the messages that name what to type (3.7)
     g3_test.go                            # fail-closed gate G3 cases (2.10)
     {snapshot,diff}.go                    # P1 command placeholders (5.2)
@@ -39,68 +43,106 @@ guage/
       {finding,report,role,severity,exit}.go # findings, per-account reports and enums
       facts.go                            # the fact shapes a report prints ahead of its findings (3.7)
       model_test.go                       # severity names, fingerprint, ordering, JSON and exit-code contracts
+      account_sequence_test.go            # the sequence token stays a JSON string above 2^53
+      facts_nil_test.go                   # null and zero fact blocks on the wire, with round trips
+      finding_json_test.go                # exact seven Finding JSON keys without omitempty (7.62)
+      {facts_identity,facts_declared}_test.go # network verdict without passphrase guard and typed DeclaredFacts.Role (7.57, 7.58)
+      severity_bounds_test.go             # valid severities, marshal refusal and invalid-severity sort order
     strkey/
       {address,checksum,seed}.go           # SEP-23 classify, CRC16 and seed detection (2.2)
       {address_test,fuzz_test}.go          # SEP-23 vectors, shape and sentinel tests; FuzzClassify
     threshold/
       {threshold,threshold_test}.go       # authorization math as verified in 0.7 (2.3)
+      cap_test.go                         # the 20-signature envelope cap at its boundary, largest weights kept (7.29)
+      crosscheck_test.go                  # subset search to 12 signers and a count-indexed cap DP at 24 (7.30)
+      preauth_test.go                     # pre-auth transaction exclusion in standing weight sum (7.51)
+      minsigners_test.go                  # MinSigners early returns against boundary signers (7.52)
+      zero_weight_test.go                 # weight filter at every tier against lone and mixed signers (7.53)
     sanitize/
       {text,domain,markdown}.go            # output and domain handling (2.5, 5.3)
       {sanitize_test,fuzz_test}.go         # injection classes, IDN, fencing; FuzzText and FuzzFenced
+      {zero_width,tag_block,c1}_test.go    # per-rune boundaries of the dropped sets (7.23, 7.24, 7.25)
+      {zero_width,tag_block,c1}_test.go    # per-rune boundaries of the dropped sets (7.23, 7.24, 7.25)
+      conformance_test.go                 # one hostile corpus held against Text, Markdown, Fenced and Domain (7.33)
+      osc_test.go                          # hyperlink escapes consumed whole, URL included (7.43)
+      bidi_test.go                         # per-rune bidi overrides and isolate controls table (7.46)
+      domain_test.go                       # IDN home domain matrix and punycode semantics (7.47)
     policy/
       {config,expectations,accept}.go      # policy declarations, no decoding or acceptance logic
       {decode,validate,roles}.go           # strict loading, rejection kinds, network passphrases and the Appendix A role floors (2.4, 3.4)
       config_test.go                       # loader tests, including that the shipped example policy loads (2.4)
-      {accept,roles}_test.go               # acceptance refusals and the role-floor table (3.4)
+      {endpoint_shape,syntax_position,empty_policy}_test.go # load boundary cases for base URLs, parse positions and empty declarations (7.65 to 7.67)
+      {accept,roles,roles_keys,roles_mutation,seed_shape,home_domain}_test.go # acceptance refusals, 16x5 role-floor table, seed shape rejection, SEP-1 home domain labels and isolation (3.4, 7.54 to 7.56, 7.63, 7.64)
+      unknown_keys_test.go                 # one load names every unknown key, sorted, never a value (7.31)
     source/
       source.go                           # Source interface and the passphrase comparison
       {horizon,http,errors}.go             # Horizon client: caps, retries, strict decode (2.7)
       horizon_test.go                     # fake-server success and failure-mode tests (2.7)
+      compare.go                          # pure field-by-field comparison of two endpoints' readings, names only (5.1)
+      compare_test.go                     # every compared field, order and run metadata ignored, existence, no values (5.1)
     sep1/
       {fetch,guard,parse}.go               # guarded identity acquisition: hostname check, dial-time IP guard, caps (3.5)
-      {fetch_test,guard_test,parse_test}.go # SSRF, rebinding, redirect, size, sanitizer-boundary and parse tests (3.5)
+      {fetch_test,guard_test,parse_test,accounts_test,home_domain_test,redirect_test}.go # SSRF, rebinding, redirect, size, sanitizer-boundary and parse tests (3.5, 7.48 to 7.50)
     rules/
       {rules,account,signers,thresholds,flags,identity}.go # registry and pure rule boundaries; identity and signers read the two role expectations 3.4 defines (3.1 to 3.5 done)
       facts.go                            # rules.Facts: the observations of one context, in the same pure shape as a rule and returning no finding (3.7)
       {rules,identity,signers,thresholds,facts}_test.go # positive and negative cases, guard proofs, a captured account and the two kinds of absence (3.1 to 3.7)
+      purity_test.go                      # Evaluate, Facts and every rule leave a deep-copied Context unchanged, and a second Evaluate gives the same findings (7.8)
+      finding_ruleid_test.go              # one firing context per registered rule; every finding's RuleID equals its registry ID (7.9)
+      arithmetic_guard_test.go            # go/ast guard: no weight sum, 20 cap or stray Weight-vs-0 filter in a rule; allowlist and delegation sites pinned (7.32)
     report/
       {text,json,exit}.go                  # P0 renderers, the fact block ahead of the findings, limits footer and outcome mapping (2.6, 3.7)
-      markdown.go                         # P1 output (5.3)
+      markdown.go                         # P1 output: escaped values, fenced evidence, limits footer (5.3)
+      markdown_test.go                    # golden, hostile markup built from fragments, fencing, wording and footer (5.3)
       report_test.go                      # golden files, sanitization, determinism, exit tests and the fact block in both formats
+      {limits,empty,nil_facts}_test.go    # golden-free contracts: limits footer last and a JSON key, the empty report in both formats, nil and empty fact blocks (7.14 to 7.16)
     run/
       {run,check,audit}.go                 # P0 orchestration: passphrase, bounded fetch, identity fetch, role severity, accepts, the fact block and `HasPolicy` (2.8, 3.4, 3.5, 3.7)
-      {compare,snapshot,diff}.go           # P1 orchestration (5.1, 5.2)
+      compare.go                          # multi-endpoint orchestration: connect every endpoint, cross-read, src-disagreement, the 5-endpoint cap (5.1)
+      compare_test.go                     # agreement, disagreement per endpoint, existence, fail-closed, mixed networks, no accepts, bounded pool (5.1)
+      {snapshot,diff}.go                   # P1 orchestration (5.2)
       run_test.go                         # end-to-end orchestration with a fake source and an offline fetcher, the UTC expiry judgement and the two builders' fact shapes (2.8, 3.4, 3.5, 3.7)
+      mismatch_short_circuit_test.go      # account and identity stages stay skipped on network mismatch (7.38)
       roles_test.go                       # one account at five roles: severity, fingerprint, accepts and the lock declaration (3.4)
+      first_error_test.go                 # two ordered concurrent read failures: the first, with its account ID, wins and a queued account is never read (7.34)
+      stage_cancel_test.go                # a context that ends between stages returns no report and builds no identity fetcher (7.35)
+      {identity_lazy,panic_containment,semaphore_peak}_test.go # lazy identity fetcher, panic containment, and concurrency limit peak (7.59 to 7.61)
 
   testdata/
     horizon/README.md                     # provenance of every file: which five are testnet captures, which seven are built, and how (0.6, 3.6)
     horizon/{root-testnet,1-default,7-extra-signer,8-clawback-undeclared,10-not-found}.json  # captures (0.6)
     horizon/{2-master-zero,3-unreachable-high,4-thresholds-out-of-order,5-hashx-signer-at-medium,6-preauth-signer-only,9-home-domain-present,12-hostile-home-domain}.json  # built for Appendix B (3.6)
+    horizon/16-endpoint-disagrees.json    # built: 1-default with two fields changed, the second endpoint of the src-disagreement CLI tests (5.1)
     policy/.gitkeep                       # still empty: a scenario declares its policy as `policy.Account` values in `internal/run/scenarios_test.go`, and acceptance and role cases are inline TOML in `internal/policy`
     golden/{sample.text,sample.json}.golden # regenerated only with `-update` and reviewed (2.6)
     golden/<scenario>.{text,json}.golden  # one pair per Appendix B case, 36 files, compared by `internal/run/scenarios_test.go` (3.6, 3.7)
 
   docs/
     banner.svg                            # README banner; wordmark plus status line
+    RECORDING.md                          # live testnet demonstration transcripts and exit codes (1.15)
+    RELEASE.md                            # 4.5 release runbook, reproducible build verification loop
     WAVE_SUBMISSION.md                    # verified Drips Wave facts, gate list, runbook        (1.15, D-13)
 
-  site/                                   # documentation site v1, deployed to GitHub Pages      (5.9, 5.10)
+  site/                                   # documentation site, deployed to GitHub Pages      (5.8 to 5.11)
     index.html                            # overview
     rules.html                            # rule reference
     policy.html                           # policy file reference
     mechanics.html                        # how a run works
-    guides.html                           # clone to failing build
+    guides.html                           # clone to failing build, per-role operator advice
+    developers.html                       # package map, tests, adding a rule or policy field (5.8)
+    contributing.html                     # roadmap rule, branch and review process             (5.8)
     status.html                           # what ships, what is verified, what does not
     404.html                              # Pages 404; root-relative asset paths
-    assets/{site.css,site.js,favicon.svg,og.png}  # one stylesheet (dark tokens plus a light override), copy buttons and theme toggle, share card
+    assets/{site.css,site.js,motion.css,motion.js,favicon.svg,og.png}  # stylesheet, motion layer, copy toggle, share card
+    data/{badge-rules.json,badge-status.json,badge-tests.json} # dynamic Shields.io endpoint data
 
   scripts/
     check_roadmap_touched.sh              # gate: a PR that changes files must change ROADMAP.md   (1.9)
-    roadmap_progress.sh                   # computes the progress table; --check fails when stale   (1.9)
-    test_roadmap_gate.sh                  # eight cases for both scripts, on throwaway git repos    (1.9)
     generate_issues.sh                    # roadmap to GitHub issues; --check, --apply, --update   (1.13, 1.14)
+    roadmap_progress.sh                   # computes the progress table; --check fails when stale   (1.9)
+    sync_readme.py                        # dynamic metrics and live badge sync; --check-base in CI
     test_issue_shape.sh                   # every generated body carries the PI-1 shape            (1.25)
+    test_roadmap_gate.sh                  # eight cases for both scripts, on throwaway git repos    (1.9)
 
   .github/
     CODEOWNERS                            # owner on every path, extra weight on the protected ones (1.3)
@@ -117,14 +159,14 @@ guage/
       pages.yml                           # pages / deploy: publishes site/ to GitHub Pages        (5.9)
 ```
 
-Remote state set up alongside these files (task 1.13, not visible in the tree): a `protect main` ruleset requiring a pull request and the three CI checks, the label taxonomy listed in `CONTRIBUTING.md`, repository topics, GitHub Discussions, and 73 issues (#5 to #77), one per open roadmap task in Phases 0 to 6 plus the ten readiness gates, produced by `scripts/generate_issues.sh`. The 1.3 direct-push rejection was observed against `main` itself on 2026-10-30, after PR #2 merged: an empty-commit push was refused with "Changes must be made through a pull request" and `main` did not move. GitHub Pages is enabled with `build_type: workflow`, so `site/` reaches `https://posture-sec.github.io/guage/` only through the `pages` workflow (5.9, verified 2026-11-02). Also set on the repository itself (1.17, 2026-11-02): the About description names what Gauge does and states that it never holds a key, the homepage field points at the documentation site, and the wiki is off (`has_wiki: false`, `/wiki` redirects to the repository) so `site/` is the only documentation surface; the nine topics are unchanged. On the org itself (1.17): name `Posture Security`, a one-line bio, the documentation site as its website, location `Remote`, and the contact email the owner chose to publish. Org-wide 2FA remains off because task 1.2 is the owner's to close. The org has a second, separate repository for its own front door: `posture-sec/.github`, public, default branch `main`, with issues, projects and wiki off, holding `profile/README.md`, which GitHub renders on `https://github.com/posture-sec`. That file is not in this tree and cannot be shipped from here. It said, until 2026-11-02, that Gauge was the only code repository published in this org; that is now false twice over. `posture-sec/airlock` exists: the sibling scanner moved into this organization that day after the account that owned it was suspended (Airlock's task 1.15). `posture-sec/stellar-account-fixtures` exists: the account-read corpus, written for the problem this repository's own 0.6 ran into, namely that a rule written against a hand-typed fixture passes until the first real account disagrees with the invention (its tasks 0.1 to 0.5 and 1.1 to 1.7). `.github` remains the front door rather than a product. Three program repositories, plus that front door, means one Drips Wave application path, one org-scope App install and one per-org point pool split across the applicants, which `docs/WAVE_SUBMISSION.md` 7 now covers. Where a fixture comes from the corpus rather than from a capture of Gauge's own is `ARCHITECTURE.md` 12 and section 6 of this file, and nothing from it is vendored here yet. Absent on purpose: no release tag (D-12), and no scheduled-audit or release workflow yet (4.5, 5.4).
+Remote state set up alongside these files (task 1.13, not visible in the tree): a `protect main` ruleset requiring a pull request and the three CI checks, the label taxonomy listed in `CONTRIBUTING.md`, repository topics, GitHub Discussions, and 73 issues (#5 to #77), one per open roadmap task in Phases 0 to 6 plus the ten readiness gates, produced by `scripts/generate_issues.sh`. The 1.3 direct-push rejection was observed against `main` itself on 2026-10-30, after PR #2 merged: an empty-commit push was refused with "Changes must be made through a pull request" and `main` did not move. GitHub Pages is enabled with `build_type: workflow`, so `site/` reaches `https://posture-sec.github.io/guage/` only through the `pages` workflow (5.9, verified 2026-11-02). Also set on the repository itself (1.17, 2026-11-02): the About description names what Gauge does and states that it never holds a key, the homepage field points at the documentation site, and the wiki is off (`has_wiki: false`, `/wiki` redirects to the repository) so `site/` is the only documentation surface; the nine topics are unchanged. On the org itself (1.17): name `Posture Security`, a one-line bio, the documentation site as its website, location `Remote`, and the contact email the owner chose to publish. Org-wide 2FA remains off because task 1.2 is the owner's to close. The org has a second, separate repository for its own front door: `posture-sec/.github`, public, default branch `main`, with issues, projects and wiki off, holding `profile/README.md`, which GitHub renders on `https://github.com/posture-sec`. That file is not in this tree and cannot be shipped from here. It said, until 2026-11-02, that Gauge was the only code repository published in this org; that is now false twice over. `posture-sec/airlock` exists: the sibling scanner moved into this organization that day after the account that owned it was suspended (Airlock's task 1.15). `posture-sec/stellar-account-fixtures` exists: the account-read corpus, written for the problem this repository's own 0.6 ran into, namely that a rule written against a hand-typed fixture passes until the first real account disagrees with the invention (its tasks 0.1 to 0.5 and 1.1 to 1.7). `.github` remains the front door rather than a product. Three program repositories, plus that front door, means one Drips Wave application path, one org-scope App install and one per-org point pool split across the applicants, which `docs/WAVE_SUBMISSION.md` 7 now covers. Where a fixture comes from the corpus rather than from a capture of Gauge's own is `ARCHITECTURE.md` 12 and section 6 of this file, and nothing from it is vendored here yet. Absent on purpose: no release tag (D-12), and no scheduled-audit workflow yet (5.4). The release workflow exists (6.2, `.github/workflows/release.yml`) but has not run, because no tag has been cut.
 
 Drafted but not finished: `README.md` (1.10) and `CONTRIBUTING.md`, `SECURITY.md`, `.github/pull_request_template.md` (1.8) carry the roadmap rule and status wording; each task is done only when merged.
 
 
-Still absent, not silently implemented: a release workflow (4.5) and a scheduled-audit template (5.4). `go.sum` holds Go's own checksums for the one approved module (ADR-004, added in 2.4); no lockfile is hand-drafted. The local `files/` briefing copies are Git-ignored; the root documents are the maintained source of truth.
+Still absent, not silently implemented: a scheduled-audit template (5.4). The release workflow that 6.2 added is unexecuted until the owner cuts a tag. `go.sum` holds Go's own checksums for the one approved module (ADR-004, added in 2.4); no lockfile is hand-drafted. The local `files/` briefing copies are Git-ignored; the root documents are the maintained source of truth.
 
-Checks that run today: `gofmt -l .`, `go build ./...`, `go vet ./...`, `go test ./... -race -count=1`, `staticcheck ./...`, `govulncheck ./...`, `scripts/check_roadmap_touched.sh origin/main`, `scripts/roadmap_progress.sh --check`, `scripts/test_roadmap_gate.sh`, `scripts/generate_issues.sh --check`, `scripts/test_issue_shape.sh`. OSSF Scorecard runs on pushes to `main` and weekly (`scorecard / analysis`), not on pull requests, because it audits the default branch and publishes results. `stellar-gauge version` prints the version, and `check` and `audit` read real accounts through the Horizon client, fetch the `stellar.toml` of any account that publishes a home domain through the guarded client, evaluate the sixteen registered rules and render a report; a HIGH finding exits 1 by default, which since 3.1 includes an unreachable threshold tier, a signer the policy does not declare and an account with no standing weight, and the WARN family (flag or threshold drift, an out-of-order tier, a `hash(x)` signer, an unreadable identity) exits 1 under `--fail-on warn`. The implemented packages are `model`, `strkey`, `threshold`, `sanitize`, `policy`, `source`, `sep1`, `report`, `rules`, `run` and `cmd/stellar-gauge` (2.1 to 2.11, 3.1 to 3.7), and `strkey` and `sanitize` carry fuzz targets. `internal/threshold` answers reachability and the minimum signer count, `internal/rules` holds all sixteen rules, and `internal/rules/facts.go` has carried `rules.Facts` since 3.7 landed on 2026-11-05: the same context a rule reads, turned into the observations a report prints ahead of its findings, with no finding in it and no path to an exit code.
+Checks that run today: `gofmt -l .`, `go build ./...`, `go vet ./...`, `go test ./... -race -count=1`, `staticcheck ./...`, `govulncheck ./...`, `scripts/check_roadmap_touched.sh origin/main`, `scripts/roadmap_progress.sh --check`, `scripts/test_roadmap_gate.sh`, `scripts/generate_issues.sh --check`, `python3 scripts/sync_readme.py --check-base origin/main`. OSSF Scorecard runs on pushes to `main` and weekly (`scorecard / analysis`), not on pull requests, because it audits the default branch and publishes results. `stellar-gauge version` prints the version, and `check` and `audit` read real accounts through the Horizon client, fetch the `stellar.toml` of any account that publishes a home domain through the guarded client, evaluate the sixteen registered rules and render a report; a HIGH finding exits 1 by default, which since 3.1 includes an unreachable threshold tier, a signer the policy does not declare and an account with no standing weight, and the WARN family (flag or threshold drift, an out-of-order tier, a `hash(x)` signer, an unreadable identity) exits 1 under `--fail-on warn`. The implemented packages are `model`, `strkey`, `threshold`, `sanitize`, `policy`, `source`, `sep1`, `report`, `rules`, `run` and `cmd/stellar-gauge` (2.1 to 2.11, 3.1 to 3.7), and `strkey` and `sanitize` carry fuzz targets. `internal/threshold` answers reachability and the minimum signer count, `internal/rules` holds all sixteen rules, and `internal/rules/facts.go` has carried `rules.Facts` since 3.7 landed on 2026-11-05: the same context a rule reads, turned into the observations a report prints ahead of its findings, with no finding in it and no path to an exit code.
 
 Not built on purpose (do not create without a roadmap decision): a watch daemon, alert integrations, a rules language or plugin loader, a web UI, reputation scoring, contract-account auditing. See `ARCHITECTURE.md` 14.3.
 

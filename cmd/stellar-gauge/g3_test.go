@@ -103,14 +103,15 @@ func TestGateG3(t *testing.T) {
 			wantFinding: "id-toml-unreachable",
 		},
 		{
-			// No fetcher means no identity was verified, so the run stops rather
-			// than printing a report that looks clean.
+			// An account that publishes a home domain needs a fetcher. No fetcher
+			// means no identity was verified, so the run stops rather than printing
+			// a report that looks clean.
 			name: "identity fetcher will not build",
 			run: func() (int, string, string) {
-				srv := startEndpoint(t, endpoint{})
+				srv := startEndpoint(t, endpoint{balance: readFixture(t, fixtureClawback)})
 				return execCLIWith(t, deps{newIdentity: func() (sep1.Fetcher, error) {
 					return nil, errors.New("the test refuses to build a fetcher")
-				}}, "check", "--network", testNetwork, "--endpoint", srv.URL, accountOne)
+				}}, "check", "--network", testNetwork, "--endpoint", srv.URL, accountMissing)
 			},
 		},
 	}

@@ -4,7 +4,7 @@ Gauge is a read-only audit tool, so the bar for a change is "it cannot produce a
 
 ## Status
 
-The repository is a functional alpha (`ROADMAP.md` Phase 2): the policy loader, Horizon client, report renderers, orchestrator and CLI are implemented and tested. The threshold math, the rules and the SEP-1 fetcher are still placeholders, and a placeholder file is not progress. Pick work from the open issues or from `ROADMAP.md` and say which task you are taking.
+The repository is a functional alpha. Phases 0 to 3 are complete as of 2026-11-05: the policy loader, Horizon client, report renderers, orchestrator, CLI, threshold math, guarded SEP-1 fetcher and all sixteen rules are implemented and tested, and every Appendix B scenario has a golden report behind it. Phase 4, where a release waits, is open (dogfooding, the CI matrix, release artifacts). Pick work from the open issues or from `ROADMAP.md` and say which task you are taking.
 
 ## Before you start
 
@@ -34,7 +34,10 @@ scripts/check_roadmap_touched.sh origin/main
 scripts/roadmap_progress.sh --check ROADMAP.md
 scripts/test_roadmap_gate.sh                 # self-test for the roadmap gate
 scripts/test_issue_shape.sh                  # every generated body matches PI-1
+python3 scripts/sync_readme.py --check-base origin/main
 ```
+
+The `<!-- METRICS:START -->` table in `README.md` and the `site/data/badge-*.json` endpoints are generated, and `scripts/sync_readme.py` is their only writer. The maintainer runs it on `main`; you do not touch those files in a pull request, so adding tests does not put you in conflict with the next contributor who adds tests. If the check names them, drop them from your branch with `git checkout origin/main -- README.md site/data/badge-tests.json`.
 
 CI runs the same set as `ci / go`, `ci / vuln` and `roadmap-check / gate`, with every action pinned by commit SHA and `permissions: contents: read`. The fuzz targets in `internal/strkey` and `internal/sanitize` exist and are run as a smoke before a release-facing change, one target per command because `-fuzz` refuses multiple packages. They are not CI jobs:
 
