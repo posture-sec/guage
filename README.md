@@ -30,8 +30,8 @@ Gauge is read-only and secret-free. It never accepts, stores or echoes a secret 
 <!-- METRICS:START -->
 | Indicator | Value | Source |
 |---|---|---|
-| Unit & Integration Tests | **207 passing** | `go test ./...` |
-| Posture Rules | **16 verified** across 4 families | `internal/rules` |
+| Unit & Integration Tests | **369 passing** | `go test ./...` |
+| Posture Rules | **17 verified** across 4 families | `internal/rules` |
 | Binary | **`stellar-gauge`** | `cmd/stellar-gauge` |
 | Security Guarantee | **Read-only / 0 secret keys** | Architecture spec |
 <!-- METRICS:END -->
@@ -51,14 +51,15 @@ A 7-page documentation site is published at **[https://posture-sec.github.io/gua
 
 ## What it checks
 
-Sixteen rules in v0.1, each with a stable kebab-case ID, and all sixteen are implemented: the account, flag and identity families from tasks 3.2, 3.3 and 3.5, and the nine signer and threshold rules from task 3.1 (`sig-no-signing-weight`, `sig-threshold-unreachable`, `sig-threshold-order`, `sig-single-key-high`, `sig-hashx`, `sig-unexpected-signer`, `sig-missing-expected`, `sig-weight-drift`, `thr-drift`). Severity depends on the account's declared role (PRD Appendix A, applied by task 3.4): single-key control is HIGH for an issuer or treasury and INFO for an account with no role, drift is HIGH for a treasury, and an issuer that publishes no home domain is a finding whether or not a policy asked it to.
+Seventeen rules implemented in `internal/rules`, each with a stable kebab-case ID: the account, flag and identity families from tasks 3.2, 3.3, 3.5 and 5.6 (`id-sep29-memo-required`), and the nine signer and threshold rules from task 3.1 (`sig-no-signing-weight`, `sig-threshold-unreachable`, `sig-threshold-order`, `sig-single-key-high`, `sig-hashx`, `sig-unexpected-signer`, `sig-missing-expected`, `sig-weight-drift`, `thr-drift`). Multi-endpoint comparison (`src-disagreement`, task 5.1) runs at the orchestrator layer across up to five endpoints. Severity depends on the account's declared role (PRD Appendix A, applied by task 3.4): single-key control is HIGH for an issuer or treasury and INFO for an account with no role, drift is HIGH for a treasury, and an issuer that publishes no home domain is a finding whether or not a policy asked it to.
 
 | Family | Rules |
 | --- | --- |
 | Account | `acct-missing`, `acct-network-mismatch` |
 | Signers | `sig-no-signing-weight`, `sig-threshold-unreachable`, `sig-threshold-order`, `sig-single-key-high`, `sig-hashx`, `sig-unexpected-signer`, `sig-missing-expected`, `sig-weight-drift` |
 | Thresholds and flags | `thr-drift`, `flag-drift`, `flag-undeclared-clawback` |
-| Identity | `id-no-home-domain`, `id-toml-unreachable`, `id-toml-account-unlisted` |
+| Identity | `id-no-home-domain`, `id-toml-unreachable`, `id-toml-account-unlisted`, `id-sep29-memo-required` |
+| Multi-Endpoint (Run) | `src-disagreement` |
 
 Exit codes: `0` pass, `1` findings at or above `--fail-on`, `2` configuration or usage error, `3` source or internal error. Anything unreachable, oversized, malformed or ambiguous fails closed. It never exits 0 on a check it could not complete.
 
@@ -66,7 +67,7 @@ Exit codes: `0` pass, `1` findings at or above `--fail-on`, `2` configuration or
 
 - Key custody. On-chain data cannot show who holds a key, how it is stored, or whether it leaked.
 - Whether an account is a good account. Gauge reports posture against your declared expectations. It never says an account is secure or safe, and "no findings" is not a clean bill of health.
-- What is still unwritten rather than still unchecked. All sixteen v0.1 rules are registered and every expectation kind in `gauge.example.toml` is compared by at least one rule, so the gaps are in the surfaces around them: markdown output (`--format markdown` refuses rather than falling back, task 5.3), `snapshot` and `diff` against a saved baseline (5.2, and the `--out` flag those commands would need does not exist), trustline exposure facts for the assets an account holds (5.5), the SEP-29 memo-required check for a merchant receiving account (5.6) and comparison across two endpoints (5.1). This bullet is about what is unfinished; the two above are about what Gauge will not look at either way.
+- What is still unwritten rather than still unchecked. All seventeen rules are registered, multi-endpoint comparison (5.1), snapshot/diff baselines (5.2), markdown formatting (5.3), trustline exposure facts (5.5), and the SEP-29 memo check (5.6) are implemented. Gaps remaining in v0.2 include the scheduled action template (5.4) and final release distribution (4.8). This bullet is about what is unfinished; the two above are about what Gauge will not look at either way.
 - Whether the rules are right about your account. Eighteen Appendix B scenarios, each pinned as a text report and a JSON report, prove the report does not change shape under a test, and no operator outside this repository has read a finding from it yet, which is task 4.1 and gate G4. A finding that matches your configuration is a judgement you should still review the first time, not a verdict the tool has earned.
 - Transactions, balances, offers, claimable balances, liquidity pools and Soroban contract accounts.
 - Live streaming or alerting. It is a state comparison you schedule, not a daemon.

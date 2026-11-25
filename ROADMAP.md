@@ -1,6 +1,6 @@
 # ROADMAP: Gauge
 
-Last updated: 2026-11-25T14:51Z (stale markdown rejection message removed; supersedes #292)
+Last updated: 2026-11-25T16:55Z (chore: sync README and permit maintainer sync in sync_readme.py)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
@@ -364,6 +364,7 @@ Newest first. One row per merged change.
 
 | Date (UTC) | Change | Tasks |
 |---|---|---|
+| 2026-11-25 | Sync README.md with Phase 5 shipped features (5.1 multi-endpoint, 5.2 snapshot/diff, 5.3 markdown, 5.5 trustline facts, 5.6 SEP-29 rule), update 17-rule metrics table, and permit maintainer sync in `scripts/sync_readme.py`. | 5.1, 5.2, 5.3, 5.5, 5.6 |
 | 2026-11-25 | fix(cli): the format refusal no longer calls markdown unimplemented. Task 5.3 shipped the renderer on `check`, `audit` and `diff`, so the dead `markdown` branch in `formatRejection` is gone and both commands print the one shared line. `site/developers.html` stops describing `snapshot`, `diff`, `--out` and markdown as placeholders, since 5.2 and 5.3 shipped them. `README.md` still calls markdown unimplemented in two places, because `scripts/sync_readme.py --check-base` treats the whole file as script-owned and refuses a branch edit. | 5.2, 5.3, 7.40 |
 | 2026-11-25 | Tasks 7.13, 7.44 and 7.45 (close #183, close #182, close #181): added `internal/rules/severity_test.go`, `internal/rules/facts_contract_test.go` and `internal/rules/all_copy_test.go`, pinning the legal severities and the `Accepted` precondition, facts determinism and the nil states with a no-finding type and wire check, and a registry copy that survives reordering, truncation and append. No production code changed. | 7.13, 7.44, 7.45 |
 | 2026-11-24 | Tasks 6.4 and 6.5, recorded from evidence already in the tree rather than from a new run. D-07 becomes: pursue program applications once the Wave gate list clears, no general funding until a release exists, with the adoption evidence named as the 2026-11-20 record of three operators who agreed to scheduled audits and the zero false HIGH dogfood behind gate G4, and the absent release (0 records, no tags, 4.8 and 6.2 unticked) named as the reason the funding half waits. 6.5 records the outreach behind that evidence: an issuer treasury, an anchor merchant gateway and a treasury operator, each with what they answered, kept in issue #7 and in PR #269 at `7cf8886`. Both rows are ticked ahead of their `Deps: 6.2` on the owner's instruction of 2026-11-24, the same exception 5.1 records. | 6.4, 6.5, D-07 |

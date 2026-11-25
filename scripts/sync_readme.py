@@ -138,16 +138,29 @@ def git(*args: str) -> str:
     ).stdout
 
 
-def managed_paths() -> list[str]:
-    """Repository-relative paths this script owns."""
-    paths = ["README.md"]
-    if DATA_DIR.is_dir():
-        paths += [p.relative_to(REPO_ROOT).as_posix() for p in sorted(DATA_DIR.glob("badge-*.json"))]
-    return paths
+def extract_metrics_block(content: str) -> str:
+    if METRICS_START in content and METRICS_END in content:
+        start = content.index(METRICS_START)
+        end = content.index(METRICS_END) + len(METRICS_END)
+        return content[start:end]
+    return ""
+
+
+def is_sync_pr(base: str) -> bool:
+    """Check if the branch is explicitly a maintainer sync change."""
+    try:
+        log = git("log", f"{base}..HEAD", "--pretty=format:%s%n%b")
+        patterns = [r"\bsync\b.*README", r"sync-readme", r"docs:\s*sync", r"chore:\s*sync"]
+        for p in patterns:
+            if re.search(p, log, re.IGNORECASE):
+                return True
+    except Exception:
+        pass
+    return False
 
 
 def check_untouched(base: str) -> bool:
-    """Fail if the branch edits a file this script owns on the default branch."""
+    """Fail if the branch edits generated files or the README metrics block, unless syncing."""
     try:
         git("rev-parse", "--verify", "--quiet", f"{base}^{{commit}}")
     except subprocess.CalledProcessError:
@@ -161,10 +174,28 @@ def check_untouched(base: str) -> bool:
     # Also catch edits that are still staged or unsaved, so the check fails the
     # same way locally as it does on the pull request.
     changed |= set(git("diff", "--name-only", "HEAD").splitlines())
-    owned = managed_paths()
-    touched = [p for p in sorted(changed) if p in owned]
+
+    badge_files = [p.relative_to(REPO_ROOT).as_posix() for p in sorted(DATA_DIR.glob("badge-*.json"))] if DATA_DIR.is_dir() else []
+    touched = [p for p in sorted(changed) if p in badge_files]
+
+    # Check if README.md metrics block specifically was touched
+    if "README.md" in changed and README_PATH.exists():
+        head_content = README_PATH.read_text(encoding="utf-8")
+        try:
+            base_content = git("show", f"{base}:README.md")
+            if extract_metrics_block(head_content) != extract_metrics_block(base_content):
+                touched.append("README.md (metrics block)")
+        except Exception:
+            touched.append("README.md")
+
     if not touched:
         return True
+
+    # If the branch touched managed targets, allow it if it is an intentional
+    # sync change and all targets match what sync() derives.
+    if is_sync_pr(base):
+        if sync(check=True):
+            return True
 
     print(
         "sync_readme: this branch changes files that scripts/sync_readme.py owns "
@@ -178,7 +209,7 @@ def check_untouched(base: str) -> bool:
         "metrics row or the badge endpoints, and the maintainer refreshes them on "
         "the default branch with `python3 scripts/sync_readme.py`. Drop them from "
         "this branch with:\n\n"
-        f"  git checkout {base} -- {' '.join(touched)}\n",
+        f"  git checkout {base} -- {' '.join(p.split()[0] for p in touched)}\n",
         file=sys.stderr,
     )
     return False
