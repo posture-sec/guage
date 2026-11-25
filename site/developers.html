@@ -134,18 +134,18 @@ go build -o stellar-gauge ./cmd/stellar-gauge
         </section>
 
         <section class="section">
-          <h2>Shipped code and placeholders</h2>
-          <p>A file in the tree is not a feature. These are the differences a reader has to keep straight today:</p>
+          <h2>Shipped surfaces</h2>
+          <p>A file in the tree is not a feature. Each row below is checked against the code and the flags that exist today:</p>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr><th>Surface</th><th>State</th></tr>
               </thead>
               <tbody>
-                <tr><td><code>check</code>, <code>audit</code>, <code>version</code>, <code>help</code></td><td>Shipped. Flags, exit codes and JSON fields are documented on <a href="guides.html">Guides</a>.</td></tr>
-                <tr><td><code>cmd/stellar-gauge/snapshot.go</code> and <code>diff.go</code></td><td>Empty files holding only a package clause. Tasks 5.2 is open, and no subcommand is registered for either.</td></tr>
-                <tr><td><code>internal/report/markdown.go</code></td><td>Placeholder for task 5.3. <code>--format markdown</code> exits 2 with "markdown output is not implemented yet" rather than falling back to text.</td></tr>
-                <tr><td><code>--out</code></td><td>A reserved name, not a flag. No shipped subcommand accepts it; it arrives with the P1 <code>snapshot</code> command.</td></tr>
+                <tr><td><code>check</code>, <code>audit</code>, <code>snapshot</code>, <code>diff</code>, <code>version</code>, <code>help</code></td><td>Shipped. Flags, exit codes and JSON fields are documented on <a href="guides.html">Guides</a>.</td></tr>
+                <tr><td><code>snapshot</code> and <code>diff</code></td><td>Shipped in task 5.2. <code>snapshot --out</code> writes a baseline JSON that opens with the review banner, and <code>diff --baseline</code> compares live state with it in text, JSON or markdown.</td></tr>
+                <tr><td><code>internal/report/markdown.go</code></td><td>Shipped in task 5.3. <code>--format markdown</code> on <code>check</code>, <code>audit</code> and <code>diff</code> prints the same facts, findings, exit code and limits footer as text, with every chain-derived value escaped and evidence in a fence longer than any backtick run inside it.</td></tr>
+                <tr><td><code>--out</code></td><td>Accepted by <code>snapshot</code> only, where it is required. No other subcommand writes a file.</td></tr>
                 <tr><td><code>livenet</code> build tag</td><td>The documented opt-in for a test that needs a public endpoint. No test in the tree carries it today, and every test runs offline against fake servers.</td></tr>
               </tbody>
             </table>

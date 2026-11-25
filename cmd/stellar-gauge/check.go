@@ -45,7 +45,7 @@ func checkCommand(args []string, stdout, stderr io.Writer, d deps) int {
 		return usageError(stderr, "--fail-on must be high or warn")
 	}
 	if !validFormat(*format) {
-		return usageError(stderr, formatRejection(*format))
+		return usageError(stderr, formatRejection())
 	}
 	concurrencyLimit, ok := parseConcurrency(*concurrency)
 	if !ok {
