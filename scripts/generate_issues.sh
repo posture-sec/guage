@@ -131,6 +131,7 @@ backlog() {
     '6.3	type: research	area: rules	docs(triage): review external false-positive reports' \
     '6.4	type: research	area: docs	docs(decisions): decide funding and applications (D-07)' \
     '6.5	type: docs	area: docs	docs(outreach): contact issuers, anchors and treasury teams' \
+    '7.13	type: test	area: rules	test(rules): rules emit legal severities and never pre-set acceptance' \
     '7.36	type: test	area: rules	test(rules): reject duplicate or malformed rule IDs' \
     '7.37	type: test	area: rules	test(rules): pin registry evaluation order before reports sort' \
     '7.38	type: test	area: run	test(run): prove network mismatch skips identity fetches' \
@@ -139,6 +140,8 @@ backlog() {
     '7.41	type: security	area: model	security(model): hash evidence after format-character stripping' \
     '7.42	type: feature	area: policy	feat(policy): scope accepted risks to one network' \
     '7.43	type: test	area: sanitize	test(sanitize): consume OSC 8 hyperlinks whole, URL included' \
+    '7.44	type: test	area: rules	test(rules): facts stay findings-free and deterministic per context' \
+    '7.45	type: test	area: rules	test(rules): All returns a copy callers cannot edit' \
     '7.46	type: test	area: sanitize	test(sanitize): table the bidi overrides and isolate controls' \
     '7.47	type: test	area: sanitize	test(sanitize): flag IDN home domains and their punycode form' \
     '7.48	type: test	area: sep1	test(sep1): prove redirect refusals stop before a request leaves' \
