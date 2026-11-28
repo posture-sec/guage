@@ -77,6 +77,7 @@ guage/
       {config,expectations,accept}.go      # policy declarations, no decoding or acceptance logic
       {decode,validate,roles}.go           # strict loading, rejection kinds, network passphrases and the Appendix A role floors (2.4, 3.4)
       config_test.go                       # loader tests, including that the shipped example policy loads (2.4)
+      coordinator_test.go                  # coordinator policy field loading, normalization and ErrCoordinator validation tests (5.12)
       {endpoint_shape,syntax_position,empty_policy}_test.go # load boundary cases for base URLs, parse positions and empty declarations (7.65 to 7.67)
       {accept,roles,roles_keys,roles_mutation,seed_shape,home_domain}_test.go # acceptance refusals, 16x5 role-floor table, seed shape rejection, SEP-1 home domain labels and isolation (3.4, 7.54 to 7.56, 7.63, 7.64)
       example_seed_test.go                 # scans the shipped example and policy fixtures for seed-shaped tokens (7.81)

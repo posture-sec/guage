@@ -1,6 +1,6 @@
 # ROADMAP: Gauge
 
-Last updated: 2026-11-28T13:10Z (feat(model,sanitize): add multisig coordinator helpers and base64/domain normalization)
+Last updated: 2026-11-28T13:12Z (feat(policy): add coordinator policy key and example config note)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
@@ -367,6 +367,7 @@ Newest first. One row per merged change.
 
 | Date (UTC) | Change | Tasks |
 |---|---|---|
+| 2026-11-28 | feat(policy): add optional `Account.Coordinator` (`coordinator`) TOML key, `ErrCoordinator` hostname validation, commented example entry in `gauge.example.toml`, and loader tests for task 5.12. | 5.12 partly |
 | 2026-11-28 | feat(model,sanitize): add `MultiSigCoordinatorEntry`/`MultiSigCoordinator`, `CoordinatorFact`/`DeclaredFacts.Coordinator` (with `prepareFacts` JSON sanitization), and strict `DecodeB64Domain`/`NormalizeDomain` helpers for task 5.12. | 5.12 partly |
 | 2026-11-28 | docs(roadmap): plan task 5.12 multisig coordinator policy check, record decision D-17, and add FR-23 to PRD.md. | 5.12, D-17 |
 | 2026-11-28 | feat(cli): support `--fail-on info` in `check` and `audit`, and sync stale documentation (`README.md` markdown usage and rule count, `ARCHITECTURE.md` status header, `ARCHITECTURE_ESSENTIALS.md` rule list, `PRD.md` SEP-29 prose and CLI synopsis, `site/guides.html` `--fail-on` values, `docs/WAVE_SUBMISSION.md` live counts). | 7.90 |

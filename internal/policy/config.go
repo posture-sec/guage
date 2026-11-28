@@ -18,5 +18,6 @@ type Account struct {
 	ExpectedThresholds *ExpectedThresholds `toml:"expected_thresholds"`
 	ExpectedFlags      *ExpectedFlags      `toml:"expected_flags"`
 	HomeDomain         *string             `toml:"home_domain"`
+	Coordinator        *string             `toml:"coordinator"`
 	ExpectLocked       *bool               `toml:"expect_locked"`
 }

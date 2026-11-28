@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/posture-sec/guage/internal/model"
+	"github.com/posture-sec/guage/internal/sanitize"
 	"github.com/posture-sec/guage/internal/strkey"
 )
 
@@ -158,6 +159,13 @@ func (a *Account) validate(index int) error {
 
 	if a.HomeDomain != nil && !validHomeDomain(*a.HomeDomain) {
 		return withDetail(ErrHomeDomain, field+".home_domain")
+	}
+	if a.Coordinator != nil && *a.Coordinator != "" {
+		normalized, ok := sanitize.NormalizeDomain(*a.Coordinator)
+		if !ok {
+			return withDetail(ErrCoordinator, field+".coordinator")
+		}
+		*a.Coordinator = normalized
 	}
 	return nil
 }

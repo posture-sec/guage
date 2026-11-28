@@ -20,6 +20,10 @@ expected_flags = { auth_required = false, auth_revocable = false, auth_immutable
 # enough: Appendix A expects a home domain from an issuer, and this account declares
 # a treasury, so only this line makes the missing domain a warning.
 home_domain = "example.com"
+# coordinator declares the bare hostname an account is expected to publish in
+# config.multisig.coordinator (or an equivalent *multisig*coordinator data entry).
+# Omit when undecided, set "" to expect none, or decide and record your host:
+# coordinator = "v1.multisig.satoshipay.io"
 # expect_locked states that a zero-weight, nonsigning account is intended. It is
 # read for `issuer` alone; on a treasury it changes nothing, and the report prints
 # the declaration as ignored rather than letting it read as a covered risk.
