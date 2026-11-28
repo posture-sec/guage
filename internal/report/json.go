@@ -103,6 +103,7 @@ func prepareFacts(facts *model.AccountFacts) *model.AccountFacts {
 		copied.Name = sanitize.Text(copied.Name)
 		copied.Role = model.Role(sanitize.Text(string(copied.Role)))
 		copied.HomeDomain = sanitizePointer(copied.HomeDomain)
+		copied.Coordinator = sanitizePointer(copied.Coordinator)
 		out.Declared = &copied
 	}
 	if identity := facts.Identity; identity != nil {
@@ -120,6 +121,12 @@ func prepareFacts(facts *model.AccountFacts) *model.AccountFacts {
 		}
 		copied.Accounts = accounts
 		out.Identity = &copied
+	}
+	if coord := facts.Coordinator; coord != nil {
+		copied := *coord
+		copied.DataKey = sanitize.Text(copied.DataKey)
+		copied.Domain = sanitize.Text(copied.Domain)
+		out.Coordinator = &copied
 	}
 	if len(facts.Trustlines) > 0 {
 		trustlines := make([]model.TrustlineFact, len(facts.Trustlines))

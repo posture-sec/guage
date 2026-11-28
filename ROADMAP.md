@@ -1,6 +1,6 @@
 # ROADMAP: Gauge
 
-Last updated: 2026-11-28T13:05Z (docs(roadmap): plan task 5.12 multisig coordinator policy check)
+Last updated: 2026-11-28T13:10Z (feat(model,sanitize): add multisig coordinator helpers and base64/domain normalization)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
@@ -367,6 +367,7 @@ Newest first. One row per merged change.
 
 | Date (UTC) | Change | Tasks |
 |---|---|---|
+| 2026-11-28 | feat(model,sanitize): add `MultiSigCoordinatorEntry`/`MultiSigCoordinator`, `CoordinatorFact`/`DeclaredFacts.Coordinator` (with `prepareFacts` JSON sanitization), and strict `DecodeB64Domain`/`NormalizeDomain` helpers for task 5.12. | 5.12 partly |
 | 2026-11-28 | docs(roadmap): plan task 5.12 multisig coordinator policy check, record decision D-17, and add FR-23 to PRD.md. | 5.12, D-17 |
 | 2026-11-28 | feat(cli): support `--fail-on info` in `check` and `audit`, and sync stale documentation (`README.md` markdown usage and rule count, `ARCHITECTURE.md` status header, `ARCHITECTURE_ESSENTIALS.md` rule list, `PRD.md` SEP-29 prose and CLI synopsis, `site/guides.html` `--fail-on` values, `docs/WAVE_SUBMISSION.md` live counts). | 7.90 |
 | 2026-11-25 | Sync README.md with Phase 5 shipped features (5.1 multi-endpoint, 5.2 snapshot/diff, 5.3 markdown, 5.5 trustline facts, 5.6 SEP-29 rule), update 17-rule metrics table, and permit maintainer sync in `scripts/sync_readme.py`. | 5.1, 5.2, 5.3, 5.5, 5.6 |
