@@ -22,6 +22,7 @@ const (
 	kindDuplicateSigner ErrorKind = "duplicate-signer"
 	kindDuplicateAcct   ErrorKind = "duplicate-account"
 	kindHomeDomain      ErrorKind = "home-domain"
+	kindCoordinator     ErrorKind = "coordinator"
 	kindAccept          ErrorKind = "accept"
 	kindAcceptRule      ErrorKind = "accept-rule"
 	kindDuplicateAccept ErrorKind = "duplicate-accept"
@@ -65,6 +66,7 @@ var (
 	ErrDuplicateSigner  = &Error{Kind: kindDuplicateSigner, Message: "an expected signer is declared twice for one account"}
 	ErrDuplicateAccount = &Error{Kind: kindDuplicateAcct, Message: "an account is declared twice"}
 	ErrHomeDomain       = &Error{Kind: kindHomeDomain, Message: "home_domain must be a bare host name, not a URL or an IP address"}
+	ErrCoordinator      = &Error{Kind: kindCoordinator, Message: "coordinator must be empty or a bare host name, not a URL or an IP address"}
 	ErrAccept           = &Error{Kind: kindAccept, Message: "each accept entry needs a rule, a G account and a reason, and an optional YYYY-MM-DD expiry"}
 	ErrAcceptRule       = &Error{Kind: kindAcceptRule, Message: "the accept rule must be a concrete rule ID that may be accepted"}
 	ErrDuplicateAccept  = &Error{Kind: kindDuplicateAccept, Message: "the same rule and network are accepted twice for one account"}
