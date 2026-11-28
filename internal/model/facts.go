@@ -27,10 +27,18 @@ var ErrIdentityNetworkPair = errors.New("identity facts carry a network verdict 
 // for a report assembled by hand, and a renderer prints no fact lines for such an
 // account rather than reading a missing block as an answer about the world.
 type AccountFacts struct {
-	Reachability *Reachability   `json:"reachability"`
-	Declared     *DeclaredFacts  `json:"declared"`
-	Identity     *IdentityFacts  `json:"identity"`
-	Trustlines   []TrustlineFact `json:"trustlines,omitempty"`
+	Reachability *Reachability    `json:"reachability"`
+	Declared     *DeclaredFacts   `json:"declared"`
+	Identity     *IdentityFacts   `json:"identity"`
+	Coordinator  *CoordinatorFact `json:"coordinator,omitempty"`
+	Trustlines   []TrustlineFact  `json:"trustlines,omitempty"`
+}
+
+// CoordinatorFact records a multisig coordinator data entry observed on the account.
+type CoordinatorFact struct {
+	DataKey string `json:"data_key"`
+	Domain  string `json:"domain,omitempty"`
+	Valid   bool   `json:"valid"`
 }
 
 // TrustlineFact describes exposure to one non-native asset issuer. It contains
@@ -78,6 +86,7 @@ type DeclaredFacts struct {
 	ExpectedThresholds *DeclaredThresholds `json:"expected_thresholds"`
 	ExpectedFlags      *DeclaredFlags      `json:"expected_flags"`
 	HomeDomain         *string             `json:"home_domain"`
+	Coordinator        *string             `json:"coordinator,omitempty"`
 	ExpectLocked       *bool               `json:"expect_locked"`
 	// ExpectLockedIgnored marks a true declaration on a role Appendix A does not
 	// allow to make it. It is not refused at load, so the only place an operator

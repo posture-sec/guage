@@ -50,6 +50,7 @@ guage/
       facts_nil_test.go                   # null and zero fact blocks on the wire, with round trips
       finding_json_test.go                # exact seven Finding JSON keys without omitempty (7.62)
       {facts_identity,facts_declared}_test.go # network verdict without passphrase guard and typed DeclaredFacts.Role (7.57, 7.58)
+      coordinator_test.go                 # multisig coordinator entry lookup precedence/aliases and JSON facts (5.12)
       severity_bounds_test.go             # valid severities, marshal refusal and invalid-severity sort order
     strkey/
       {address,checksum,seed}.go           # SEP-23 classify, CRC16 and seed detection (2.2)
@@ -63,7 +64,7 @@ guage/
       minsigners_test.go                  # MinSigners early returns against boundary signers (7.52)
       zero_weight_test.go                 # weight filter at every tier against lone and mixed signers (7.53)
     sanitize/
-      {text,domain,markdown}.go            # output and domain handling (2.5, 5.3)
+      {text,domain,markdown,coordinator}.go # output, domain handling and base64 coordinator normalization (2.5, 5.3, 5.12)
       {sanitize_test,fuzz_test}.go         # injection classes, IDN, fencing; FuzzText and FuzzFenced
       {zero_width,tag_block,c1}_test.go    # per-rune boundaries of the dropped sets (7.23, 7.24, 7.25)
       {zero_width,tag_block,c1}_test.go    # per-rune boundaries of the dropped sets (7.23, 7.24, 7.25)
@@ -71,6 +72,7 @@ guage/
       osc_test.go                          # hyperlink escapes consumed whole, URL included (7.43)
       bidi_test.go                         # per-rune bidi overrides and isolate controls table (7.46)
       domain_test.go                       # IDN home domain matrix and punycode semantics (7.47)
+      coordinator_test.go                  # NormalizeDomain and DecodeB64Domain unit and hostile-shape tests (5.12)
     policy/
       {config,expectations,accept}.go      # policy declarations, no decoding or acceptance logic
       {decode,validate,roles}.go           # strict loading, rejection kinds, network passphrases and the Appendix A role floors (2.4, 3.4)

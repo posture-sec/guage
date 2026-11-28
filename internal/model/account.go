@@ -72,3 +72,40 @@ type AccountSnapshot struct {
 func (a AccountSnapshot) HasHomeDomain() bool {
 	return strings.TrimSpace(a.HomeDomain) != ""
 }
+
+// MultiSigCoordinatorEntry looks up the multisig coordinator data entry on the
+// account. Canonical "config.multisig.coordinator" takes precedence; otherwise it
+// selects the lexicographically first key ending with <sep>multisig<sep>coordinator
+// for sep in {., :, _, /} with a non-empty prefix.
+func (a AccountSnapshot) MultiSigCoordinatorEntry() (key, raw string, present bool) {
+	if raw, ok := a.Data["config.multisig.coordinator"]; ok {
+		return "config.multisig.coordinator", raw, true
+	}
+	var bestKey string
+	for k := range a.Data {
+		if isCoordinatorAliasKey(k) && (bestKey == "" || k < bestKey) {
+			bestKey = k
+		}
+	}
+	if bestKey == "" {
+		return "", "", false
+	}
+	return bestKey, a.Data[bestKey], true
+}
+
+// MultiSigCoordinator returns the raw value of the selected multisig
+// coordinator data entry, if one is present.
+func (a AccountSnapshot) MultiSigCoordinator() (raw string, present bool) {
+	_, raw, present = a.MultiSigCoordinatorEntry()
+	return raw, present
+}
+
+func isCoordinatorAliasKey(k string) bool {
+	for _, sep := range []string{".", ":", "_", "/"} {
+		suffix := sep + "multisig" + sep + "coordinator"
+		if len(k) > len(suffix) && strings.HasSuffix(k, suffix) {
+			return true
+		}
+	}
+	return false
+}
