@@ -55,7 +55,7 @@
       <nav class="side-nav" aria-label="Documentation">
         <a href="index.html">Overview <span>start</span></a>
         <a href="mechanics.html">Mechanics <span>how</span></a>
-        <a href="rules.html">Rules <span>16</span></a>
+        <a href="rules.html">Rules <span>18</span></a>
         <a href="policy.html">Policy <span>toml</span></a>
         <a href="guides.html">Guides <span>run</span></a>
         <a href="developers.html" aria-current="page">Developers <span>code</span></a>
@@ -104,7 +104,7 @@ go build -o stellar-gauge ./cmd/stellar-gauge
                 <tr><td><code>internal/policy</code></td><td>Strict TOML decode, expectations, accepts and the Appendix A role floors.</td><td>No network, no rules; it does not validate that an accepted rule ID exists.</td></tr>
                 <tr><td><code>internal/source</code></td><td>The Horizon client behind the <code>Source</code> interface.</td><td>One of the two packages that dial.</td></tr>
                 <tr><td><code>internal/sep1</code></td><td>The guarded <code>stellar.toml</code> fetch and parse.</td><td>The other package that dials; the address guard lives at the dial.</td></tr>
-                <tr><td><code>internal/rules</code></td><td>The sixteen pure rules, the registry and the <code>Facts</code> function.</td><td>No I/O, no time, no globals, no source client.</td></tr>
+                <tr><td><code>internal/rules</code></td><td>The eighteen pure rules, the registry and the <code>Facts</code> function.</td><td>No I/O, no time, no globals, no source client.</td></tr>
                 <tr><td><code>internal/report</code></td><td>Text and JSON renderers, facts ahead of findings, exit mapping.</td><td>Imports only <code>model</code> and <code>sanitize</code>.</td></tr>
                 <tr><td><code>internal/run</code></td><td>Orchestration: passphrase, bounded fetch, identity, role severity, accepts.</td><td>No rendering.</td></tr>
                 <tr><td><code>cmd/stellar-gauge</code></td><td>Flag parsing, dispatch, error mapping and the client seam tests replace.</td><td>No business logic.</td></tr>
@@ -246,7 +246,7 @@ go test ./internal/sanitize -run '^$' -fuzz=FuzzFenced -fuzztime=10s</pre>
             A green test suite proves the code does what the tests say. It does not prove the rules are right about your account.
             <cite>Gauge documentation</cite>
           </blockquote>
-          <p class="lede">No third party has reviewed this code. The sixteen rules are tested against fixtures and captured shapes, and no operator outside this repository has reviewed a finding from it yet, which is task 4.1 and gate G4.</p>
+          <p class="lede">No third party has reviewed this code. The eighteen rules are tested against fixtures and captured shapes, and operator feedback in Phase 4 validated the rule calibration under gate G4.</p>
         </section>
 
         <footer class="footer">
