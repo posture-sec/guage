@@ -129,6 +129,7 @@ Priority: **P0** ships in v0.1.0, **P1** in v0.2.0, **Later** is backlog. Task I
 | FR-20 | Stellar RPC source implementation | Later | After Horizon's long-term status is clear (task 0.9) |
 | FR-21 | Claimable balances, liquidity pool and sponsorship analysis | Later | |
 | FR-22 | Alert integrations (chat, email) | Later, probably never | Use JSON output and CI instead |
+| FR-23 | Multisig coordinator policy check (`id-multisig-coordinator-unexpected`) | P1 | Detects `config.multisig.coordinator` and legacy `*multisig*coordinator` account data entries against declared `coordinator` domain (task 5.12) |
 
 ### 6.1 Rule catalog (v0.2)
 
@@ -153,6 +154,7 @@ Severities shown are defaults; a role raises a finding to the value its Appendix
 | `id-toml-unreachable` | `stellar.toml` cannot be fetched or parsed under the guard | WARN |
 | `id-toml-account-unlisted` | The account is not listed in `stellar.toml` | WARN |
 | `id-sep29-memo-required` | Merchant account lacks SEP-29 `config.memo_required` data entry | WARN |
+| `id-multisig-coordinator-unexpected` | Account carries a multisig coordinator data entry that is undeclared, unreadable, or disagrees with policy `coordinator` (planned, task 5.12) | WARN |
 
 Facts always printed: network and ledger as of, signers (type, weight, sponsor), thresholds, flags, minimum signers to reach each tier, home domain, sponsorship, and held asset trustlines (with issuer flags; no balance amounts).
 
