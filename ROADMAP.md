@@ -1,6 +1,6 @@
 # ROADMAP: Gauge
 
-Last updated: 2026-11-28T13:00Z (feat(cli): support --fail-on info and align docs with shipped state)
+Last updated: 2026-11-28T13:05Z (docs(roadmap): plan task 5.12 multisig coordinator policy check)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
@@ -38,10 +38,10 @@ The repository is 100% ready when every task in Phases 0 to 6 is done and every 
 | 2 | Core | 11 | 11 | 100% |
 | 3 | Rules | 7 | 7 | 100% |
 | 4 | Dogfood and release v0.1.0 | 4 | 9 | 44% |
-| 5 | v0.2 features | 10 | 11 | 90% |
+| 5 | v0.2 features | 10 | 12 | 83% |
 | 6 | Release v0.2.0 and community | 3 | 5 | 60% |
 | 7 (backlog) | Backlog | 86 | 90 | 95% |
-| **Phases 0 to 6** | **Readiness total** | **72** | **80** | **90%** |
+| **Phases 0 to 6** | **Readiness total** | **72** | **81** | **88%** |
 | Gates | G1 to G10 | 8 | 10 | 80% |
 <!-- PROGRESS:END -->
 
@@ -214,6 +214,7 @@ Constraint on the two remaining experimental tasks: Gauge never builds or submit
 - [x] **5.9** Documentation site v1 on GitHub Pages, separate from the README: hand-written static HTML, CSS and vanilla JS under `site/` (no generator, so the dependency rule holds), deployed by the `pages` workflow. Seven pages: overview, rules, policy, mechanics, guides, status and a 404. M. Deps: none (8.2 and 4.3 are not preconditions for documenting what already ships; 5.8's economic-model and contract clauses do not apply to a Go CLI). Done when: the site is live at `https://posture-sec.github.io/guage/`, linked from `README.md`, and every page states shipped behavior only. (done 2026-11-02: the site is live and the design is flat, no gradients, every claim traced to code or an observed testnet run; the pages that describe unshipped behavior say so, e.g. `policy.html` records that only network, existence and flags are compared today.)
 - [x] **5.10** Site theme and audit pass: light and dark mode on the same flat ink-and-paper identity, plus a measured UI/UX and responsiveness audit with the fixes it found. No new dependency and no build step; the theme is tokens plus a pre-paint script. M. Deps: 5.9. Done when: both themes are readable at every breakpoint with no flash of the wrong theme and no layout shift when the toggle is used, no page overflows its viewport at 320px, and every text pair meets WCAG AA, each proven by measurement rather than by looking. (done 2026-11-02: contrast computed per token pair with a relative-luminance helper for both themes, lowest text pair 4.86:1 dark and 4.66:1 light, which fixed one real failure where the side-nav label used the hairline token as type at 2.23:1; every page loaded into an iframe at seven widths in both themes, 98 runs, zero page overflow and byte-identical geometry between the themes, which found one real bug (an unbreakable install command in `guides.html` pushed the page to 336px inside a 305px viewport); the theme is chosen by an inline head script before the stylesheet, so neither mode flashes.)
 - [x] **5.11** Site motion layer: scroll reveals, a staged hero entrance and hover response on the same flat identity, taking the reveal patterns catalogued on land-book.com as the reference. Two dependency-free files under `site/assets/` (`motion.css`, `motion.js`) loaded by all seven pages; no build step and no new dependency. S. Deps: 5.10. Done when: every page reveals its sections on scroll and enters its hero on load, `prefers-reduced-motion` turns all of it off with content fully visible, and no element is left hidden or carrying the reveal class after its entrance. (done 2026-11-09: verified by driving headless Chrome over CDP on all seven pages, each scrolled end to end: every reveal target intersected and finished, zero elements stuck hidden, zero left carrying the reveal class, zero console errors; reduced-motion emulation applies no motion at all and the content is fully visible; the theme toggle flips dark to light and back; the hero report drifts under scroll once its entrance animation releases it; 390px renders checked by screenshot. The accent and scrollbar colors resolve through the site's own tokens, so the same files serve the sibling sites without edits.)
+- [ ] **5.12** Multisig coordinator check: `id-multisig-coordinator-unexpected` rule and optional `coordinator` policy key for SEP-19-style `*.multisig.coordinator` account data entries. M. Deps: 5.6.
 
 ### Phase 6: Release v0.2.0 and community
 
@@ -344,6 +345,7 @@ The path that ran through 0.7 is open. Until 2026-11-04 it read `0.7 (impossible
 | D-14 | Accept the three Branch-Protection warnings while the repository has one maintainer | Decided 2026-10-30 | Scorecard warns that `main` requires no approvers, no CODEOWNERS review and no last-push approval. Requiring one approval would make every pull request unmergeable, because a pull request author cannot approve their own change and there is no second account. The checks that do bind are pinned: PR requirement, three status checks, no force push, no deletion, up-to-date branches. Revisit when a second maintainer joins |
 | D-15 | Rename the repository slug away from `guage` before public launch | Proposed 2026-10-30 | 0.11 evidence, all read from GitHub search and the repository API on 2026-10-30: `evoziosk/guage` is an active Python project with the same spelling (4 stars, pushed 2026-10-13), the GitHub account name `guage` is taken (0 public repositories, last touched 2019), and a search for `guage` returns `npm/gauge` before anything here. `getgauge/gauge` (3,195 stars, pushed 2026-10-29) already owns the correctly spelled word in Go. Cost of renaming: the module path, every recorded URL and the issues already generated from this file. Needs the owner's decision, so it is not a blocker on feature work |
 | D-16 | Phase 0 verification runs against testnet only | Decided 2026-10-30 | Owner instruction on 2026-10-30. Friendbot funding and reads go to `horizon-testnet.stellar.org` and `soroban-testnet.stellar.org`; mainnet endpoints are quoted from official documentation and marked as not observed. Consequence: fixtures derived from testnet are perishable (testnet resets), and any mainnet-specific shape difference remains unverified. Amended 2026-11-03, not relaxed: the demonstration run in `docs/RECORDING.md` sent exactly one request to `https://horizon.stellar.org` and it was the root document, asked in order to show that a run demanding the testnet passphrase from the public endpoint stops before any account read. No mainnet account was read, no mainnet response was captured or vendored, and the unverified-mainnet-shape half of this consequence is unchanged. |
+| D-17 | Multisig coordinator severity across roles | Decided 2026-11-28: WARN for all roles including treasury | Owner confirmed keeping `id-multisig-coordinator-unexpected` at WARN across all five Appendix A role profiles rather than raising `treasury` to HIGH. An unexpected or undeclared coordinator data entry does not alter on-chain signer weights, so WARN surfaces the metadata mismatch without breaking CI gates configured for `--fail-on high`. Revisit only if real operator reports under task 6.3 justify role escalation. |
 
 ## 8. Risk register
 
@@ -365,6 +367,7 @@ Newest first. One row per merged change.
 
 | Date (UTC) | Change | Tasks |
 |---|---|---|
+| 2026-11-28 | docs(roadmap): plan task 5.12 multisig coordinator policy check, record decision D-17, and add FR-23 to PRD.md. | 5.12, D-17 |
 | 2026-11-28 | feat(cli): support `--fail-on info` in `check` and `audit`, and sync stale documentation (`README.md` markdown usage and rule count, `ARCHITECTURE.md` status header, `ARCHITECTURE_ESSENTIALS.md` rule list, `PRD.md` SEP-29 prose and CLI synopsis, `site/guides.html` `--fail-on` values, `docs/WAVE_SUBMISSION.md` live counts). | 7.90 |
 | 2026-11-25 | Sync README.md with Phase 5 shipped features (5.1 multi-endpoint, 5.2 snapshot/diff, 5.3 markdown, 5.5 trustline facts, 5.6 SEP-29 rule), update 17-rule metrics table, and permit maintainer sync in `scripts/sync_readme.py`. | 5.1, 5.2, 5.3, 5.5, 5.6 |
 | 2026-11-25 | fix(cli): the format refusal no longer calls markdown unimplemented. Task 5.3 shipped the renderer on `check`, `audit` and `diff`, so the dead `markdown` branch in `formatRejection` is gone and both commands print the one shared line. `site/developers.html` stops describing `snapshot`, `diff`, `--out` and markdown as placeholders, since 5.2 and 5.3 shipped them. `README.md` still calls markdown unimplemented in two places, because `scripts/sync_readme.py --check-base` treats the whole file as script-owned and refuses a branch edit. | 5.2, 5.3, 7.40 |
