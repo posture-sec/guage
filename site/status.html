@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Status and evidence · Gauge docs</title>
-  <meta name="description" content="What Gauge does today: shipped components, all sixteen rules live, fail-closed behavior, testnet evidence from 2026-10-30 and 2026-11-02, and the limits of that evidence.">
+  <meta name="description" content="What Gauge does today: shipped components, all eighteen rules live, fail-closed behavior, testnet and mainnet evidence, and the limits of that evidence.">
   <meta property="og:type" content="article">
   <meta property="og:title" content="Status and evidence · Gauge docs">
   <meta property="og:description" content="Functional alpha, testnet verified, unaudited. The exact state of every component and the runs behind it.">
@@ -55,7 +55,7 @@
       <nav class="side-nav" aria-label="Documentation">
         <a href="index.html">Overview <span>start</span></a>
         <a href="mechanics.html">Mechanics <span>how</span></a>
-        <a href="rules.html">Rules <span>16</span></a>
+        <a href="rules.html">Rules <span>18</span></a>
         <a href="policy.html">Policy <span>toml</span></a>
         <a href="guides.html">Guides <span>run</span></a>
         <a href="developers.html">Developers <span>code</span></a>
@@ -74,7 +74,7 @@
       <div class="content">
         <p class="eyebrow">Status</p>
         <h1>Functional alpha. Testnet verified. Unaudited.</h1>
-        <p class="lede">Gauge reads real Horizon data, prints the facts it read and produces real findings. It is also early: all sixteen rules are registered and evaluating, none has a release tag, and every observation below comes from testnet. This page records what was run, when, and what it does not prove.</p>
+        <p class="lede">Gauge reads real Horizon data, prints the facts it read and produces real findings. It is also early: all eighteen rules are registered and evaluating, none has a release tag, and every claim below records what was run and what it does not prove.</p>
         <div class="chip-row">
           <span class="chip chip--live">Functional alpha</span>
           <span class="chip chip--warn">Unaudited</span>
@@ -92,7 +92,7 @@
                 <tr><td>strict policy loader</td><td><span class="chip chip--live">Shipped</span></td><td>Unknown keys, duplicate accounts, bad values and secret seeds are rejected with exit 2.</td></tr>
                 <tr><td>Horizon source</td><td><span class="chip chip--live">Shipped</span></td><td>Timeouts, a 1 MiB cap, retries, bounded concurrency, no redirects and a passphrase check before any account read.</td></tr>
                 <tr><td>check and audit</td><td><span class="chip chip--live">Shipped</span></td><td>Text and JSON output, the facts each account read printed before any judgement, a stable exit code, and the limits footer on every report. The fact block is task 3.7.</td></tr>
-                <tr><td>rules</td><td><span class="chip chip--live">16 of 16</span></td><td>The account, signer, threshold, flag and identity families are registered and evaluated on every run; task 3.1 landed the nine that answer who can authorize an account.</td></tr>
+                <tr><td>rules</td><td><span class="chip chip--live">18 of 18</span></td><td>The account, signer, threshold, flag and identity families are registered and evaluated on every run, including SEP-29 memo checks (5.6) and SEP-19 multisig coordinator checks (5.12).</td></tr>
                 <tr><td>threshold math</td><td><span class="chip chip--live">Shipped</span></td><td>Reachability and minimum signers, read from the protocol implementation in task 0.7 and implemented once in <code>internal/threshold</code>, which every signer rule calls.</td></tr>
                 <tr><td>role severities</td><td><span class="chip chip--live">Shipped</span></td><td>A declared role raises a finding to the severity Appendix A names and never lowers one. Task 3.4.</td></tr>
                 <tr><td>SEP-1 identity checks</td><td><span class="chip chip--live">Shipped</span></td><td>The home domain an account publishes is fetched through a dial-time address guard, and an identity Gauge could not verify is a warning rather than a pass. Read twice against a live domain, on 2026-11-03 and again on 2026-11-05; the address classes it refuses are proven by tests, not by runs.</td></tr>

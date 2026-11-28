@@ -55,7 +55,7 @@
       <nav class="side-nav" aria-label="Documentation">
         <a href="index.html">Overview <span>start</span></a>
         <a href="mechanics.html">Mechanics <span>how</span></a>
-        <a href="rules.html">Rules <span>16</span></a>
+        <a href="rules.html">Rules <span>18</span></a>
         <a href="policy.html" aria-current="page">Policy <span>toml</span></a>
         <a href="guides.html">Guides <span>run</span></a>
         <a href="developers.html">Developers <span>code</span></a>
@@ -104,6 +104,8 @@ expected_signers = [
 expected_thresholds = { low = 1, medium = 2, high = 2 }
 expected_flags = { auth_required = false, auth_revocable = false, auth_immutable = false, clawback = false }
 home_domain = "example.com"
+<span class="c"># coordinator is the expected multisig coordinator hostname (optional; "" disables the check).</span>
+# coordinator = "v1.multisig.satoshipay.io"
 <span class="c"># expect_locked is read for an issuer alone.</span>
 expect_locked = false
 
@@ -151,12 +153,13 @@ expect_locked = false
                 <tr><td>expected_thresholds</td><td>Table</td><td>Any of <code>low</code>, <code>medium</code> and <code>high</code>, each an integer from 0 to 255. Omitted tiers are not compared.</td></tr>
                 <tr><td>expected_flags</td><td>Table</td><td>Any of <code>auth_required</code>, <code>auth_revocable</code>, <code>auth_immutable</code> and <code>clawback</code>, each a boolean. Omitted flags are not compared.</td></tr>
                 <tr><td>home_domain</td><td>String</td><td>A bare host name. URLs, IP addresses, a trailing dot and characters such as <code>/</code>, <code>@</code>, <code>:</code> and <code>?</code> are rejected. Declaring it is what lets <code>id-no-home-domain</code> fire when the chain shows none.</td></tr>
+                <tr><td>coordinator</td><td>String</td><td>A bare host name or empty string <code>""</code>. URLs, IP addresses, paths and ports are rejected. Compares against decoded <code>config.multisig.coordinator</code> and <code>*multisig*coordinator</code> data entries via <code>id-multisig-coordinator-unexpected</code>; omitting it warns when an entry exists, while <code>""</code> disables the rule.</td></tr>
                 <tr><td>expect_locked</td><td>Boolean</td><td>Declares that a zero-weight, nonsigning issuer is intended. <code>sig-no-signing-weight</code> reports INFO when an <code>issuer</code> declares it true, and HIGH for every other role. A true declaration on another role is not refused at load, because a typo in a declaration should not cost more than the declaration is worth: the finding stays HIGH and the <code>declared:</code> block prints that the line was ignored.</td></tr>
               </tbody>
             </table>
           </div>
           <div class="note">
-            <p><strong>Every expectation you can write is compared.</strong> All sixteen rules are registered, and the five expectation kinds each reach one: <code>expected_signers</code> against the chain's signers (<code>sig-unexpected-signer</code>, <code>sig-missing-expected</code>, <code>sig-weight-drift</code>), <code>expected_thresholds</code> against <code>thr-drift</code>, <code>expected_flags</code> against <code>flag-drift</code>, <code>home_domain</code> against <code>id-no-home-domain</code>, and <code>expect_locked</code> against <code>sig-no-signing-weight</code> for an issuer. A declared <code>role</code> then weights whatever those rules found. Since 2026-11-05 every one of those comparisons also has a golden report behind it: each expectation kind appears in a fixture run under <code>internal/run/scenarios_test.go</code>, so a declaration that stops reaching its rule shows up as a diff rather than a silent pass. What a policy could not buy until 2026-11-05 was the facts a zero-config run prints; task 3.7 closed that, so <code>check</code> now prints what it read for every account even with no file on the tree, and <code>audit</code> prints a <code>declared:</code> block naming which of the lines above the policy carried and which it left out.</p>
+            <p><strong>Every expectation you can write is compared.</strong> All eighteen rules are registered, and the six expectation kinds each reach one: <code>expected_signers</code> against the chain's signers (<code>sig-unexpected-signer</code>, <code>sig-missing-expected</code>, <code>sig-weight-drift</code>), <code>expected_thresholds</code> against <code>thr-drift</code>, <code>expected_flags</code> against <code>flag-drift</code>, <code>home_domain</code> against <code>id-no-home-domain</code>, <code>coordinator</code> against <code>id-multisig-coordinator-unexpected</code>, and <code>expect_locked</code> against <code>sig-no-signing-weight</code> for an issuer. A declared <code>role</code> then weights whatever those rules found. Every one of those comparisons also has a golden report behind it under <code>internal/run/</code>, so a declaration that stops reaching its rule shows up as a diff rather than a silent pass. Since task 3.7, <code>check</code> prints what it read for every account even with no file on the tree, and <code>audit</code> prints a <code>declared:</code> block naming which of the lines above the policy carried and which it left out.</p>
           </div>
         </section>
 
@@ -239,7 +242,7 @@ expect_locked = false
         </section>
 
         <footer class="footer">
-          <p>Functional alpha, unaudited. This page reflects the v0.1 loader and all sixteen registered rules, re-read against <code>internal/policy</code> on 2026-11-05.</p>
+          <p>Functional alpha, unaudited. This page reflects the policy loader and all eighteen registered rules, updated with <code>coordinator</code> on 2026-11-28.</p>
           <div class="footer-links">
             <a href="guides.html">Next: guides</a>
             <a href="rules.html">Rule catalog</a>

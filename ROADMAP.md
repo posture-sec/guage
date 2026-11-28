@@ -1,6 +1,6 @@
 # ROADMAP: Gauge
 
-Last updated: 2026-11-28T13:18Z (feat(rules,report): ship id-multisig-coordinator-unexpected rule, facts rendering, fixtures, and goldens; complete task 5.12)
+Last updated: 2026-11-28T13:22Z (docs(site): update site pages, README rule table, ARCHITECTURE_ESSENTIALS, and PRD.md for 18 rules)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
@@ -367,6 +367,7 @@ Newest first. One row per merged change.
 
 | Date (UTC) | Change | Tasks |
 |---|---|---|
+| 2026-11-28 | docs(site): update all static site pages (`site/*.html`), `README.md` rule prose, `ARCHITECTURE_ESSENTIALS.md`, and `PRD.md` for 18 live rules and the `coordinator` policy key / fact line. | 5.12 |
 | 2026-11-28 | feat(rules,report,run): implement `id-multisig-coordinator-unexpected` (18th rule, WARN across all roles per D-17), render `CoordinatorFact` and `Declared.Coordinator` in text/JSON/markdown reports, update `schema-v1.json` and fixtures `17`/`18` with scenario goldens, and tick task 5.12. | 5.12 |
 | 2026-11-28 | feat(policy): add optional `Account.Coordinator` (`coordinator`) TOML key, `ErrCoordinator` hostname validation, commented example entry in `gauge.example.toml`, and loader tests for task 5.12. | 5.12 partly |
 | 2026-11-28 | feat(model,sanitize): add `MultiSigCoordinatorEntry`/`MultiSigCoordinator`, `CoordinatorFact`/`DeclaredFacts.Coordinator` (with `prepareFacts` JSON sanitization), and strict `DecodeB64Domain`/`NormalizeDomain` helpers for task 5.12. | 5.12 partly |

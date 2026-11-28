@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Rule catalog · Gauge docs</title>
-  <meta name="description" content="All sixteen Gauge rules with their conditions, severities and status, as registered in the shipped registry.">
+  <meta name="description" content="All eighteen Gauge rules with their conditions, severities and status, as registered in the shipped registry.">
   <meta property="og:type" content="article">
   <meta property="og:title" content="Rule catalog · Gauge docs">
-  <meta property="og:description" content="Sixteen checks, all sixteen shipped: every rule has a stable ID, a condition and a severity.">
+  <meta property="og:description" content="Eighteen checks, all eighteen shipped: every rule has a stable ID, a condition and a severity.">
   <meta property="og:url" content="https://posture-sec.github.io/guage/rules.html">
   <meta property="og:image" content="https://posture-sec.github.io/guage/assets/og.png">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -55,7 +55,7 @@
       <nav class="side-nav" aria-label="Documentation">
         <a href="index.html">Overview <span>start</span></a>
         <a href="mechanics.html">Mechanics <span>how</span></a>
-        <a href="rules.html" aria-current="page">Rules <span>16</span></a>
+        <a href="rules.html" aria-current="page">Rules <span>18</span></a>
         <a href="policy.html">Policy <span>toml</span></a>
         <a href="guides.html">Guides <span>run</span></a>
         <a href="developers.html">Developers <span>code</span></a>
@@ -73,12 +73,12 @@
     <main class="main" id="main">
       <div class="content">
         <p class="eyebrow">Rule catalog</p>
-        <h1>Sixteen checks. All sixteen live.</h1>
+        <h1>Eighteen checks. All eighteen live.</h1>
         <p class="lede">Every rule has a stable kebab-case ID, a written condition and a severity. A finding names the rule, the account, an evidence line and a fingerprint that identifies it. An accepted risk matches on rule and account, not on the fingerprint. A declared role raises a severity and cannot lower one.</p>
         <div class="chip-row">
-          <span class="chip chip--live">16 live</span>
+          <span class="chip chip--live">18 live</span>
           <span class="chip">Severity by role, since 3.4</span>
-          <span class="chip">Rule articles: 16 of 16</span>
+          <span class="chip">Rule articles: 18 of 18</span>
         </div>
 
         <section class="section">
@@ -208,6 +208,13 @@
                   <td><span class="chip chip--warn">WARN</span></td>
                   <td><span class="chip chip--live">Live</span></td>
                 </tr>
+                <tr>
+                  <td>Identity</td>
+                  <td>id-multisig-coordinator-unexpected</td>
+                  <td>The account publishes a SEP-19 multisig coordinator data entry that is undeclared, unreadable, or disagrees with policy <code>coordinator</code>.</td>
+                  <td><span class="chip chip--warn">WARN</span></td>
+                  <td><span class="chip chip--live">Live</span></td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -216,7 +223,7 @@
 
         <section class="section">
           <h2>Rule articles, the first seven</h2>
-          <p>These seven landed before the signer family, so their articles were written while they were the whole catalog. Every one is registered in <code>internal/rules</code>, covered by positive and negative fixture cases, and exercised end to end by the CLI tests. The nine signer and threshold rules below were registered on 2026-11-04 and weighted by role on the same day. All sixteen articles now carry the same four rows, so what a declared role does to a finding is readable per rule rather than only from the table above: five of the sixteen move above the severity a <code>check</code> prints, two more are named by a row whose number they already carry, and nine are untouched by every role.</p>
+          <p>These base rules landed before the signer family and grew with the data-entry identity checks (5.6 and 5.12). Every one is registered in <code>internal/rules</code>, covered by positive and negative fixture cases, and exercised end to end by the CLI tests. The nine signer and threshold rules below were registered on 2026-11-04 and weighted by role on the same day. All eighteen articles now carry the same four rows, so what a declared role does to a finding is readable per rule rather than only from the table above: five of the eighteen move above the severity a <code>check</code> prints, two more are named by a row whose number they already carry, and eleven are untouched by every role.</p>
 
           <article class="rule">
             <div class="rule-head">
@@ -367,6 +374,25 @@
               <dd>WARN. Exit 1 only under <code>--fail-on warn</code>.</dd>
               <dt>Role weight</dt>
               <dd>Applies to the <code>merchant</code> role. Other roles do not trigger this check.</dd>
+            </dl>
+          </article>
+
+          <article class="rule">
+            <div class="rule-head">
+              <h3>id-multisig-coordinator-unexpected</h3>
+              <span class="chip chip--warn">WARN</span>
+              <span class="chip chip--live">Live</span>
+            </div>
+            <p>The account publishes a base64 SEP-19 multisig coordinator data entry (<code>config.multisig.coordinator</code> or a legacy <code>*multisig*coordinator</code> suffix key) that is unreadable, undeclared in policy, or differs from the declared <code>coordinator</code> hostname. Omitting <code>coordinator</code> warns whenever an entry is present; setting <code>coordinator = ""</code> suppresses the check. Leading <code>http://</code> and <code>https://</code> URLs with paths are normalized to lowercase bare hostnames without making any network request.</p>
+            <dl>
+              <dt>Evidence</dt>
+              <dd><code>data entry config.multisig.coordinator names v1.multisig.satoshipay.io; the policy declares no coordinator</code>, <code>data entry ... names &lt;observed&gt;; policy declares &lt;declared&gt;</code>, or <code>data entry &lt;key&gt; is not a valid base64 coordinator domain</code></dd>
+              <dt>Acceptable</dt>
+              <dd>Yes, with a reason and an optional expiry.</dd>
+              <dt>Exit effect</dt>
+              <dd>WARN. Exit 1 under <code>--fail-on warn</code> or <code>--fail-on info</code>.</dd>
+              <dt>Role weight</dt>
+              <dd>WARN across every Appendix A role (including <code>treasury</code>, recorded as decision D-17).</dd>
             </dl>
           </article>
         </section>
@@ -555,9 +581,9 @@
 
         <section class="section">
           <h2>What is not shipped</h2>
-          <p>All sixteen rules in the table are registered and evaluated on every run, and a declared role now weights them. Every Appendix B scenario now has a fixture and a golden pair behind it, landed 2026-11-05: twelve files in <code>testdata/horizon/</code>, five captured from testnet and seven built here and labelled as built, and 57 report files in <code>testdata/golden/</code> (markdown joined text and JSON with task 5.3) that one test run compares in all three formats, so a severity, a wording, a fingerprint or an exit code that moves shows up as a diff rather than a silent pass. The same day brought the facts report (task 3.7): a run now prints what it read before it prints what it thinks, including the minimum signatures each tier needs, which expectations a policy carried and which it left out, and what the home-domain fetch returned. Multi-endpoint comparison landed with task 5.1, and it is a source finding rather than a seventeenth rule: <code>src-disagreement</code> is HIGH, comes from the run comparing each further endpoint's reading with the first one, names endpoints by position and fields by name, and cannot be accepted. See <a href="policy.html">Endpoint rules</a>. What is left on this page's horizon is not the rule reference: 4.2 closed on 2026-11-05 with every article carrying its condition, evidence shape, acceptability and role weight, and the usage pages re-read against the shipped CLI. Still genuinely unwritten: release v0.2.0 (Phase 6) and community feedback. No release is tagged and no third party has audited any of it.</p>
+          <p>All eighteen rules in the table are registered and evaluated on every run, and a declared role now weights them. Every Appendix B scenario has a fixture and a golden triplet behind it: fourteen Horizon fixture files in <code>testdata/horizon/</code> plus the mainnet coordinator capture (<code>17-coordinator-entry.json</code>) and mismatch builder (<code>18-coordinator-mismatch.json</code>), with text, JSON and markdown goldens under <code>testdata/golden/</code> so a severity, a wording, a fingerprint or an exit code that moves shows up as a diff rather than a silent pass. Every run also prints the facts block ahead of its findings, including the minimum signatures each tier needs, which expectations a policy carried and which it left out, any observed multisig coordinator data entry, held trustline issuer flags and what the home-domain fetch returned. Multi-endpoint comparison landed with task 5.1 as a source finding rather than a registered rule: <code>src-disagreement</code> is HIGH, comes from the run comparing each further endpoint's reading with the first one, names endpoints by position and fields by name, and cannot be accepted. See <a href="policy.html">Endpoint rules</a>. Still genuinely unwritten: release v0.2.0 (Phase 6) and community feedback. No release is tagged and no third party has audited any of it.</p>
           <div class="note">
-            <p><strong>Read the status before trusting a pass.</strong> A clean result means all sixteen checks agreed with what the chain showed and with what your policy declared. It is not a statement about key custody: on-chain data cannot show who holds a key, and ten of the sixteen rules compare against a declaration, so a policy that says nothing about signers, thresholds or flags gets no answer about drift.</p>
+            <p><strong>Read the status before trusting a pass.</strong> A clean result means all eighteen checks agreed with what the chain showed and with what your policy declared. It is not a statement about key custody: on-chain data cannot show who holds a key, and seven of the eighteen rules only fire when a policy or role states expectations, so a policy that says nothing about signers, thresholds, flags or coordinators should still review the printed facts block.</p>
           </div>
           <p><a href="status.html">Current implementation status</a> · <a href="policy.html">How to declare expectations</a></p>
         </section>

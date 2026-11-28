@@ -36,7 +36,7 @@ Gauge is read-only and secret-free. It never accepts, stores or echoes a secret 
 | Security Guarantee | **Read-only / 0 secret keys** | Architecture spec |
 <!-- METRICS:END -->
 
-Functional alpha (ROADMAP Phase 2, tasks 2.1 to 2.11), with Phase 3 complete on 2026-11-05: the seventeen rules, the role profiles and the facts report. The policy loader, Horizon client, guarded `stellar.toml` fetcher, report renderers, orchestrator, rules and CLI are implemented and tested:
+Functional alpha (ROADMAP Phase 2, tasks 2.1 to 2.11), with Phase 3 complete on 2026-11-05: the eighteen rules, the role profiles and the facts report. The policy loader, Horizon client, guarded `stellar.toml` fetcher, report renderers, orchestrator, rules and CLI are implemented and tested:
 
 ```bash
 go run ./cmd/stellar-gauge version
@@ -45,20 +45,20 @@ go run ./cmd/stellar-gauge check --network testnet --endpoint https://horizon-te
 
 A run reads the account, prints what the chain shows and exits `0`, `1`, `2` or `3`. A missing account or an endpoint on the wrong network is a HIGH finding and exits `1` by default, as does any run that could not complete. Declared flag drift, an undeclared clawback and a home domain whose `stellar.toml` cannot be read are warnings and exit `1` under `--fail-on warn`. A run also fetches the `stellar.toml` of any account that publishes a home domain, through a guard that resolves the name and then refuses loopback, private, link-local and other non-public addresses at dial time; an identity Gauge could not verify is a warning, never a pass. An account with no standing signing weight, a threshold tier its signers can never reach and a signer the policy does not declare are HIGH findings too, and an unreachable tier cannot be accepted away. What a finding is worth depends on the role you declared for the account: an issuer or treasury is held to a tighter bar than a distribution account or a merchant, a role can only raise a severity and never lower one, and `check`, which declares no role, reports at the baseline. There is no release to install.
 
-Ahead of every finding, a report prints the facts it read for that account: thresholds, how many of the account's own signers each tier needs, flags, home domain, sponsor, each signer, what your policy declared (or that it declared nothing, which is what a `check` run did) and what the identity fetch saw, including the step that decided it. Those lines carry no severity and cannot fail a run; they are what makes "no findings" readable as an observation rather than a verdict.
+Ahead of every finding, a report prints the facts it read for that account: thresholds, how many of the account's own signers each tier needs, flags, home domain, sponsor, any observed multisig coordinator data entry, each signer, held asset trustlines, what your policy declared (or that it declared nothing, which is what a `check` run did) and what the identity fetch saw, including the step that decided it. Those lines carry no severity and cannot fail a run; they are what makes "no findings" readable as an observation rather than a verdict.
 
 A 7-page documentation site is published at **[https://posture-sec.github.io/guage/](https://posture-sec.github.io/guage/)**, covering policy specifications, CLI mechanics, integration guides, and an interactive rule reference.
 
 ## What it checks
 
-Seventeen rules implemented in `internal/rules`, each with a stable kebab-case ID: the account, flag and identity families from tasks 3.2, 3.3, 3.5 and 5.6 (`id-sep29-memo-required`), and the nine signer and threshold rules from task 3.1 (`sig-no-signing-weight`, `sig-threshold-unreachable`, `sig-threshold-order`, `sig-single-key-high`, `sig-hashx`, `sig-unexpected-signer`, `sig-missing-expected`, `sig-weight-drift`, `thr-drift`). Multi-endpoint comparison (`src-disagreement`, task 5.1) runs at the orchestrator layer across up to five endpoints. Severity depends on the account's declared role (PRD Appendix A, applied by task 3.4): single-key control is HIGH for an issuer or treasury and INFO for an account with no role, drift is HIGH for a treasury, and an issuer that publishes no home domain is a finding whether or not a policy asked it to.
+Eighteen rules implemented in `internal/rules`, each with a stable kebab-case ID: the account, flag and identity families from tasks 3.2, 3.3, 3.5, 5.6 (`id-sep29-memo-required`) and 5.12 (`id-multisig-coordinator-unexpected`), and the nine signer and threshold rules from task 3.1 (`sig-no-signing-weight`, `sig-threshold-unreachable`, `sig-threshold-order`, `sig-single-key-high`, `sig-hashx`, `sig-unexpected-signer`, `sig-missing-expected`, `sig-weight-drift`, `thr-drift`). Multi-endpoint comparison (`src-disagreement`, task 5.1) runs at the orchestrator layer across up to five endpoints. Severity depends on the account's declared role (PRD Appendix A, applied by task 3.4): single-key control is HIGH for an issuer or treasury and INFO for an account with no role, drift is HIGH for a treasury, and an issuer that publishes no home domain is a finding whether or not a policy asked it to.
 
 | Family | Rules |
 | --- | --- |
 | Account | `acct-missing`, `acct-network-mismatch` |
 | Signers | `sig-no-signing-weight`, `sig-threshold-unreachable`, `sig-threshold-order`, `sig-single-key-high`, `sig-hashx`, `sig-unexpected-signer`, `sig-missing-expected`, `sig-weight-drift` |
 | Thresholds and flags | `thr-drift`, `flag-drift`, `flag-undeclared-clawback` |
-| Identity | `id-no-home-domain`, `id-toml-unreachable`, `id-toml-account-unlisted`, `id-sep29-memo-required` |
+| Identity | `id-no-home-domain`, `id-toml-unreachable`, `id-toml-account-unlisted`, `id-sep29-memo-required`, `id-multisig-coordinator-unexpected` |
 | Multi-Endpoint (Run) | `src-disagreement` |
 
 Exit codes: `0` pass, `1` findings at or above `--fail-on`, `2` configuration or usage error, `3` source or internal error. Anything unreachable, oversized, malformed or ambiguous fails closed. It never exits 0 on a check it could not complete.
@@ -67,7 +67,7 @@ Exit codes: `0` pass, `1` findings at or above `--fail-on`, `2` configuration or
 
 - Key custody. On-chain data cannot show who holds a key, how it is stored, or whether it leaked.
 - Whether an account is a good account. Gauge reports posture against your declared expectations. It never says an account is secure or safe, and "no findings" is not a clean bill of health.
-- What is still unwritten rather than still unchecked. All seventeen rules are registered, multi-endpoint comparison (5.1), snapshot/diff baselines (5.2), markdown formatting (5.3), trustline exposure facts (5.5), and the SEP-29 memo check (5.6) are implemented. Gaps remaining in v0.2 include the scheduled action template (5.4) and final release distribution (4.8). This bullet is about what is unfinished; the two above are about what Gauge will not look at either way.
+- What is still unwritten rather than still unchecked. All eighteen rules are registered, multi-endpoint comparison (5.1), snapshot/diff baselines (5.2), markdown formatting (5.3), trustline exposure facts (5.5), the SEP-29 memo check (5.6), and the multisig coordinator check (5.12) are implemented. Gaps remaining in v0.2 include the scheduled action template guidance (5.4) and final release distribution (4.8). This bullet is about what is unfinished; the two above are about what Gauge will not look at either way.
 - Whether the rules are right about your account. Eighteen Appendix B scenarios, each pinned as a text report and a JSON report, prove the report does not change shape under a test, and no operator outside this repository has read a finding from it yet, which is task 4.1 and gate G4. A finding that matches your configuration is a judgement you should still review the first time, not a verdict the tool has earned.
 - Transactions, balances, offers, claimable balances, liquidity pools and Soroban contract accounts.
 - Live streaming or alerting. It is a state comparison you schedule, not a daemon.
