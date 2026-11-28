@@ -17,6 +17,7 @@ account GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ
     expected_thresholds: low 2, medium 2, high 3
     expected_flags: (not declared)
     home_domain: (not declared)
+    coordinator: (not declared)
     expect_locked: true, which role "treasury" is not allowed to declare; it is read for issuer alone
   identity document: example.com served a readable file
     step: ok
@@ -56,6 +57,7 @@ account GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3
     expected_thresholds: (not declared)
     expected_flags: (not declared)
     home_domain: (not declared)
+    coordinator: (not declared)
     expect_locked: (not declared)
   findings: none
 

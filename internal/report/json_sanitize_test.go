@@ -45,11 +45,12 @@ func hostileReport() model.Report {
 			},
 			Facts: &model.AccountFacts{
 				Reachability: &model.Reachability{Low: value(1)},
-				Declared:     &model.DeclaredFacts{Role: "other"},
+				Declared:     &model.DeclaredFacts{Role: "other", Coordinator: value("seed.example")},
 				Identity: &model.IdentityFacts{
 					HomeDomain: "seed.example", Step: "seed", Accounts: []string{"seed"},
 				},
-				Trustlines: []model.TrustlineFact{{AssetCode: "seed", AssetIssuer: "seed", IssuerStatus: "seed"}},
+				Coordinator: &model.CoordinatorFact{DataKey: "seed", Domain: "seed.example", Valid: true},
+				Trustlines:  []model.TrustlineFact{{AssetCode: "seed", AssetIssuer: "seed", IssuerStatus: "seed"}},
 			},
 			Findings: []model.Finding{model.NewFinding("seed", model.SevWarn, "seed", "seed", "seed")},
 			Skipped:  "seed",

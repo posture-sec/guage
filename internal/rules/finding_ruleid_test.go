@@ -135,6 +135,14 @@ func ruleIDFiring() map[string]struct {
 			policy.Account{Role: model.RoleMerchant},
 			model.AccountSnapshot{Thresholds: tiers(1, 1, 1), Signers: one},
 		)},
+		"id-multisig-coordinator-unexpected": {count: 1, ctx: ruleIDContext(
+			policy.Account{},
+			model.AccountSnapshot{
+				Thresholds: tiers(1, 1, 1),
+				Signers:    one,
+				Data:       map[string]string{"config.multisig.coordinator": "djEubXVsdGlzaWcuc2F0b3NoaXBheS5pbw=="},
+			},
+		)},
 	}
 }
 

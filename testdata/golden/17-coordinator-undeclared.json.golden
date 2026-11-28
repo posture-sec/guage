@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "tool_version": "test",
+  "network": "Test SDF Network ; September 2015",
+  "ledger": 5466897,
+  "accounts": [
+    {
+      "snapshot": {
+        "id": "GAUA7XL5K54CC2DDGP77FJ2YBHRJLT36CPZDXWPM6MP7MANOGG77PNJU",
+        "network": "Test SDF Network ; September 2015",
+        "endpoint": "https://horizon-testnet.stellar.org",
+        "ledger": 65282653,
+        "sequence": "206632444273623290",
+        "thresholds": {
+          "low": 2,
+          "medium": 2,
+          "high": 2
+        },
+        "signers": [
+          {
+            "key": "GAP5GK5CXT5DXBITLIH5WU2VFXRRT22YAQLQITF4XCMPAQ7JQGUQ4E3Z",
+            "type": "ed25519",
+            "weight": 1,
+            "sponsor": ""
+          },
+          {
+            "key": "GAPUR2F7OAHMLOEGZI67V7TQSYSPFLULQ2ABQ3WT5QAWIF27YTYPEHDR",
+            "type": "ed25519",
+            "weight": 2,
+            "sponsor": ""
+          },
+          {
+            "key": "GAVNCSZG2BHKV2BUTHQCTL7NDQUXE6RP6TT2HDCK5XXP7ND2FAU2ZHX4",
+            "type": "ed25519",
+            "weight": 1,
+            "sponsor": ""
+          },
+          {
+            "key": "GBYHZ6KJJPETZXVUU5QJILH47KB7XZDABB43J3W4NDLTXB66ME3HDWVL",
+            "type": "ed25519",
+            "weight": 2,
+            "sponsor": ""
+          },
+          {
+            "key": "GCGP7I5BPYNGDCQRRH2EQ6RSWZZDJPICB3H2N5T3LFGURHUCHPYBDUPK",
+            "type": "ed25519",
+            "weight": 1,
+            "sponsor": ""
+          },
+          {
+            "key": "GD7LBT2KB3PX57RQCILAMY4THCI5KRST6AQRMWL7AL7KEZGY6QSBUPHY",
+            "type": "ed25519",
+            "weight": 1,
+            "sponsor": ""
+          },
+          {
+            "key": "GDGJHJYYXNZFMATLO2UOVNWDNJQKRGSJEHYT4U4QUI3BLEJBC3TRZX57",
+            "type": "ed25519",
+            "weight": 1,
+            "sponsor": ""
+          },
+          {
+            "key": "GDUZXSXAHGCNRMOMXBQ2JACZFUKB7QJ35A75WERNO4FPP2RTSMLF2EWO",
+            "type": "ed25519",
+            "weight": 1,
+            "sponsor": ""
+          },
+          {
+            "key": "GAUA7XL5K54CC2DDGP77FJ2YBHRJLT36CPZDXWPM6MP7MANOGG77PNJU",
+            "type": "ed25519",
+            "weight": 0,
+            "sponsor": ""
+          }
+        ],
+        "flags": {
+          "auth_required": false,
+          "auth_revocable": false,
+          "auth_immutable": false,
+          "clawback_enabled": false
+        },
+        "home_domain": "",
+        "sponsor": "",
+        "balances": [
+          {
+            "asset_code": "EURC",
+            "asset_issuer": "GDHU6WRG4IEQXM5NZ4BMPKOXHW76MZM4Y2IEMFDVXBSDP6SJY4ITNPP2",
+            "is_authorized": true,
+            "clawback_enabled": false
+          },
+          {
+            "asset_code": "USDC",
+            "asset_issuer": "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
+            "is_authorized": true,
+            "clawback_enabled": false
+          },
+          {
+            "asset_code": "",
+            "asset_issuer": "",
+            "is_authorized": true,
+            "clawback_enabled": false
+          }
+        ],
+        "data": {
+          "config.multisig.coordinator": "djEubXVsdGlzaWcuc2F0b3NoaXBheS5pbw=="
+        }
+      },
+      "facts": {
+        "reachability": {
+          "low": 1,
+          "medium": 1,
+          "high": 1
+        },
+        "declared": null,
+        "identity": null,
+        "coordinator": {
+          "data_key": "config.multisig.coordinator",
+          "domain": "v1.multisig.satoshipay.io",
+          "valid": true
+        },
+        "trustlines": [
+          {
+            "asset_code": "EURC",
+            "asset_issuer": "GDHU6WRG4IEQXM5NZ4BMPKOXHW76MZM4Y2IEMFDVXBSDP6SJY4ITNPP2",
+            "authorized": true,
+            "clawback": false,
+            "issuer_status": "not found"
+          },
+          {
+            "asset_code": "USDC",
+            "asset_issuer": "GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN",
+            "authorized": true,
+            "clawback": false,
+            "issuer_status": "not found"
+          }
+        ]
+      },
+      "findings": [
+        {
+          "rule_id": "id-multisig-coordinator-unexpected",
+          "severity": "warn",
+          "account": "GAUA7XL5K54CC2DDGP77FJ2YBHRJLT36CPZDXWPM6MP7MANOGG77PNJU",
+          "message": "account publishes an unexpected multisig coordinator data entry",
+          "evidence": "data entry config.multisig.coordinator names v1.multisig.satoshipay.io; the policy declares no coordinator",
+          "fingerprint": "7319bee3ec2c923ca4f789e9433061d2870b12b8dd1cfcaf24b05743cd2a0783",
+          "accepted": false
+        },
+        {
+          "rule_id": "sig-single-key-high",
+          "severity": "info",
+          "account": "GAUA7XL5K54CC2DDGP77FJ2YBHRJLT36CPZDXWPM6MP7MANOGG77PNJU",
+          "message": "one signer alone reaches the high threshold, so a single key holds the account",
+          "evidence": "GAPUR2...EHDR ed25519 at weight 2 reaches 2; GBYHZ6...DWVL ed25519 at weight 2 reaches 2",
+          "fingerprint": "5023d61495ace3e1d7bfa82338291f5035069b3b514567a70760924f71b9a98b",
+          "accepted": false
+        }
+      ]
+    }
+  ],
+  "exit_code": 1,
+  "limits": "Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised."
+}

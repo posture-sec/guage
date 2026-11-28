@@ -5,6 +5,7 @@ import (
 
 	"github.com/posture-sec/guage/internal/model"
 	"github.com/posture-sec/guage/internal/policy"
+	"github.com/posture-sec/guage/internal/sanitize"
 	"github.com/posture-sec/guage/internal/sep1"
 	"github.com/posture-sec/guage/internal/threshold"
 )
@@ -36,9 +37,29 @@ func Facts(c Context) model.AccountFacts {
 	// three zeros.
 	if !c.Missing && !c.Mismatch {
 		facts.Reachability = reachability(c.Snapshot)
+		facts.Coordinator = coordinatorFacts(c.Snapshot)
 		facts.Trustlines = trustlines(c.Snapshot.Balances, c.Issuers)
 	}
 	return facts
+}
+
+func coordinatorFacts(snapshot model.AccountSnapshot) *model.CoordinatorFact {
+	key, raw, present := snapshot.MultiSigCoordinatorEntry()
+	if !present {
+		return nil
+	}
+	domain, ok := sanitize.DecodeB64Domain(raw)
+	if !ok {
+		return &model.CoordinatorFact{
+			DataKey: key,
+			Valid:   false,
+		}
+	}
+	return &model.CoordinatorFact{
+		DataKey: key,
+		Domain:  domain,
+		Valid:   true,
+	}
 }
 
 func trustlines(balances []model.Balance, issuers map[string]IssuerObservation) []model.TrustlineFact {
@@ -120,6 +141,7 @@ func declaredFacts(account policy.Account) *model.DeclaredFacts {
 		}
 	}
 	facts.HomeDomain = account.HomeDomain
+	facts.Coordinator = account.Coordinator
 	facts.ExpectLocked = account.ExpectLocked
 	// The rule that reads this gate keeps the account at HIGH; this says why the
 	// declaration the operator wrote did not lower it.

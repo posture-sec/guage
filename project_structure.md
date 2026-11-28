@@ -31,6 +31,7 @@ guage/
     {check,audit,version}.go              # P0 commands: flags, account validation, policy load (2.9)
     cli_test.go                           # in-process CLI tests: check, audit, JSON output, failure modes
     concurrency_flag_test.go              # check concurrency bounds and observed in-flight account reads (7.39)
+    coordinator_test.go                   # check and audit end-to-end tests for multisig coordinator rules and facts (5.12)
     endpoint_flag_test.go                 # duplicate endpoint credential redaction (7.83)
     format.go                             # shared format rejection message (7.40)
     format_flag_test.go                   # shared check and audit format rejection (7.40)
@@ -97,6 +98,7 @@ guage/
       {rules,account,signers,thresholds,flags,identity}.go # registry and pure rule boundaries; identity and signers read the two role expectations 3.4 defines (3.1 to 3.5 done)
       facts.go                            # rules.Facts: the observations of one context, in the same pure shape as a rule and returning no finding (3.7)
       {rules,identity,signers,thresholds,facts}_test.go # positive and negative cases, guard proofs, a captured account and the two kinds of absence (3.1 to 3.7)
+      coordinator_test.go                 # positive, negative, alias, opt-out, hostile and D-17 role tests for id-multisig-coordinator-unexpected (5.12)
       purity_test.go                      # Evaluate, Facts and every rule leave a deep-copied Context unchanged, and a second Evaluate gives the same findings (7.8)
       finding_ruleid_test.go              # one firing context per registered rule; every finding's RuleID equals its registry ID (7.9)
       arithmetic_guard_test.go            # go/ast guard: no weight sum, 20 cap or stray Weight-vs-0 filter in a rule; allowlist and delegation sites pinned (7.32)
@@ -109,6 +111,7 @@ guage/
       schema_version_test.go              # strict v1 envelope decode and unknown-key refusal (7.79)
       partial_test.go                     # normal, missing and skipped accounts in one report (7.80)
       {limits,empty,nil_facts}_test.go    # golden-free contracts: limits footer last and a JSON key, the empty report in both formats, nil and empty fact blocks (7.14 to 7.16)
+      coordinator_test.go                 # observed and declared coordinator rendering and hostile control stripping across all formats (5.12)
     run/
       {run,check,audit}.go                 # P0 orchestration: passphrase, bounded fetch, identity fetch, role severity, accepts, the fact block and `HasPolicy` (2.8, 3.4, 3.5, 3.7)
       compare.go                          # multi-endpoint orchestration: connect every endpoint, cross-read, src-disagreement, the 5-endpoint cap (5.1)
@@ -120,15 +123,19 @@ guage/
       first_error_test.go                 # two ordered concurrent read failures: the first, with its account ID, wins and a queued account is never read (7.34)
       stage_cancel_test.go                # a context that ends between stages returns no report and builds no identity fetcher (7.35)
       {identity_lazy,panic_containment,semaphore_peak}_test.go # lazy identity fetcher, panic containment, and concurrency limit peak (7.59 to 7.61)
+      coordinator_scenario_test.go        # golden scenario tests and matched/empty opt-out checks for multisig coordinator entries (5.12)
 
   testdata/
     horizon/README.md                     # provenance of every file: which five are testnet captures, which seven are built, and how (0.6, 3.6)
     horizon/{root-testnet,1-default,7-extra-signer,8-clawback-undeclared,10-not-found}.json  # captures (0.6)
     horizon/{2-master-zero,3-unreachable-high,4-thresholds-out-of-order,5-hashx-signer-at-medium,6-preauth-signer-only,9-home-domain-present,12-hostile-home-domain}.json  # built for Appendix B (3.6)
     horizon/16-endpoint-disagrees.json    # built: 1-default with two fields changed, the second endpoint of the src-disagreement CLI tests (5.1)
+    horizon/17-coordinator-entry.json     # captured (mainnet ledger 65282653): copied byte-for-byte from stellar-account-fixtures coordinator-data-entry (5.12)
+    horizon/18-coordinator-mismatch.json  # built: 17-coordinator-entry with config.multisig.coordinator replaced by other.coordinator.example (5.12)
     policy/.gitkeep                       # still empty: a scenario declares its policy as `policy.Account` values in `internal/run/scenarios_test.go`, and acceptance and role cases are inline TOML in `internal/policy`
     golden/{sample.text,sample.json}.golden # regenerated only with `-update` and reviewed (2.6)
     golden/<scenario>.{text,json}.golden  # one pair per Appendix B case, 36 files, compared by `internal/run/scenarios_test.go` (3.6, 3.7)
+    golden/{17-coordinator-undeclared,18-coordinator-mismatch}.{text,json,markdown}.golden # scenario goldens for task 5.12
     golden/schema-v1.json                # strict-decode fixture for the versioned JSON envelope, not renderer output (7.79)
 
   docs/

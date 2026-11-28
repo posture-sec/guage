@@ -5,6 +5,7 @@ import (
 
 	"github.com/posture-sec/guage/internal/model"
 	"github.com/posture-sec/guage/internal/policy"
+	"github.com/posture-sec/guage/internal/sanitize"
 )
 
 // idNoHomeDomain has two triggers, and PRD 6.1 phrases them as one sentence: an
@@ -140,6 +141,56 @@ func idSep29MemoRequired(c Context) []model.Finding {
 		c.Snapshot.ID,
 		"merchant receiving account does not enforce SEP-29 memo requirements",
 		fmt.Sprintf("config.memo_required expected \"MQ==\", observed %s", observed),
+	)}
+}
+
+// idMultisigCoordinatorUnexpected warns when an account publishes a SEP-19
+// multisig coordinator data entry that is unreadable, undeclared in policy, or
+// differs from the declared coordinator hostname. When the policy sets
+// coordinator = "" the rule stays silent.
+func idMultisigCoordinatorUnexpected(c Context) []model.Finding {
+	if c.Missing || c.Mismatch {
+		return nil
+	}
+	key, raw, present := c.Snapshot.MultiSigCoordinatorEntry()
+	if !present {
+		return nil
+	}
+	if c.Account.Coordinator != nil && *c.Account.Coordinator == "" {
+		return nil
+	}
+	observed, ok := sanitize.DecodeB64Domain(raw)
+	if !ok {
+		return []model.Finding{model.NewFinding(
+			"id-multisig-coordinator-unexpected",
+			model.SevWarn,
+			c.Snapshot.ID,
+			"account publishes an unreadable multisig coordinator data entry",
+			fmt.Sprintf("data entry %s is not a valid base64 coordinator domain", key),
+		)}
+	}
+	if c.Account.Coordinator == nil {
+		return []model.Finding{model.NewFinding(
+			"id-multisig-coordinator-unexpected",
+			model.SevWarn,
+			c.Snapshot.ID,
+			"account publishes an unexpected multisig coordinator data entry",
+			fmt.Sprintf("data entry %s names %s; the policy declares no coordinator", key, observed),
+		)}
+	}
+	declared, declOK := sanitize.NormalizeDomain(*c.Account.Coordinator)
+	if !declOK {
+		declared = *c.Account.Coordinator
+	}
+	if declOK && observed == declared {
+		return nil
+	}
+	return []model.Finding{model.NewFinding(
+		"id-multisig-coordinator-unexpected",
+		model.SevWarn,
+		c.Snapshot.ID,
+		"account publishes a multisig coordinator that differs from declared policy",
+		fmt.Sprintf("data entry %s names %s; policy declares %s", key, observed, declared),
 	)}
 }
 

@@ -1,0 +1,46 @@
+Gauge test
+network: Test SDF Network ; September 2015
+ledger: 5466897
+
+account GAUA7XL5K54CC2DDGP77FJ2YBHRJLT36CPZDXWPM6MP7MANOGG77PNJU
+  endpoint: https://horizon-testnet.stellar.org
+  as of ledger 65282653, sequence 206632444273623290
+  thresholds: low 2, medium 2, high 2
+  minimum signers to authorize: low 1, medium 1, high 1
+  flags: auth_required=false auth_revocable=false auth_immutable=false clawback=false
+  home domain: (none)
+  sponsor: (none)
+  coordinator: other.coordinator.example (data entry config.multisig.coordinator)
+  signers: 9
+    GAP5GK5CXT5DXBITLIH5WU2VFXRRT22YAQLQITF4XCMPAQ7JQGUQ4E3Z ed25519 weight 1
+    GAPUR2F7OAHMLOEGZI67V7TQSYSPFLULQ2ABQ3WT5QAWIF27YTYPEHDR ed25519 weight 2
+    GAVNCSZG2BHKV2BUTHQCTL7NDQUXE6RP6TT2HDCK5XXP7ND2FAU2ZHX4 ed25519 weight 1
+    GBYHZ6KJJPETZXVUU5QJILH47KB7XZDABB43J3W4NDLTXB66ME3HDWVL ed25519 weight 2
+    GCGP7I5BPYNGDCQRRH2EQ6RSWZZDJPICB3H2N5T3LFGURHUCHPYBDUPK ed25519 weight 1
+    GD7LBT2KB3PX57RQCILAMY4THCI5KRST6AQRMWL7AL7KEZGY6QSBUPHY ed25519 weight 1
+    GDGJHJYYXNZFMATLO2UOVNWDNJQKRGSJEHYT4U4QUI3BLEJBC3TRZX57 ed25519 weight 1
+    GDUZXSXAHGCNRMOMXBQ2JACZFUKB7QJ35A75WERNO4FPP2RTSMLF2EWO ed25519 weight 1
+    GAUA7XL5K54CC2DDGP77FJ2YBHRJLT36CPZDXWPM6MP7MANOGG77PNJU ed25519 weight 0
+  declared: role treasury
+    expected_signers: (not declared)
+    expected_thresholds: (not declared)
+    expected_flags: (not declared)
+    home_domain: (not declared)
+    coordinator: "v1.multisig.satoshipay.io"
+    expect_locked: (not declared)
+  trustlines: 2 held
+    EURC (issuer GDHU6WRG4IEQXM5NZ4BMPKOXHW76MZM4Y2IEMFDVXBSDP6SJY4ITNPP2): issuer not found
+    USDC (issuer GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN): issuer not found
+  findings: 2 (0 accepted)
+    [high] sig-single-key-high
+      one signer alone reaches the high threshold, so a single key holds the account
+      evidence: GAPUR2...EHDR ed25519 at weight 2 reaches 2; GBYHZ6...DWVL ed25519 at weight 2 reaches 2
+      fingerprint: 5023d61495ace3e1d7bfa82338291f5035069b3b514567a70760924f71b9a98b
+    [warn] id-multisig-coordinator-unexpected
+      account publishes a multisig coordinator that differs from declared policy
+      evidence: data entry config.multisig.coordinator names other.coordinator.example; policy declares v1.multisig.satoshipay.io
+      fingerprint: 599481107adcef3347164170434b05b59e08698025103ee3b01bb333690b8701
+
+result: 2 findings (1 high, 1 warn, 0 info), 0 accepted
+exit code: 1
+limits: Gauge reads public ledger state only. It cannot see who holds a key, whether signers are separate people, or off-chain controls. A clean report is a posture result, not proof that the account cannot be compromised.

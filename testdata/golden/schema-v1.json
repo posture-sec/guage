@@ -66,6 +66,7 @@
             "clawback_enabled": null
           },
           "home_domain": "example.com",
+          "coordinator": "v1.multisig.satoshipay.io",
           "expect_locked": true,
           "expect_locked_ignored": true
         },
@@ -87,6 +88,11 @@
             "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ"
           ],
           "malformed_accounts": 0
+        },
+        "coordinator": {
+          "data_key": "config.multisig.coordinator",
+          "domain": "v1.multisig.satoshipay.io",
+          "valid": true
         },
         "trustlines": [
           {

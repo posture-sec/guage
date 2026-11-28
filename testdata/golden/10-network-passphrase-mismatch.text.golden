@@ -10,6 +10,7 @@ account GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3
     expected_thresholds: (not declared)
     expected_flags: (not declared)
     home_domain: (not declared)
+    coordinator: (not declared)
     expect_locked: (not declared)
   findings: 1 (0 accepted)
     [high] acct-network-mismatch
@@ -25,6 +26,7 @@ account GALGVY52QMWYIRPFP3EBCQZNQZXW4BPG4WWJAQ4KICLFGZH6VLSL6VMI
     expected_thresholds: (not declared)
     expected_flags: (not declared)
     home_domain: (not declared)
+    coordinator: (not declared)
     expect_locked: (not declared)
   findings: 1 (0 accepted)
     [high] acct-network-mismatch

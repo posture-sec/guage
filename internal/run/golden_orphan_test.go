@@ -55,6 +55,9 @@ func scenarioNames() []string {
 	for _, sc := range scenarios() {
 		seen[sc.name] = true
 	}
+	for _, sc := range coordinatorScenarios() {
+		seen[sc.name] = true
+	}
 	var names []string
 	for n := range seen {
 		names = append(names, n)

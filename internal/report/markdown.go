@@ -79,6 +79,7 @@ func writeMarkdownAccount(b *strings.Builder, ar model.AccountReport) {
 			s.Flags.AuthRequired, s.Flags.AuthRevocable, s.Flags.AuthImmutable, s.Flags.ClawbackEnabled)
 		fmt.Fprintf(b, "- home domain: %s\n", markdownDomain(s.HomeDomain))
 		fmt.Fprintf(b, "- sponsor: %s\n", mdOr(s.Sponsor, "(none)"))
+		writeMarkdownCoordinator(b, ar.Facts)
 		writeMarkdownSigners(b, s.Signers)
 	}
 
@@ -95,6 +96,18 @@ func markdownDomain(domain string) string {
 		return md(domain) + " (IDN)"
 	}
 	return md(domain)
+}
+
+func writeMarkdownCoordinator(b *strings.Builder, facts *model.AccountFacts) {
+	if facts == nil || facts.Coordinator == nil {
+		return
+	}
+	c := facts.Coordinator
+	if c.Valid {
+		fmt.Fprintf(b, "- coordinator: %s (data entry %s)\n", md(c.Domain), md(c.DataKey))
+		return
+	}
+	fmt.Fprintf(b, "- coordinator: (unreadable data entry %s)\n", md(c.DataKey))
 }
 
 func writeMarkdownSigners(b *strings.Builder, signers []model.Signer) {
@@ -130,6 +143,7 @@ func writeMarkdownDeclared(b *strings.Builder, facts *model.AccountFacts) {
 	fmt.Fprintf(b, "- expected\\_thresholds: %s\n", thresholdsText(declared.ExpectedThresholds))
 	fmt.Fprintf(b, "- expected\\_flags: %s\n", md(flagsText(declared.ExpectedFlags)))
 	fmt.Fprintf(b, "- home\\_domain: %s\n", markdownQuoted(declared.HomeDomain, notDeclared))
+	fmt.Fprintf(b, "- coordinator: %s\n", markdownQuoted(declared.Coordinator, notDeclared))
 	switch {
 	case declared.ExpectLocked == nil:
 		fmt.Fprintf(b, "- expect\\_locked: %s\n", notDeclared)
