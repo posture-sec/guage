@@ -152,6 +152,7 @@ Severities shown are defaults; a role raises a finding to the value its Appendix
 | `id-no-home-domain` | No home domain on an account whose role expects one | WARN |
 | `id-toml-unreachable` | `stellar.toml` cannot be fetched or parsed under the guard | WARN |
 | `id-toml-account-unlisted` | The account is not listed in `stellar.toml` | WARN |
+| `id-sep29-memo-required` | Merchant account lacks SEP-29 `config.memo_required` data entry | WARN |
 
 Facts always printed: network and ledger as of, signers (type, weight, sponsor), thresholds, flags, minimum signers to reach each tier, home domain, sponsorship, and held asset trustlines (with issuer flags; no balance amounts).
 
@@ -165,13 +166,13 @@ Implemented 2026-11-04 (task 3.1), and three rows did not ship as the table read
 
 Implemented 2026-11-04 (task 3.4), which is the change the two paragraphs above kept pointing at, and every cell of Appendix A now reads as the shipped behavior. The readings that were choices are recorded under Appendix A itself rather than here: a role raises and never lowers, a row lists only what its prose names, and the two prose cells that are not severities ("home domain expected", "`expect_locked` allowed") became a trigger and a gate rather than a new rule. Two consequences for how a report should be read. First, the by-role rows in the table above are honored, including the `flag-undeclared-clawback` cell this catalog wrote as "WARN (HIGH for issuer)" while Appendix A spoke only of flags in general; where the two documents differ about one rule by ID, the row that cannot be wrong about it wins. Second, an issuer now raises `id-no-home-domain` with no declaration behind it, so `audit` on an issuer account that publishes nothing reports an identity gap the operator never asked about, and `check` still cannot raise it. Accepted risks are judged after the role has spoken and on the fingerprint, which severity is not part of, so adding a role to a policy re-weights a report without un-accepting a risk an operator already recorded. The other two adjustments are narrower triggers, not severities: `sig-unexpected-signer`, `sig-missing-expected` and `sig-weight-drift` fire only when `expected_signers` is declared, and a key appears in exactly one of the three, with a declared weight of 0 read as an intent to remove; and `sig-threshold-unreachable` emits one finding per account naming every unreachable tier, because it is on the non-acceptable list and a per-tier fingerprint would let one accepted tier read as a clean account.
 
-SEP-29, the memo-required check behind FR-19, is one account data entry: name `config.memo_required`, value the base64 of the string `1`. It applies to a destination that is not a multiplexed account, it is enforced entirely by the sending client, and the spec's requirement is to prevent submission and notify, not to warn. Gauge is read-only, so its part is to report whether the receiving account has opted in and whether its home domain's SEP-1 file exists to say so.
+SEP-29, the memo-required check behind FR-19, is one account data entry: name `config.memo_required`, value the base64 of the string `1`. It applies to a destination that is not a multiplexed account, it is enforced entirely by the sending client, and the spec's requirement is to prevent submission and notify, not to warn. Gauge is read-only, so its part is to report whether the receiving merchant account has set `config.memo_required` to `"MQ=="` (SEP-1 v2.7.0 defines no memo field in `stellar.toml`, so this check inspects the account data entry alone).
 
 ### 6.2 CLI
 
 ```
-stellar-gauge check --network mainnet|testnet|<passphrase> [--endpoint URL]... [--format text|json] G... [G...]
-stellar-gauge audit --config gauge.toml [--format text|json|markdown] [--fail-on high|warn]
+stellar-gauge check --network mainnet|testnet|<passphrase> [--endpoint URL]... [--format text|json|markdown] [--fail-on high|warn|info] G... [G...]
+stellar-gauge audit --config gauge.toml [--format text|json|markdown] [--fail-on high|warn|info]
 stellar-gauge snapshot --config gauge.toml --out baseline.json        (P1)
 stellar-gauge diff --config gauge.toml --baseline baseline.json       (P1)
 stellar-gauge version

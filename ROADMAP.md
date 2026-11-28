@@ -1,6 +1,6 @@
 # ROADMAP: Gauge
 
-Last updated: 2026-11-25T16:55Z (chore: sync README and permit maintainer sync in sync_readme.py)
+Last updated: 2026-11-28T13:00Z (feat(cli): support --fail-on info and align docs with shipped state)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
@@ -40,7 +40,7 @@ The repository is 100% ready when every task in Phases 0 to 6 is done and every 
 | 4 | Dogfood and release v0.1.0 | 4 | 9 | 44% |
 | 5 | v0.2 features | 10 | 11 | 90% |
 | 6 | Release v0.2.0 and community | 3 | 5 | 60% |
-| 7 (backlog) | Backlog | 85 | 89 | 95% |
+| 7 (backlog) | Backlog | 86 | 90 | 95% |
 | **Phases 0 to 6** | **Readiness total** | **72** | **80** | **90%** |
 | Gates | G1 to G10 | 8 | 10 | 80% |
 <!-- PROGRESS:END -->
@@ -315,6 +315,7 @@ Constraint on the two remaining experimental tasks: Gauge never builds or submit
 - [x] **7.78** security(report): sanitize every string the JSON renderer emits. M. Deps: 2.5, 2.6. Done when: `internal/report/json_sanitize_test.go` fills every string field with an OSC sequence, a bidi override, a zero-width rune and a 400-rune domain, decodes the JSON into `map[string]any`, walks every string and finds no payload and no value longer than `sanitize.MaxFieldLen`; `prepare` and `prepareFacts` sanitize each exposed field, including the report network, the snapshot network and endpoint, account data keys and values, and finding rule IDs and fingerprints; `go test ./internal/report -run TestEveryJSONStringIsSanitized -race -count=1` passes. Issue #190 asked for ID 7.20, which `main` already uses for a source threshold test, so this row takes the next free ID in Phase 7. (done 2026-11-25; issue #190)
 - [x] **7.79** feat(report): version the JSON envelope and pin its decoded schema. M. Deps: 2.6, 3.7. Done when: `internal/report/json.go` emits `schema_version` first through a named constant documented as changing only on a breaking shape change; `testdata/golden/schema-v1.json` is decoded with `json.Decoder.DisallowUnknownFields` by `internal/report/schema_version_test.go`, which asserts the names and types of the envelope, accounts, snapshot, thresholds, flags, signers, findings and facts and rejects an unknown top-level key; every JSON golden gains only the new field; `go test ./internal/report -run TestJSONSchemaVersion -race -count=1` passes. Issue #191 asked for ID 7.21, which `main` already uses for source cancellation, so this row takes the next free ID in Phase 7. (done 2026-11-25; issue #191)
 - [x] **7.80** test(report): missing and mismatch accounts still render partial results. S. Deps: 2.6, 3.3. Done when: `internal/report/partial_test.go` renders one report with a normal, a missing and a skipped mismatch account, each with a snapshot ID; text contains all three IDs, one `not found on this endpoint` line, one `no state read:` line and exactly one `limits:` line; JSON decodes to three entries with the right missing and skipped flags and neither flag on the normal entry; zero thresholds and an empty signer slice print `low 0, medium 0, high 0` and `signers: 0` and the exit line matches `ExitCode`; `go test ./internal/report -run TestMixedAccountOutcomes -race -count=1` passes. Issue #192 asked for ID 7.22, which `main` already uses for SEP-1 hostnames, so this row takes the next free ID in Phase 7. (done 2026-11-25; issue #192)
+- [x] **7.90** feat(cli): support `--fail-on info` across `check` and `audit`, and align stale docs (`README.md`, `ARCHITECTURE.md`, `ARCHITECTURE_ESSENTIALS.md`, `PRD.md`, `docs/WAVE_SUBMISSION.md`, `site/guides.html`). XS. Deps: 2.9. Done when: `parseFailOn` accepts `info`, `check` and `audit` document and accept `high|warn|info`, `cmd/stellar-gauge/cli_test.go` verifies exit 1 on unaccepted info findings and exit 0 when accepted, and stale 16-rule / unimplemented-markdown / Wave count claims are updated. (done 2026-11-28)
 ## 6. Dependency map (critical path)
 
 `0.2, 0.4 -> 1.1 -> 1.4 -> 2.1 -> 2.2, 2.3, 2.5 -> 2.7 -> 2.8 -> 2.9 -> 3.1 to 3.5 -> 3.7 -> 4.1 -> 4.8`
@@ -364,6 +365,7 @@ Newest first. One row per merged change.
 
 | Date (UTC) | Change | Tasks |
 |---|---|---|
+| 2026-11-28 | feat(cli): support `--fail-on info` in `check` and `audit`, and sync stale documentation (`README.md` markdown usage and rule count, `ARCHITECTURE.md` status header, `ARCHITECTURE_ESSENTIALS.md` rule list, `PRD.md` SEP-29 prose and CLI synopsis, `site/guides.html` `--fail-on` values, `docs/WAVE_SUBMISSION.md` live counts). | 7.90 |
 | 2026-11-25 | Sync README.md with Phase 5 shipped features (5.1 multi-endpoint, 5.2 snapshot/diff, 5.3 markdown, 5.5 trustline facts, 5.6 SEP-29 rule), update 17-rule metrics table, and permit maintainer sync in `scripts/sync_readme.py`. | 5.1, 5.2, 5.3, 5.5, 5.6 |
 | 2026-11-25 | fix(cli): the format refusal no longer calls markdown unimplemented. Task 5.3 shipped the renderer on `check`, `audit` and `diff`, so the dead `markdown` branch in `formatRejection` is gone and both commands print the one shared line. `site/developers.html` stops describing `snapshot`, `diff`, `--out` and markdown as placeholders, since 5.2 and 5.3 shipped them. `README.md` still calls markdown unimplemented in two places, because `scripts/sync_readme.py --check-base` treats the whole file as script-owned and refuses a branch edit. | 5.2, 5.3, 7.40 |
 | 2026-11-25 | Tasks 7.13, 7.44 and 7.45 (close #183, close #182, close #181): added `internal/rules/severity_test.go`, `internal/rules/facts_contract_test.go` and `internal/rules/all_copy_test.go`, pinning the legal severities and the `Accepted` precondition, facts determinism and the nil states with a no-finding type and wire check, and a registry copy that survives reordering, truncation and append. No production code changed. | 7.13, 7.44, 7.45 |

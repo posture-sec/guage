@@ -14,10 +14,10 @@ import (
 
 func auditCommand(args []string, stdout, stderr io.Writer, d deps) int {
 	fs := newFlagSet("audit", stderr,
-		"usage: stellar-gauge audit [--config gauge.toml] [--format text|json|markdown] [--fail-on high|warn]")
+		"usage: stellar-gauge audit [--config gauge.toml] [--format text|json|markdown] [--fail-on high|warn|info]")
 	configPath := fs.String("config", defaultConfig, "policy file to load")
 	format := fs.String("format", "text", "output format: text, json or markdown")
-	failOn := fs.String("fail-on", "high", "fail at this severity: high or warn")
+	failOn := fs.String("fail-on", "high", "fail at this severity: high, warn or info")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return int(model.ExitPass)
@@ -32,7 +32,7 @@ func auditCommand(args []string, stdout, stderr io.Writer, d deps) int {
 	}
 	severity, ok := parseFailOn(*failOn)
 	if !ok {
-		return usageError(stderr, "--fail-on must be high or warn")
+		return usageError(stderr, "--fail-on must be high, warn or info")
 	}
 
 	cfg, err := policy.LoadFile(*configPath)

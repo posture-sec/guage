@@ -94,13 +94,16 @@ const (
 )
 
 // parseFailOn maps the CLI value to the severity at which a finding fails the
-// run. The default is high, so a warning alone does not fail a scheduled job.
+// run. The default is high, so a warning or info finding alone does not fail a
+// scheduled job.
 func parseFailOn(value string) (model.Severity, bool) {
 	switch value {
 	case "high":
 		return model.SevHigh, true
 	case "warn":
 		return model.SevWarn, true
+	case "info":
+		return model.SevInfo, true
 	default:
 		return model.SevInfo, false
 	}
