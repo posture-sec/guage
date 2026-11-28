@@ -29,6 +29,7 @@ func documentedRuleIDs() []string {
 		"id-toml-unreachable",
 		"id-toml-account-unlisted",
 		"id-sep29-memo-required",
+		"id-multisig-coordinator-unexpected",
 	}
 }
 

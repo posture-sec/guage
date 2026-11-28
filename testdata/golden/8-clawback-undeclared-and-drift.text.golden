@@ -17,6 +17,7 @@ account GDSX2WUFUT7KCMTUNG3IUQWIUQSC4XNKQ5NTGEZRKLTMLCSJTCUVBEVG
     expected_thresholds: (not declared)
     expected_flags: auth_required=false auth_revocable=(not stated) auth_immutable=(not stated) clawback=(not stated)
     home_domain: (not declared)
+    coordinator: (not declared)
     expect_locked: (not declared)
   identity document: komunitin.org did not serve a readable file
     step: parse

@@ -77,7 +77,14 @@ type schemaV1Facts struct {
 	Reachability *schemaV1Reachability `json:"reachability"`
 	Declared     *schemaV1Declared     `json:"declared"`
 	Identity     *schemaV1Identity     `json:"identity"`
+	Coordinator  *schemaV1Coordinator  `json:"coordinator"`
 	Trustlines   []schemaV1Trustline   `json:"trustlines"`
+}
+
+type schemaV1Coordinator struct {
+	DataKey string `json:"data_key"`
+	Domain  string `json:"domain"`
+	Valid   bool   `json:"valid"`
 }
 
 type schemaV1Reachability struct {
@@ -93,6 +100,7 @@ type schemaV1Declared struct {
 	ExpectedThresholds  *schemaV1DeclaredThresholds `json:"expected_thresholds"`
 	ExpectedFlags       *schemaV1DeclaredFlags      `json:"expected_flags"`
 	HomeDomain          *string                     `json:"home_domain"`
+	Coordinator         *string                     `json:"coordinator"`
 	ExpectLocked        *bool                       `json:"expect_locked"`
 	ExpectLockedIgnored bool                        `json:"expect_locked_ignored"`
 }
@@ -207,6 +215,12 @@ func TestJSONSchemaVersion(t *testing.T) {
 	}
 	if account.Facts.Identity.Status != 200 || account.Facts.Identity.NetworkPassphrase == nil || account.Facts.Identity.NetworkMatches == nil || len(account.Facts.Identity.Accounts) != 1 {
 		t.Fatal("identity facts did not decode")
+	}
+	if account.Facts.Coordinator == nil || !account.Facts.Coordinator.Valid || account.Facts.Coordinator.DataKey != "config.multisig.coordinator" || account.Facts.Coordinator.Domain == "" {
+		t.Fatal("coordinator facts did not decode")
+	}
+	if account.Facts.Declared.Coordinator == nil || *account.Facts.Declared.Coordinator == "" {
+		t.Fatal("declared coordinator did not decode")
 	}
 	if len(account.Facts.Trustlines) != 1 || account.Facts.Trustlines[0].IssuerFlags == nil || account.Facts.Trustlines[0].IssuerStatus != "not found" {
 		t.Fatal("trustline facts did not decode")

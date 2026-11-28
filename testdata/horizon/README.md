@@ -29,6 +29,8 @@ exists on any network and nothing here is fetched at test time.
 | `14-issuer-regulated.json` | built | none (task 5.5 trustline exposure) | `GD4CMQCXWU7QKVK5SW4HYLJ3NVWIFZ353CZQISCO54TYREWNC7UBCQY7` at 5466909 |
 | `15-issuer-open.json` | built | none (task 5.5 trustline exposure) | `GBFZVIKRAZWSNQG6T5TEFAQTKYTZONSDUJN5G6A7W7Z6PTA2K5QETXN6` at 5466910 |
 | `16-endpoint-disagrees.json` | built | none (task 5.1, `src-disagreement`) | `GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3` at 5465023, the `1-default.json` account as a disagreeing endpoint would serve it |
+| `17-coordinator-entry.json` | captured (mainnet) | none (task 5.12, `id-multisig-coordinator-unexpected`) | `GAUA7XL5K54CC2DDGP77FJ2YBHRJLT36CPZDXWPM6MP7MANOGG77PNJU` at `last_modified_ledger` 65282653; copied byte-for-byte from `posture-sec/stellar-account-fixtures/fixtures/coordinator-data-entry/account.json` (`captured_at` 2026-11-03T09:48:29Z, sha256 `6c794f8716fb0754605344923e37d6ef417fbb680db274f7e27ba0a12a917659`) |
+| `18-coordinator-mismatch.json` | built | none (task 5.12, `id-multisig-coordinator-unexpected`) | `GAUA7XL5K54CC2DDGP77FJ2YBHRJLT36CPZDXWPM6MP7MANOGG77PNJU`, `17-coordinator-entry.json` with `data["config.multisig.coordinator"]` replaced by base64 of `other.coordinator.example` |
 
 Scenario 10 has a second half, the network passphrase mismatch, and it needs no
 account file: the run asks for a mainnet network against a testnet endpoint, so

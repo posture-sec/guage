@@ -27,6 +27,7 @@
 - expected\_thresholds: (not declared)
 - expected\_flags: auth\_required=false auth\_revocable=(not stated) auth\_immutable=(not stated) clawback=(not stated)
 - home\_domain: (not declared)
+- coordinator: (not declared)
 - expect\_locked: (not declared)
 
 ### Identity document

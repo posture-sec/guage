@@ -1,6 +1,6 @@
 # ROADMAP: Gauge
 
-Last updated: 2026-11-28T13:12Z (feat(policy): add coordinator policy key and example config note)
+Last updated: 2026-11-28T13:18Z (feat(rules,report): ship id-multisig-coordinator-unexpected rule, facts rendering, fixtures, and goldens; complete task 5.12)
 Roadmap version: 3
 
 This file is the single source of truth for remaining work. It is read before every task and updated after every change.
@@ -38,10 +38,10 @@ The repository is 100% ready when every task in Phases 0 to 6 is done and every 
 | 2 | Core | 11 | 11 | 100% |
 | 3 | Rules | 7 | 7 | 100% |
 | 4 | Dogfood and release v0.1.0 | 4 | 9 | 44% |
-| 5 | v0.2 features | 10 | 12 | 83% |
+| 5 | v0.2 features | 11 | 12 | 91% |
 | 6 | Release v0.2.0 and community | 3 | 5 | 60% |
 | 7 (backlog) | Backlog | 86 | 90 | 95% |
-| **Phases 0 to 6** | **Readiness total** | **72** | **81** | **88%** |
+| **Phases 0 to 6** | **Readiness total** | **73** | **81** | **90%** |
 | Gates | G1 to G10 | 8 | 10 | 80% |
 <!-- PROGRESS:END -->
 
@@ -214,7 +214,7 @@ Constraint on the two remaining experimental tasks: Gauge never builds or submit
 - [x] **5.9** Documentation site v1 on GitHub Pages, separate from the README: hand-written static HTML, CSS and vanilla JS under `site/` (no generator, so the dependency rule holds), deployed by the `pages` workflow. Seven pages: overview, rules, policy, mechanics, guides, status and a 404. M. Deps: none (8.2 and 4.3 are not preconditions for documenting what already ships; 5.8's economic-model and contract clauses do not apply to a Go CLI). Done when: the site is live at `https://posture-sec.github.io/guage/`, linked from `README.md`, and every page states shipped behavior only. (done 2026-11-02: the site is live and the design is flat, no gradients, every claim traced to code or an observed testnet run; the pages that describe unshipped behavior say so, e.g. `policy.html` records that only network, existence and flags are compared today.)
 - [x] **5.10** Site theme and audit pass: light and dark mode on the same flat ink-and-paper identity, plus a measured UI/UX and responsiveness audit with the fixes it found. No new dependency and no build step; the theme is tokens plus a pre-paint script. M. Deps: 5.9. Done when: both themes are readable at every breakpoint with no flash of the wrong theme and no layout shift when the toggle is used, no page overflows its viewport at 320px, and every text pair meets WCAG AA, each proven by measurement rather than by looking. (done 2026-11-02: contrast computed per token pair with a relative-luminance helper for both themes, lowest text pair 4.86:1 dark and 4.66:1 light, which fixed one real failure where the side-nav label used the hairline token as type at 2.23:1; every page loaded into an iframe at seven widths in both themes, 98 runs, zero page overflow and byte-identical geometry between the themes, which found one real bug (an unbreakable install command in `guides.html` pushed the page to 336px inside a 305px viewport); the theme is chosen by an inline head script before the stylesheet, so neither mode flashes.)
 - [x] **5.11** Site motion layer: scroll reveals, a staged hero entrance and hover response on the same flat identity, taking the reveal patterns catalogued on land-book.com as the reference. Two dependency-free files under `site/assets/` (`motion.css`, `motion.js`) loaded by all seven pages; no build step and no new dependency. S. Deps: 5.10. Done when: every page reveals its sections on scroll and enters its hero on load, `prefers-reduced-motion` turns all of it off with content fully visible, and no element is left hidden or carrying the reveal class after its entrance. (done 2026-11-09: verified by driving headless Chrome over CDP on all seven pages, each scrolled end to end: every reveal target intersected and finished, zero elements stuck hidden, zero left carrying the reveal class, zero console errors; reduced-motion emulation applies no motion at all and the content is fully visible; the theme toggle flips dark to light and back; the hero report drifts under scroll once its entrance animation releases it; 390px renders checked by screenshot. The accent and scrollbar colors resolve through the site's own tokens, so the same files serve the sibling sites without edits.)
-- [ ] **5.12** Multisig coordinator check: `id-multisig-coordinator-unexpected` rule and optional `coordinator` policy key for SEP-19-style `*.multisig.coordinator` account data entries. M. Deps: 5.6.
+- [x] **5.12** Multisig coordinator check: `id-multisig-coordinator-unexpected` rule and optional `coordinator` policy key for SEP-19-style `*.multisig.coordinator` account data entries. M. Deps: 5.6. (done 2026-11-28: `internal/rules/identity.go` registers `id-multisig-coordinator-unexpected` at WARN across all five Appendix A roles per D-17, reading `AccountSnapshot.MultiSigCoordinatorEntry` and `sanitize.DecodeB64Domain` purely with zero network calls. `Facts` populates observed `CoordinatorFact` (`data_key`, `domain`, `valid`) and `Declared.Coordinator`, rendered across text, JSON, and markdown reports with `prepareFacts` sanitization. Added captured mainnet fixture `testdata/horizon/17-coordinator-entry.json` from `posture-sec/stellar-account-fixtures/fixtures/coordinator-data-entry`, built `18-coordinator-mismatch.json`, schema-v1 updates, CLI/unit/hostile tests, and scenario goldens `17-coordinator-undeclared.*` and `18-coordinator-mismatch.*`.)
 
 ### Phase 6: Release v0.2.0 and community
 
@@ -367,6 +367,7 @@ Newest first. One row per merged change.
 
 | Date (UTC) | Change | Tasks |
 |---|---|---|
+| 2026-11-28 | feat(rules,report,run): implement `id-multisig-coordinator-unexpected` (18th rule, WARN across all roles per D-17), render `CoordinatorFact` and `Declared.Coordinator` in text/JSON/markdown reports, update `schema-v1.json` and fixtures `17`/`18` with scenario goldens, and tick task 5.12. | 5.12 |
 | 2026-11-28 | feat(policy): add optional `Account.Coordinator` (`coordinator`) TOML key, `ErrCoordinator` hostname validation, commented example entry in `gauge.example.toml`, and loader tests for task 5.12. | 5.12 partly |
 | 2026-11-28 | feat(model,sanitize): add `MultiSigCoordinatorEntry`/`MultiSigCoordinator`, `CoordinatorFact`/`DeclaredFacts.Coordinator` (with `prepareFacts` JSON sanitization), and strict `DecodeB64Domain`/`NormalizeDomain` helpers for task 5.12. | 5.12 partly |
 | 2026-11-28 | docs(roadmap): plan task 5.12 multisig coordinator policy check, record decision D-17, and add FR-23 to PRD.md. | 5.12, D-17 |

@@ -68,6 +68,7 @@ func writeAccount(b *strings.Builder, ar model.AccountReport) {
 			s.Flags.AuthRequired, s.Flags.AuthRevocable, s.Flags.AuthImmutable, s.Flags.ClawbackEnabled)
 		fmt.Fprintf(b, "  home domain: %s\n", describedDomain(s.HomeDomain))
 		fmt.Fprintf(b, "  sponsor: %s\n", emptyAs(s.Sponsor, "(none)"))
+		writeCoordinator(b, ar.Facts)
 		fmt.Fprintf(b, "  signers: %d\n", len(s.Signers))
 		for _, signer := range s.Signers {
 			fmt.Fprintf(b, "    %s %s weight %d", signer.Key, signer.Type, signer.Weight)
@@ -181,6 +182,7 @@ func writeDeclared(b *strings.Builder, facts *model.AccountFacts) {
 	fmt.Fprintf(b, "    expected_thresholds: %s\n", thresholdsText(declared.ExpectedThresholds))
 	fmt.Fprintf(b, "    expected_flags: %s\n", flagsText(declared.ExpectedFlags))
 	fmt.Fprintf(b, "    home_domain: %s\n", quotedText(declared.HomeDomain, notDeclared))
+	fmt.Fprintf(b, "    coordinator: %s\n", quotedText(declared.Coordinator, notDeclared))
 	if declared.ExpectLocked == nil {
 		fmt.Fprintf(b, "    expect_locked: %s\n", notDeclared)
 		return
@@ -232,6 +234,18 @@ func booleanText(value *bool) string {
 		return notStated
 	}
 	return strconv.FormatBool(*value)
+}
+
+func writeCoordinator(b *strings.Builder, facts *model.AccountFacts) {
+	if facts == nil || facts.Coordinator == nil {
+		return
+	}
+	c := facts.Coordinator
+	if c.Valid {
+		fmt.Fprintf(b, "  coordinator: %s (data entry %s)\n", c.Domain, c.DataKey)
+		return
+	}
+	fmt.Fprintf(b, "  coordinator: (unreadable data entry %s)\n", c.DataKey)
 }
 
 // writeIdentity prints what the guarded fetcher made of the account's home domain.

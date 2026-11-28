@@ -17,6 +17,7 @@ account GBK4NFJ7SVMUNPBIYBC4WNMCTKI6Z66MYYWZQSSLQNOSUSTMKVUKE7M3
     expected_thresholds: (not declared)
     expected_flags: (not declared)
     home_domain: "gauge.example.invalid"
+    coordinator: (not declared)
     expect_locked: (not declared)
   findings: 2 (0 accepted)
     [warn] id-no-home-domain

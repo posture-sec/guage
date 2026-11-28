@@ -28,6 +28,7 @@
 - expected\_thresholds: low 1, medium 2, high 4
 - expected\_flags: (not declared)
 - home\_domain: (not declared)
+- coordinator: (not declared)
 - expect\_locked: (not declared)
 
 ### Findings: 2 (0 accepted)

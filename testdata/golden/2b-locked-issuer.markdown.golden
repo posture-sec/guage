@@ -27,6 +27,7 @@
 - expected\_thresholds: (not declared)
 - expected\_flags: (not declared)
 - home\_domain: (not declared)
+- coordinator: (not declared)
 - expect\_locked: true
 
 ### Findings: 3 (0 accepted)

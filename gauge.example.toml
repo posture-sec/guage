@@ -22,7 +22,8 @@ expected_flags = { auth_required = false, auth_revocable = false, auth_immutable
 home_domain = "example.com"
 # coordinator declares the bare hostname an account is expected to publish in
 # config.multisig.coordinator (or an equivalent *multisig*coordinator data entry).
-# Omit when undecided, set "" to expect none, or decide and record your host:
+# Omit to warn if a coordinator data entry is present, set "" to disable the rule,
+# or decide and record your host:
 # coordinator = "v1.multisig.satoshipay.io"
 # expect_locked states that a zero-weight, nonsigning account is intended. It is
 # read for `issuer` alone; on a treasury it changes nothing, and the report prints
