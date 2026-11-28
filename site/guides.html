@@ -109,7 +109,7 @@ go build -o stellar-gauge ./cmd/stellar-gauge
                 <tr><td>--network</td><td>(required)</td><td><code>mainnet</code>, <code>testnet</code> or a full passphrase. There is no default and no discovery.</td></tr>
                 <tr><td>--endpoint</td><td>(required)</td><td>May be repeated by the parser, but exactly one is accepted at v0.1. Must be HTTPS, except loopback.</td></tr>
                 <tr><td>--format</td><td>text</td><td><code>text</code>, <code>json</code> or <code>markdown</code>. Any other value exits 2.</td></tr>
-                <tr><td>--fail-on</td><td>high</td><td><code>high</code> or <code>warn</code>. Sets the severity at which a finding produces exit 1.</td></tr>
+                <tr><td>--fail-on</td><td>high</td><td><code>high</code>, <code>warn</code> or <code>info</code>. Sets the severity at which a finding produces exit 1.</td></tr>
               </tbody>
             </table>
           </div>
@@ -132,7 +132,7 @@ go build -o stellar-gauge ./cmd/stellar-gauge
               <tbody>
                 <tr><td>--config</td><td>gauge.toml</td><td>Path to the policy. A missing or rejected file exits 2 before any request.</td></tr>
                 <tr><td>--format</td><td>text</td><td><code>text</code>, <code>json</code> or <code>markdown</code>. Any other value exits 2.</td></tr>
-                <tr><td>--fail-on</td><td>high</td><td><code>high</code> or <code>warn</code>.</td></tr>
+                <tr><td>--fail-on</td><td>high</td><td><code>high</code>, <code>warn</code> or <code>info</code>.</td></tr>
               </tbody>
             </table>
           </div>

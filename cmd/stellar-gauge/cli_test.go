@@ -207,8 +207,8 @@ func TestCheckRejectsBadArguments(t *testing.T) {
 		},
 		{
 			name:    "bad fail-on",
-			args:    []string{"check", "--network", testNetwork, "--endpoint", "https://example.invalid", "--fail-on", "info", accountOne},
-			wantMsg: "--fail-on must be high or warn",
+			args:    []string{"check", "--network", testNetwork, "--endpoint", "https://example.invalid", "--fail-on", "critical", accountOne},
+			wantMsg: "--fail-on must be high, warn or info",
 		},
 		{
 			name:    "bad format",
@@ -803,4 +803,53 @@ func TestCheckPassphraseIsNotHardcodedToTheEndpoint(t *testing.T) {
 			t.Errorf("stdout does not contain %q:\n%s", want, stdout)
 		}
 	}
+}
+
+func TestFailOnInfo(t *testing.T) {
+	t.Parallel()
+
+	t.Run("check fails on info finding", func(t *testing.T) {
+		t.Parallel()
+		srv := startEndpoint(t, endpoint{})
+		code, stdout, stderr := execCLI(t,
+			"check", "--network", testNetwork, "--endpoint", srv.URL, "--fail-on", "info", accountOne)
+		if code != 1 {
+			t.Fatalf("exit code = %d, want 1 (stderr %q)", code, stderr)
+		}
+		if !strings.Contains(stdout, "[info] sig-single-key-high") || !strings.Contains(stdout, "exit code: 1") {
+			t.Errorf("unexpected stdout:\n%s", stdout)
+		}
+	})
+
+	t.Run("audit fails on info finding and passes when accepted", func(t *testing.T) {
+		t.Parallel()
+		srv := startEndpoint(t, endpoint{})
+		cfg := policyForAccount(srv.URL, accountOne)
+		path := writePolicy(t, cfg)
+		code, stdout, stderr := execCLI(t, "audit", "--config", path, "--fail-on", "info")
+		if code != 1 {
+			t.Fatalf("exit code = %d, want 1 (stderr %q)", code, stderr)
+		}
+		if !strings.Contains(stdout, "[info] sig-single-key-high") {
+			t.Errorf("unexpected stdout:\n%s", stdout)
+		}
+
+		acceptedCfg := cfg + "\n[[accept]]\nrule = \"sig-single-key-high\"\naccount = \"" + accountOne + "\"\nreason = \"single signer intended on test account\"\n"
+		acceptedPath := writePolicy(t, acceptedCfg)
+		code, stdout, stderr = execCLI(t, "audit", "--config", acceptedPath, "--fail-on", "info")
+		if code != 0 {
+			t.Fatalf("exit code = %d, want 0 (stderr %q)\n%s", code, stderr, stdout)
+		}
+	})
+
+	t.Run("audit rejects invalid fail-on", func(t *testing.T) {
+		t.Parallel()
+		code, _, stderr := execCLI(t, "audit", "--fail-on", "critical")
+		if code != 2 {
+			t.Fatalf("exit code = %d, want 2 (stderr %q)", code, stderr)
+		}
+		if !strings.Contains(stderr, "--fail-on must be high, warn or info") {
+			t.Errorf("stderr = %q, want fail-on usage error", stderr)
+		}
+	})
 }

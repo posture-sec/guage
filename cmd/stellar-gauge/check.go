@@ -14,12 +14,12 @@ import (
 
 func checkCommand(args []string, stdout, stderr io.Writer, d deps) int {
 	fs := newFlagSet("check", stderr,
-		"usage: stellar-gauge check --network NETWORK --endpoint URL [--endpoint URL ...] [--format text|json|markdown] [--fail-on high|warn] [--concurrency N] G...")
+		"usage: stellar-gauge check --network NETWORK --endpoint URL [--endpoint URL ...] [--format text|json|markdown] [--fail-on high|warn|info] [--concurrency N] G...")
 	network := fs.String("network", "", "mainnet, testnet, or a full network passphrase")
 	endpoints := &stringList{}
 	fs.Var(endpoints, "endpoint", "Horizon endpoint; repeat it, up to five times, to compare endpoints")
 	format := fs.String("format", "text", "output format: text, json or markdown")
-	failOn := fs.String("fail-on", "high", "fail at this severity: high or warn")
+	failOn := fs.String("fail-on", "high", "fail at this severity: high, warn or info")
 	concurrency := fs.String("concurrency", "8", "maximum concurrent account and identity reads (1-32)")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
@@ -42,7 +42,7 @@ func checkCommand(args []string, stdout, stderr io.Writer, d deps) int {
 	}
 	severity, ok := parseFailOn(*failOn)
 	if !ok {
-		return usageError(stderr, "--fail-on must be high or warn")
+		return usageError(stderr, "--fail-on must be high, warn or info")
 	}
 	if !validFormat(*format) {
 		return usageError(stderr, formatRejection())

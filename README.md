@@ -36,7 +36,7 @@ Gauge is read-only and secret-free. It never accepts, stores or echoes a secret 
 | Security Guarantee | **Read-only / 0 secret keys** | Architecture spec |
 <!-- METRICS:END -->
 
-Functional alpha (ROADMAP Phase 2, tasks 2.1 to 2.11), with Phase 3 complete on 2026-11-05: the sixteen rules, the role profiles and the facts report. The policy loader, Horizon client, guarded `stellar.toml` fetcher, report renderers, orchestrator, rules and CLI are implemented and tested:
+Functional alpha (ROADMAP Phase 2, tasks 2.1 to 2.11), with Phase 3 complete on 2026-11-05: the seventeen rules, the role profiles and the facts report. The policy loader, Horizon client, guarded `stellar.toml` fetcher, report renderers, orchestrator, rules and CLI are implemented and tested:
 
 ```bash
 go run ./cmd/stellar-gauge version
@@ -91,7 +91,7 @@ cd guage
 go build -o stellar-gauge ./cmd/stellar-gauge
 ```
 
-Then, with that binary on your `PATH` or run as `./stellar-gauge`:
+The module path keeps the original spelling (`github.com/posture-sec/guage`). Then, with that binary on your `PATH` or run as `./stellar-gauge`:
 
 ```bash
 stellar-gauge check --network testnet --endpoint https://horizon-testnet.stellar.org G... G...
@@ -101,7 +101,7 @@ stellar-gauge version
 
 `go run ./cmd/stellar-gauge ...` is the same code without the build step, which is fine for one account and slower than a cached binary on a schedule.
 
-`check` takes accounts on the command line and needs an explicit network and one endpoint. Neither has a default, and the usage error names both public endpoints so there is one thing to read: a silent default to mainnet is how an audit ends up reading the wrong ledger. `audit` reads accounts, roles and expectations from the policy file, whose `endpoints` entry supplies the endpoint; run it with no `gauge.toml` and it tells you to copy `gauge.example.toml`. Both take `--format text|json` and `--fail-on high|warn`; markdown output is not implemented yet.
+`check` takes accounts on the command line and needs an explicit network and one endpoint. Neither has a default, and the usage error names both public endpoints so there is one thing to read: a silent default to mainnet is how an audit ends up reading the wrong ledger. `audit` reads accounts, roles and expectations from the policy file, whose `endpoints` entry supplies the endpoint; run it with no `gauge.toml` and it tells you to copy `gauge.example.toml`. Both take `--format text|json|markdown` and `--fail-on high|warn|info`.
 
 A text report reads facts first, then judgements. This is the whole output of one `check` against a fresh testnet account, pasted as the binary printed it on 2026-11-05 at ledger 5570026, with nothing elided:
 
@@ -190,7 +190,7 @@ policy loader + Source + sep1 -> snapshots -> rules + facts -> role severity -> 
 | `internal/source` | Horizon client behind a `Source` interface |
 | `internal/sep1` | Guarded `stellar.toml` fetch for identity rules |
 | `internal/rules` | Pure rule functions and the fact block, no I/O |
-| `internal/report` | Text and JSON renderers, facts ahead of findings, exit-code mapping |
+| `internal/report` | Text, JSON and markdown renderers, facts ahead of findings, exit-code mapping |
 | `internal/run` | Orchestration |
 
 Imports point one way: `model <- strkey, threshold, sanitize <- policy, source, sep1 <- rules <- report <- run <- cmd`. Dependencies: Go standard library plus one TOML parser. No framework, no plugin system, no rule language.
